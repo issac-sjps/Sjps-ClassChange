@@ -163,12 +163,13 @@ select:focus, input:focus { border-color: var(--blue); }
     </div>
   </div>
   <div class="header-right">
-    <div class="db-badge">
-      <div class="db-dot" id="dbDot"></div>
-      <span id="dbStatus">連接中...</span>
+      <div class="db-badge">
+        <div class="db-dot" id="dbDot"></div>
+        <span id="dbStatus">連接中...</span>
+      </div>
+      <a href="admin.html" class="lock-btn-small" style="text-decoration:none;">🔧 後台管理</a>
+      <button class="lock-btn-small" onclick="lockOut()">🔒 鎖定</button>
     </div>
-    <button class="lock-btn-small" onclick="lockOut()">🔒 鎖定</button>
-  </div>
 </div>
 
 <nav class="tabs">
