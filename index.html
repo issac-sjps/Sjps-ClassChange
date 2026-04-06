@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>編班名單查詢 ─ 教務組</title>
+<style>
+:root {
+  --navy: #0f2044; --navy2: #1a3060; --blue: #2d5be3; --blue-light: #e8eefb;
+  --red: #dc2626; --red-light: #fee2e2; --purple: #7c3aed; --purple-light: #ede9fe;
+  --gold: #b45309; --gold-light: #fef9c3; --green: #16a34a;
+  --pink: #be185d; --pink-light: #fce7f3; --teal: #0d9488; --teal-light: #ccfbf1;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --bg: #f4f6fb; --surface: #fff; --border: #dde3f0;
+  --text: #111827; --text2: #4b5563; --text3: #9ca3af;
+  --radius: 10px; --shadow: 0 1px 4px rgba(15,32,68,.08), 0 4px 16px rgba(15,32,68,.06);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Microsoft JhengHei','PingFang TC','Noto Sans TC',system-ui,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+/* LOCK SCREEN */
+.lock-screen {
+  position: fixed; inset: 0; background: linear-gradient(135deg, var(--navy) 0%, #1e3a6e 50%, var(--navy2) 100%);
+  display: flex; align-items: center; justify-content: center; z-index: 999; padding: 20px;
+}
+.lock-box {
+  background: rgba(255,255,255,.06); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 20px;
+  padding: 48px 40px; width: 100%; max-width: 380px; text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,.4);
+}
+.lock-icon { font-size: 3.5rem; margin-bottom: 16px; }
+.lock-title { color: #fff; font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+.lock-sub { color: rgba(255,255,255,.6); font-size: .85rem; margin-bottom: 32px; }
+.lock-input {
+  width: 100%; padding: 14px 18px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.1); color: #fff; font-size: 1rem; text-align: center;
+  letter-spacing: .15em; outline: none; font-family: inherit; transition: border-color .2s;
+  margin-bottom: 14px;
+}
+.lock-input::placeholder { color: rgba(255,255,255,.4); letter-spacing: 0; }
+.lock-input:focus { border-color: rgba(255,255,255,.5); }
+.lock-btn {
+  width: 100%; padding: 13px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--blue); color: #fff; font-size: 1rem; font-weight: 700;
+  font-family: inherit; transition: all .2s;
+}
+.lock-btn:hover { background: #2347c5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,91,227,.4); }
+.lock-error { color: #fca5a5; font-size: .85rem; margin-top: 10px; min-height: 20px; }
+
+/* HEADER */
+.header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); color: #fff; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 60px; box-shadow: 0 2px 12px rgba(15,32,68,.25); position: sticky; top: 0; z-index: 100; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-title { font-size: 1.1rem; font-weight: 700; }
+.header-sub { font-size: .72rem; opacity: .6; margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.db-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border-radius: 99px; padding: 4px 12px; font-size: .75rem; }
+.db-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; transition: background .4s; }
+.db-dot.ok { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+.lock-btn-small { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); color: #fff; border-radius: 8px; padding: 5px 12px; font-size: .78rem; cursor: pointer; font-family: inherit; transition: background .2s; }
+.lock-btn-small:hover { background: rgba(255,255,255,.25); }
+
+/* TABS */
+.tabs { background: var(--surface); border-bottom: 2px solid var(--border); display: flex; overflow-x: auto; padding: 0 16px; position: sticky; top: 60px; z-index: 90; }
+.tab-btn { padding: 13px 20px; border: none; background: none; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--text2); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: color .2s, border-color .2s; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+.tab-btn:hover { color: var(--blue); }
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* LAYOUT */
+.tab-pane { display: none; padding: 24px; max-width: 1280px; margin: 0 auto; }
+.tab-pane.active { display: block; }
+
+/* CARD */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+.card-title { font-size: .95rem; font-weight: 700; color: var(--navy); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.card-title span { margin-left: auto; font-size: .78rem; font-weight: 400; color: var(--text3); }
+
+/* FORM */
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+label.fl { font-size: .75rem; font-weight: 700; color: var(--text2); letter-spacing: .04em; }
+select, input[type=text] { border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: .875rem; color: var(--text); background: #fff; outline: none; font-family: inherit; transition: border-color .2s; }
+select:focus, input:focus { border-color: var(--blue); }
+
+/* TAG */
+.tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; font-size: .72rem; font-weight: 700; }
+.tag-bighead { background: var(--red-light); color: var(--red); }
+.tag-special { background: var(--purple-light); color: var(--purple); }
+.tag-gifted { background: var(--gold-light); color: var(--gold); }
+.tag-male { background: var(--blue-light); color: var(--blue); }
+.tag-female { background: var(--pink-light); color: var(--pink); }
+
+/* STAT */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 80px; }
+.stat-num { font-size: 1.5rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.stat-lbl { font-size: .7rem; color: var(--text3); margin-top: 3px; font-weight: 600; }
+
+/* STUDENT GRID */
+.class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.class-card { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.class-head { padding: 10px 14px; background: var(--navy); display: flex; justify-content: space-between; align-items: center; }
+.class-head-title { font-weight: 800; color: #fff; font-size: .95rem; }
+.class-head-counts { display: flex; gap: 6px; font-size: .75rem; }
+.class-stats { display: flex; gap: 8px; padding: 7px 12px; background: #f8f9fd; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.stu-row { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-bottom: 1px solid #f0f2f8; font-size: .855rem; }
+.stu-row:last-child { border-bottom: none; }
+.stu-row.male { background: rgba(219,234,254,.2); }
+.stu-row.female { background: rgba(252,231,243,.15); }
+.stu-name { font-weight: 600; flex: 1; }
+.stu-num { font-size: .72rem; color: var(--text3); }
+
+/* OVERVIEW GRIDS */
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.ov-card { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.ov-head { padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; }
+.ov-head-blue { background: var(--navy); }
+.ov-head-title { font-weight: 800; color: #fff; }
+.ov-head-sub { font-size: .78rem; color: rgba(255,255,255,.7); }
+.ov-row { display: flex; align-items: center; gap: 7px; padding: 6px 14px; border-bottom: 1px solid #f0f2f8; font-size: .855rem; }
+.ov-row:last-child { border-bottom: none; }
+
+/* RULE CARD */
+.rule-ov-row { padding: 8px 12px; border-bottom: 1px solid #f0f2f8; }
+.rule-ov-row:last-child { border-bottom: none; }
+.rule-target { font-weight: 700; font-size: .9rem; }
+.rule-cls-lbl { font-size: .73rem; color: var(--text3); }
+.rule-sep { font-size: .82rem; color: var(--text2); padding-left: 10px; margin-top: 3px; }
+.rule-reason-txt { font-size: .75rem; color: var(--text3); font-style: italic; padding-left: 10px; margin-top: 2px; }
+.rule-type-badge { font-size: .68rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+.rule-type-uni { background: #fef3c7; color: #92400e; }
+.rule-type-group { background: var(--red-light); color: var(--red); }
+
+/* MISC */
+.empty { text-align: center; padding: 32px; color: var(--text3); font-size: .9rem; }
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 18px; background: var(--surface); padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.updated-lbl { font-size: .75rem; color: var(--text3); margin-left: auto; }
+</style>
+</head>
+<body>
+
+<!-- ==================== LOCK SCREEN ==================== -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🏫</div>
+    <div class="lock-title">編班名單查詢系統</div>
+    <div class="lock-sub">輸入查詢密碼以繼續<br>如需取得密碼請洽教務組</div>
+    <input class="lock-input" type="password" id="pwInput" placeholder="輸入密碼" maxlength="20"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="lock-btn" onclick="checkPw()">🔓 進入查詢</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="mainApp" style="display:none;">
+
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-title">📋 編班名單查詢</div>
+      <div class="header-sub">僅供查閱，如需修改請洽教務組</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="db-badge">
+      <div class="db-dot" id="dbDot"></div>
+      <span id="dbStatus">連接中...</span>
+    </div>
+    <button class="lock-btn-small" onclick="lockOut()">🔒 鎖定</button>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('classlist', this)">📚 各班名單</button>
+  <button class="tab-btn" onclick="switchTab('specials', this)">👁 特殊生總表</button>
+  <button class="tab-btn" onclick="switchTab('rules', this)">📌 不能同班總表</button>
+</nav>
+
+<!-- TAB 1: 各班名單 -->
+<div id="tab-classlist" class="tab-pane active">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="clGrade" onchange="renderClassList()">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="fl">班級</label>
+      <select id="clClass" onchange="renderClassList()">
+        <option value="">全部班級</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="fl">搜尋學生</label>
+      <input type="text" id="clSearch" placeholder="輸入姓名關鍵字" oninput="renderClassList()" style="width:160px;">
+    </div>
+    <span class="updated-lbl" id="updatedLbl"></span>
+  </div>
+  <div id="classListSummary" style="margin-bottom:16px;"></div>
+  <div class="class-grid" id="classListContent">
+    <div class="card"><div class="empty">載入中…</div></div>
+  </div>
+</div>
+
+<!-- TAB 2: 特殊生總表 -->
+<div id="tab-specials" class="tab-pane">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="spGrade" onchange="renderSpecials()">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="fl">篩選標記</label>
+      <select id="spTag" onchange="renderSpecials()">
+        <option value="">全部特殊標記</option>
+        <option value="bighead">⚠ 大頭</option>
+        <option value="special">🔵 鑑輔生</option>
+        <option value="gifted">⭐ 資優生</option>
+      </select>
+    </div>
+  </div>
+  <div id="specialsSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="specialsContent">
+    <div class="card"><div class="empty">載入中…</div></div>
+  </div>
+</div>
+
+<!-- TAB 3: 不能同班總表 -->
+<div id="tab-rules" class="tab-pane">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="rlGrade" onchange="renderRules()">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="fl">班級</label>
+      <select id="rlClass" onchange="renderRules()">
+        <option value="">全部班級</option>
+      </select>
+    </div>
+  </div>
+  <div id="rulesSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="rulesContent">
+    <div class="card"><div class="empty">載入中…</div></div>
+  </div>
+</div>
+
+</div><!-- end mainApp -->
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script>
+const PASSWORDS = ['073411373'];
+
+// ── LOCK ──
+function checkPw() {
+  const val = document.getElementById('pwInput').value.trim();
+  if(PASSWORDS.includes(val)) {
+    sessionStorage.setItem('cl_auth','1');
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = '';
+    initApp();
+  } else {
+    const err = document.getElementById('lockError');
+    err.textContent = '密碼錯誤，請再試一次';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(()=>err.textContent='', 2500);
+  }
+}
+function lockOut() {
+  sessionStorage.removeItem('cl_auth');
+  location.reload();
+}
+// Auto-unlock if already authenticated
+if(sessionStorage.getItem('cl_auth')==='1') {
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='';
+}
+
+// ── FIREBASE ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
+  authDomain: "sjps-classchange.firebaseapp.com",
+  projectId: "sjps-classchange",
+  storageBucket: "sjps-classchange.firebasestorage.app",
+  messagingSenderId: "907928897295",
+  appId: "1:907928897295:web:b6bfb2dcb3c8c447ad607a",
+  measurementId: "G-TX21BVYWZ0"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── STATE ──
+const state = { students:{}, rules:{}, bindings:{} };
+
+// ── HELPERS ──
+function classLabel(g,c){ return `${g}年${c}班`; }
+function genderLabel(g){ return g==='M'?'男':'女'; }
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ── INIT ──
+async function initApp() {
+  if(!firebase.apps.length) return;
+  try {
+    const [stuSnap, ruleSnap, bindSnap] = await Promise.all([
+      db.collection('students').get(),
+      db.collection('separationRules').get(),
+      db.collection('bindings').get()
+    ]);
+    stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
+    ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
+    bindSnap.forEach(d=>{ state.bindings[d.id]={id:d.id,...d.data()}; });
+    document.getElementById('dbDot').className='db-dot ok';
+    document.getElementById('dbStatus').textContent='資料已載入';
+    document.getElementById('updatedLbl').textContent='最後更新：'+new Date().toLocaleTimeString('zh-TW');
+    populateClassFilters();
+    renderClassList();
+    renderSpecials();
+    renderRules();
+  } catch(e) {
+    document.getElementById('dbDot').className='db-dot err';
+    document.getElementById('dbStatus').textContent='載入失敗';
+    console.error(e);
+  }
+}
+
+// Auto init if already unlocked
+if(sessionStorage.getItem('cl_auth')==='1') initApp();
+
+// ── FILTER OPTIONS ──
+function populateClassFilters() {
+  const grades = {};
+  Object.values(state.students).forEach(s=>{
+    const key=`${s.grade}-${s.class}`;
+    if(!grades[key]) grades[key]={grade:s.grade,class:s.class};
+  });
+  const sortedKeys = Object.keys(grades).sort();
+
+  // class list filter
+  const sel1 = document.getElementById('clClass');
+  sel1.innerHTML = '<option value="">全部班級</option>';
+  sortedKeys.forEach(k=>{
+    const {grade,class:cls}=grades[k];
+    const o=document.createElement('option'); o.value=k; o.textContent=classLabel(grade,cls); sel1.appendChild(o);
+  });
+
+  // rules filter
+  const sel2 = document.getElementById('rlClass');
+  sel2.innerHTML = '<option value="">全部班級</option>';
+  sortedKeys.forEach(k=>{
+    const {grade,class:cls}=grades[k];
+    const o=document.createElement('option'); o.value=k; o.textContent=classLabel(grade,cls); sel2.appendChild(o);
+  });
+}
+
+// ── TAB 1: CLASS LIST ──
+function renderClassList() {
+  const filterGrade = document.getElementById('clGrade').value;
+  const filterClass = document.getElementById('clClass').value;
+  const search = document.getElementById('clSearch').value.trim();
+  const cont = document.getElementById('classListContent');
+  const summary = document.getElementById('classListSummary');
+
+  // Group
+  const map = {};
+  Object.values(state.students).forEach(s=>{
+    if(filterGrade && s.grade!=filterGrade) return;
+    if(filterClass) { const [fg,fc]=filterClass.split('-').map(Number); if(s.grade!==fg||s.class!==fc) return; }
+    if(search && !s.name.includes(search)) return;
+    const key=`${s.grade}-${s.class}`;
+    if(!map[key]) map[key]={grade:s.grade,class:s.class,students:[]};
+    map[key].students.push(s);
+  });
+
+  const keys = Object.keys(map).sort();
+  if(!keys.length) { cont.innerHTML='<div class="card"><div class="empty">無符合條件的學生</div></div>'; summary.innerHTML=''; return; }
+
+  // Summary stats
+  const allStus = keys.flatMap(k=>map[k].students);
+  summary.innerHTML=`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${allStus.length}</div><div class="stat-lbl">顯示人數</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--blue);">${allStus.filter(s=>s.gender==='M').length}</div><div class="stat-lbl">男生</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--pink);">${allStus.filter(s=>s.gender==='F').length}</div><div class="stat-lbl">女生</div></div>
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">班級數</div></div>
+  </div>`;
+
+  cont.innerHTML='';
+  for(const key of keys) {
+    const {grade,class:cls,students}=map[key];
+    const M=students.filter(s=>s.gender==='M').length;
+    const F=students.filter(s=>s.gender==='F').length;
+    const bh=students.filter(s=>s.tags.includes('bighead')).length;
+    const sp=students.filter(s=>s.tags.includes('special')).length;
+    const gf=students.filter(s=>s.tags.includes('gifted')).length;
+
+    const div=document.createElement('div'); div.className='class-card';
+    const tagBadges=[
+      bh?`<span class="tag tag-bighead" style="font-size:.65rem;">大頭 ${bh}</span>`:'',
+      sp?`<span class="tag tag-special" style="font-size:.65rem;">鑑輔 ${sp}</span>`:'',
+      gf?`<span class="tag tag-gifted" style="font-size:.65rem;">資優 ${gf}</span>`:''
+    ].filter(Boolean).join('');
+
+    const sorted=[...students].sort((a,b)=>a.number-b.number);
+    const rowsHtml=sorted.map(s=>{
+      const tgs=[
+        s.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':'',
+        s.tags.includes('special')?'<span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>':'',
+        s.tags.includes('gifted')?'<span class="tag tag-gifted" style="font-size:.65rem;">資優生</span>':''
+      ].filter(Boolean).join('');
+      const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
+      return `<div class="stu-row ${s.gender==='M'?'male':'female'}">
+        <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+        <span class="stu-num">${String(s.number).padStart(2,'0')}</span>
+        <span class="stu-name">${s.name}</span>
+        ${tgs}
+      </div>`;
+    }).join('');
+
+    div.innerHTML=`
+      <div class="class-head">
+        <span class="class-head-title">${classLabel(grade,cls)}</span>
+        <div class="class-head-counts">
+          <span class="tag tag-male" style="font-size:.65rem;">男${M}</span>
+          <span class="tag tag-female" style="font-size:.65rem;">女${F}</span>
+        </div>
+      </div>
+      ${tagBadges?`<div class="class-stats">${tagBadges}</div>`:''}
+      ${rowsHtml}
+    `;
+    cont.appendChild(div);
+  }
+}
+
+// ── TAB 2: SPECIALS ──
+function renderSpecials() {
+  const filterGrade = document.getElementById('spGrade').value;
+  const filterTag   = document.getElementById('spTag').value;
+  const cont = document.getElementById('specialsContent');
+  const summary = document.getElementById('specialsSummary');
+
+  const map={};
+  Object.values(state.students).forEach(s=>{
+    if(filterGrade && s.grade!=filterGrade) return;
+    const has = filterTag ? s.tags.includes(filterTag) : (s.tags.includes('bighead')||s.tags.includes('special')||s.tags.includes('gifted'));
+    if(!has) return;
+    const key=`${s.grade}-${s.class}`;
+    if(!map[key]) map[key]={grade:s.grade,class:s.class,students:[]};
+    map[key].students.push(s);
+  });
+
+  const keys=Object.keys(map).sort();
+  if(!keys.length){ cont.innerHTML='<div class="card"><div class="empty">無符合條件的特殊標記學生</div></div>'; summary.innerHTML=''; return; }
+
+  let totalBH=0,totalSP=0,totalGF=0;
+  Object.values(map).forEach(({students})=>{
+    students.forEach(s=>{
+      if(s.tags.includes('bighead')) totalBH++;
+      if(s.tags.includes('special')) totalSP++;
+      if(s.tags.includes('gifted'))  totalGF++;
+    });
+  });
+  summary.innerHTML=`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num" style="color:var(--red);">${totalBH}</div><div class="stat-lbl">大頭</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--purple);">${totalSP}</div><div class="stat-lbl">鑑輔生</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--gold);">${totalGF}</div><div class="stat-lbl">資優生</div></div>
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">涉及班級</div></div>
+  </div>`;
+
+  cont.innerHTML='';
+  for(const key of keys) {
+    const {grade,class:cls,students}=map[key];
+    const bh=students.filter(s=>s.tags.includes('bighead')).length;
+    const sp=students.filter(s=>s.tags.includes('special')).length;
+    const gf=students.filter(s=>s.tags.includes('gifted')).length;
+    const badges=[
+      bh?`<span class="tag tag-bighead" style="font-size:.65rem;">大頭 ${bh}</span>`:'',
+      sp?`<span class="tag tag-special" style="font-size:.65rem;">鑑輔生 ${sp}</span>`:'',
+      gf?`<span class="tag tag-gifted" style="font-size:.65rem;">資優生 ${gf}</span>`:''
+    ].filter(Boolean).join('');
+
+    const tagOrder=t=>t.tags.includes('special')?0:t.tags.includes('bighead')?1:t.tags.includes('gifted')?2:3;
+    const sorted=[...students].sort((a,b)=>tagOrder(a)-tagOrder(b)||a.number-b.number);
+
+    const rowsHtml=sorted.map(s=>{
+      const tgs=[
+        s.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':'',
+        s.tags.includes('special')?'<span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>':'',
+        s.tags.includes('gifted')?'<span class="tag tag-gifted" style="font-size:.65rem;">資優生</span>':''
+      ].filter(Boolean).join('');
+      const binding=Object.values(state.bindings).find(b=>b.studentId===s.id);
+      const bindHtml=binding?`<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.63rem;">綁 ${binding.teacherName}</span>`:'';
+      const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
+      return `<div class="ov-row">
+        <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+        <span style="font-weight:600;flex:1;">${s.name}</span>
+        ${tgs} ${bindHtml}
+      </div>`;
+    }).join('');
+
+    const div=document.createElement('div'); div.className='ov-card';
+    div.innerHTML=`
+      <div class="ov-head ov-head-blue">
+        <span class="ov-head-title">${classLabel(grade,cls)}</span>
+        <div style="display:flex;gap:4px;">${badges}</div>
+      </div>
+      ${rowsHtml}
+    `;
+    cont.appendChild(div);
+  }
+}
+
+// ── TAB 3: RULES ──
+function renderRules() {
+  const filterGrade=document.getElementById('rlGrade').value;
+  const filterClass=document.getElementById('rlClass').value;
+  const cont=document.getElementById('rulesContent');
+  const summary=document.getElementById('rulesSummary');
+
+  let rules=Object.values(state.rules);
+  if(filterGrade) rules=rules.filter(r=>r.grade==filterGrade);
+
+  // Group by class
+  const map={};
+  rules.forEach(r=>{
+    const key=`${r.grade}-${r.targetStudentClass}`;
+    if(!map[key]) map[key]={grade:r.grade,class:r.targetStudentClass,rules:[]};
+    map[key].rules.push(r);
+    // Also show in sep-from classes
+    (r.separateFrom||[]).forEach(s=>{
+      if(s.class!==r.targetStudentClass){
+        const k2=`${r.grade}-${s.class}`;
+        if(!map[k2]) map[k2]={grade:r.grade,class:s.class,rules:[]};
+        if(!map[k2].rules.find(x=>x.id===r.id)) map[k2].rules.push(r);
+      }
+    });
+  });
+
+  let keys=Object.keys(map).sort();
+  if(filterClass){ const [fg,fc]=filterClass.split('-'); keys=keys.filter(k=>k===`${fg}-${fc}`); }
+
+  if(!keys.length){ cont.innerHTML='<div class="card"><div class="empty">無符合條件的隔離規則</div></div>'; summary.innerHTML=''; return; }
+
+  summary.innerHTML=`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${rules.length}</div><div class="stat-lbl">規則總數</div></div>
+    <div class="stat-box"><div class="stat-num">${rules.filter(r=>r.type==='group').length}</div><div class="stat-lbl">群組隔離</div></div>
+    <div class="stat-box"><div class="stat-num">${rules.filter(r=>r.type!=='group').length}</div><div class="stat-lbl">單向隔離</div></div>
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">涉及班級</div></div>
+  </div>`;
+
+  cont.innerHTML='';
+  for(const key of keys){
+    const {grade,class:cls,rules:clsRules}=map[key];
+    const rowsHtml=clsRules.map(r=>{
+      const targetStu=state.students[r.targetStudentId];
+      const isBH=targetStu&&targetStu.tags.includes('bighead');
+      const typeBadge=r.type==='group'
+        ?'<span class="rule-type-badge rule-type-group">群組</span>'
+        :'<span class="rule-type-badge rule-type-uni">單向</span>';
+      const sepHtml=(r.separateFrom||[]).map(s=>{
+        const stu=state.students[s.id];
+        const bh=stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.62rem;">大頭</span>':'';
+        return `${s.name}<span style="font-size:.72rem;color:var(--text3);"> (${classLabel(r.grade,s.class)})</span>${bh}`;
+      }).join(' ╱ ');
+      return `<div class="rule-ov-row">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <span class="rule-target">${r.targetStudentName}</span>
+          <span class="rule-cls-lbl">(${classLabel(r.grade,r.targetStudentClass)})</span>
+          ${isBH?'<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':''}
+          ${typeBadge}
+        </div>
+        <div class="rule-sep">↳ 不能同班：${sepHtml}</div>
+        ${r.reason?`<div class="rule-reason-txt">📝 ${r.reason}</div>`:''}
+      </div>`;
+    }).join('');
+    const div=document.createElement('div'); div.className='ov-card';
+    div.innerHTML=`
+      <div class="ov-head ov-head-blue">
+        <span class="ov-head-title">${classLabel(grade,cls)}</span>
+        <span class="ov-head-sub">${clsRules.length} 條規則</span>
+      </div>
+      ${rowsHtml}
+    `;
+    cont.appendChild(div);
+  }
+}
+</script>
+</body>
+</html>
