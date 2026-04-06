@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理員權限管理 ─ 編班系統</title>
+<style>
+:root {
+  --navy:#0f2044;--navy2:#1a3060;--blue:#2d5be3;--blue-light:#e8eefb;
+  --red:#dc2626;--red-light:#fee2e2;--green:#16a34a;--green-light:#dcfce7;
+  --bg:#f4f6fb;--surface:#fff;--border:#dde3f0;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --radius:10px;--shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+/* AUTH SCREEN */
+.auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f2044,#1a3060);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-box{background:rgba(255,255,255,.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:48px 40px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4);}
+.auth-icon{font-size:3rem;margin-bottom:16px;}
+.auth-title{color:#fff;font-size:1.3rem;font-weight:800;margin-bottom:6px;}
+.auth-sub{color:rgba(255,255,255,.6);font-size:.85rem;margin-bottom:28px;}
+.google-btn{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;background:#fff;color:#1f2937;font-size:.95rem;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;}
+.google-btn:hover{box-shadow:0 4px 16px rgba(0,0,0,.2);transform:translateY(-1px);}
+.google-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.auth-error{color:#fca5a5;font-size:.82rem;margin-top:12px;min-height:18px;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;box-shadow:0 2px 12px rgba(15,32,68,.25);position:sticky;top:0;z-index:100;}
+.header-title{font-size:1.1rem;font-weight:700;}
+.header-sub{font-size:.72rem;opacity:.6;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.badge{background:rgba(255,255,255,.12);border-radius:99px;padding:4px 12px;font-size:.75rem;}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+
+/* MAIN */
+.main{max-width:760px;margin:0 auto;padding:28px 20px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;box-shadow:var(--shadow);}
+.card-title{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px;}
+label.lbl{font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;}
+input[type=email],input[type=text]{border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.875rem;color:var(--text);background:#fff;outline:none;font-family:inherit;transition:border-color .2s;width:100%;}
+input:focus{border-color:var(--blue);}
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.875rem;font-weight:600;font-family:inherit;transition:all .18s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:#2347c5;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-danger:hover{background:#b91c1c;}
+.btn-sm{padding:5px 10px;font-size:.8rem;border-radius:6px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:.875rem;}
+th{background:var(--bg);padding:9px 14px;text-align:left;font-size:.78rem;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8f9fd;}
+
+.notice{background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#1e40af;margin-bottom:14px;line-height:1.6;}
+.alert{padding:10px 14px;border-radius:8px;font-size:.85rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.alert-success{background:var(--green-light);color:var(--green);}
+.alert-warn{background:#fef3c7;color:#92400e;}
+.self-badge{background:var(--blue-light);color:var(--blue);font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;}
+.empty{text-align:center;padding:28px;color:var(--text3);}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-icon">👥</div>
+    <div class="auth-title">管理員權限管理</div>
+    <div class="auth-sub">請使用管理員 Google 帳號登入</div>
+    <button class="google-btn" id="signInBtn" onclick="doSignIn()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      使用 Google 帳號登入
+    </button>
+    <div class="auth-error" id="authErr"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
+<div class="header">
+  <div>
+    <div class="header-title">👥 管理員權限管理</div>
+    <div class="header-sub">新增或移除後台管理員帳號</div>
+  </div>
+  <div class="header-right">
+    <span class="badge">👤 <span id="currentEmail"></span></span>
+    <button onclick="doSignOut()" class="hbtn">登出</button>
+    <a href="admin.html" class="hbtn">← 後台</a>
+  </div>
+</div>
+
+<div class="main">
+  <div id="flashMsg"></div>
+
+  <div class="card">
+    <div class="card-title">➕ 新增管理員</div>
+    <div class="notice">新增後該帳號即可使用 Google 登入進入後台。主帳號 <b>issac@sjps.kh.edu.tw</b> 永遠有效，不會被刪除。</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="lbl">Google 帳號（Email）</label>
+        <input type="email" id="newEmail" placeholder="teacher@sjps.kh.edu.tw" onkeydown="if(event.key==='Enter')addAdmin()">
+      </div>
+      <div class="form-group" style="min-width:140px;flex:0;">
+        <label class="lbl">備註（選填）</label>
+        <input type="text" id="newNote" placeholder="例：教務主任">
+      </div>
+      <button class="btn btn-primary" style="align-self:flex-end;" onclick="addAdmin()">➕ 新增</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 目前管理員清單</div>
+    <div id="adminTableWrap"><div class="empty">載入中…</div></div>
+  </div>
+</div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
+  authDomain: "sjps-classchange.firebaseapp.com",
+  projectId: "sjps-classchange",
+  storageBucket: "sjps-classchange.firebasestorage.app",
+  messagingSenderId: "907928897295",
+  appId: "1:907928897295:web:b6bfb2dcb3c8c447ad607a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const OWNER = 'issac@sjps.kh.edu.tw';
+const ALLOWED = [OWNER];
+
+let currentUser = null;
+const adminsRef = db.collection('admins');
+
+// ── AUTH ──
+async function doSignIn() {
+  const btn = document.getElementById('signInBtn');
+  const err = document.getElementById('authErr');
+  btn.disabled = true; btn.textContent = '登入中…';
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+    const email = result.user.email;
+    const doc = await adminsRef.doc(email).get();
+    if(doc.exists || ALLOWED.includes(email)) {
+      showApp(result.user);
+    } else {
+      err.textContent = email + ' 無管理員權限';
+      await auth.signOut();
+      btn.disabled = false;
+      btn.textContent = '使用 Google 帳號登入';
+    }
+  } catch(e) {
+    err.textContent = '登入失敗：' + e.message;
+    btn.disabled = false;
+    btn.textContent = '使用 Google 帳號登入';
+  }
+}
+
+async function doSignOut() {
+  await auth.signOut();
+  location.reload();
+}
+
+auth.onAuthStateChanged(async user => {
+  if(user) {
+    const doc = await adminsRef.doc(user.email).get();
+    if(doc.exists || ALLOWED.includes(user.email)) showApp(user);
+    else { await auth.signOut(); }
+  }
+});
+
+function showApp(user) {
+  currentUser = user;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  document.getElementById('currentEmail').textContent = user.email;
+  loadAdmins();
+}
+
+// ── ADMIN LIST ──
+async function loadAdmins() {
+  const snap = await adminsRef.orderBy('addedAt', 'desc').get().catch(()=>adminsRef.get());
+  const cont = document.getElementById('adminTableWrap');
+  const docs = [];
+  snap.forEach(d => docs.push({id:d.id, ...d.data()}));
+
+  // Always show owner first even if not in DB
+  const hasOwner = docs.find(d=>d.id===OWNER);
+
+  const allRows = [];
+  if(!hasOwner) allRows.push({id:OWNER, note:'主帳號（永久有效）', addedBy:'系統', isOwner:true});
+  docs.forEach(d => allRows.push({...d, isOwner: d.id===OWNER}));
+
+  if(!allRows.length) { cont.innerHTML='<div class="empty">尚無管理員（除主帳號外）</div>'; return; }
+
+  const table = document.createElement('table');
+  table.innerHTML = '<thead><tr><th>Email</th><th>備註</th><th>新增時間</th><th>新增者</th><th></th></tr></thead>';
+  const tbody = document.createElement('tbody');
+
+  allRows.forEach(row => {
+    const isMe = currentUser && row.id === currentUser.email;
+    const tr = document.createElement('tr');
+    const addedAt = row.addedAt ? (row.addedAt.toDate ? row.addedAt.toDate().toLocaleString('zh-TW') : new Date(row.addedAt).toLocaleString('zh-TW')) : '─';
+    tr.innerHTML = `
+      <td><b>${row.id}</b> ${isMe?'<span class="self-badge">本人</span>':''} ${row.isOwner?'<span class="self-badge" style="background:var(--green-light);color:var(--green);">主帳號</span>':''}</td>
+      <td style="color:var(--text2);font-size:.85rem;">${row.note||'─'}</td>
+      <td style="font-size:.8rem;color:var(--text3);">${addedAt}</td>
+      <td style="font-size:.8rem;color:var(--text3);">${row.addedBy||'─'}</td>
+      <td>${row.isOwner ? '' : `<button class="btn btn-danger btn-sm" onclick="removeAdmin('${row.id}')">移除</button>`}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  cont.innerHTML = '';
+  cont.appendChild(table);
+}
+
+async function addAdmin() {
+  const email = document.getElementById('newEmail').value.trim().toLowerCase();
+  const note  = document.getElementById('newNote').value.trim();
+  if(!email || !email.includes('@')) { flash('請輸入有效的 Email', 'warn'); return; }
+  try {
+    await adminsRef.doc(email).set({
+      note, addedBy: currentUser.email,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    flash(`✅ 已新增管理員：${email}`);
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newNote').value = '';
+    loadAdmins();
+  } catch(e) { flash('新增失敗：'+e.message,'warn'); }
+}
+
+async function removeAdmin(email) {
+  if(email === OWNER) { flash('主帳號無法刪除','warn'); return; }
+  if(!confirm(`確定移除管理員權限？\n${email}`)) return;
+  try {
+    await adminsRef.doc(email).delete();
+    flash(`已移除：${email}`);
+    loadAdmins();
+  } catch(e) { flash('移除失敗：'+e.message,'warn'); }
+}
+
+function flash(msg, type='success') {
+  const div = document.getElementById('flashMsg');
+  div.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(()=>div.innerHTML='', 3500);
+}
+</script>
+</body>
+</html>
