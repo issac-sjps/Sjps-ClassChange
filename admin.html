@@ -214,16 +214,17 @@ tr:hover td { background: #f8f9fd; }
       <div class="header-sub">後台管理 ─ 僅限管理員</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;" id="adminBar" style="display:none;">
-    <div class="db-badge">
-      <div class="db-dot" id="dbDot"></div>
-      <span id="dbStatus">連接中...</span>
+  <div id="adminBar" style="display:none;flex-direction:column;align-items:flex-end;gap:5px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="db-badge">
+        <div class="db-dot" id="dbDot"></div>
+        <span id="dbStatus">連接中...</span>
+      </div>
+      <button onclick="signOut()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;">🚪 登出</button>
+      <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">前台 →</a>
+      <a href="admin-users.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">👥 權限管理</a>
     </div>
-    <div style="background:rgba(255,255,255,.12);border-radius:99px;padding:4px 12px;font-size:.75rem;display:flex;align-items:center;gap:6px;">
-      <span>👤</span><span id="userEmailBadge"></span>
-    </div>
-    <button onclick="signOut()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;">登出</button>
-    <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;">前台 →</a>
+    <div style="font-size:.72rem;color:rgba(255,255,255,.6);">👤 <span id="userEmailBadge"></span></div>
   </div>
 </div>
 
@@ -687,7 +688,7 @@ async function signInWithGoogle() {
     if(adminDoc.exists || ALLOWED_EMAILS.includes(email)) {
       document.getElementById('authScreen').style.display = 'none';
       document.getElementById('userEmailBadge').textContent = email;
-      document.getElementById('adminBar').style.display = '';
+      document.getElementById('adminBar').style.display = 'flex';
     } else {
       err.textContent = `${email} 無管理員權限，請聯絡 issac@sjps.kh.edu.tw`;
       await auth.signOut();
@@ -713,7 +714,7 @@ auth.onAuthStateChanged(async (user) => {
     if(adminDoc.exists || ALLOWED_EMAILS.includes(user.email)) {
       document.getElementById('authScreen').style.display = 'none';
       document.getElementById('userEmailBadge').textContent = user.email;
-      document.getElementById('adminBar').style.display = '';
+      document.getElementById('adminBar').style.display = 'flex';
     } else {
       await auth.signOut();
     }
