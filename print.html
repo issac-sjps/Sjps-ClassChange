@@ -290,8 +290,13 @@
   <div class="card-title">🖨️ 其他調查表</div>
   <div class="btn-group">
     <button class="btn btn-print" onclick="printForm('subject')">🖨️ 科任教師調查表</button>
-    <button class="btn btn-print" onclick="printForm('twin')">🖨️ 雙胞胎調查表</button>
-    <button class="btn btn-green" onclick="printForm('twinapp')">🖨️ 雙胞胎申請書</button>
+    <button class="btn btn-print" onclick="printForm('twin2')">🖨️ 二年級 雙胞胎調查表</button>
+    <button class="btn btn-print" onclick="printForm('twin4')">🖨️ 四年級 雙胞胎調查表</button>
+  </div>
+  <div style="margin-top:10px;" class="notice" style="font-size:.82rem;">雙胞胎申請書（較少使用，需要時再列印）：</div>
+  <div class="btn-group" style="margin-top:8px;">
+    <button class="btn btn-ghost" onclick="printForm('twinapp')">🖨️ 複數子女編班意願書</button>
+    <button class="btn btn-ghost" onclick="printForm('twinadj')">🖨️ 複數子女改調班申請書</button>
   </div>
   <div style="margin-top:12px;font-size:.82rem;color:var(--text3);">
     列印時請在瀏覽器設定：A4、直向、縮放「無」或「符合頁面」。
@@ -407,17 +412,17 @@ function buildTeacherForm(grade, classNum, cfg) {
     <th style="border:0.75pt solid #555;padding:4pt 3pt;text-align:center;">學生姓名</th>
     <th style="border:0.75pt solid #555;padding:4pt 6pt;text-align:left;">說　明（行為特徵、需注意事項等）</th>
   </tr>
-  ${[1,2,3].map(n=>`
+  ${[1,2,3,4,5].map(n=>`
   <tr>
     <td style="border:0.75pt solid #555;padding:3pt;text-align:center;font-weight:bold;">${n}</td>
-    <td style="border:0.75pt solid #555;padding:3pt;height:24pt;"></td>
+    <td style="border:0.75pt solid #555;padding:3pt;height:22pt;"></td>
     <td style="border:0.75pt solid #555;padding:3pt;"></td>
     <td style="border:0.75pt solid #555;padding:3pt;"></td>
   </tr>`).join('')}
 </table>
 
 <div style="font-size:10.5pt;font-weight:bold;background:#222;color:#fff;padding:3.5pt 7pt;margin-bottom:0;">
-  貳、不宜再同班的學生名單　<span style="font-size:9pt;font-weight:normal;">（甲生跨列合併，每位乙生各填一行，最多 5 位乙生）</span>
+  貳、不宜再同班的學生名單　<span style="font-size:9pt;font-weight:normal;">（甲生跨列合併，每位乙生各填一行；超過 3 位請寫說明欄或紙張背面）</span>
 </div>
 <table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:6pt;">
   <colgroup>
@@ -439,9 +444,9 @@ function buildTeacherForm(grade, classNum, cfg) {
     const B = 'border:0.75pt solid #555;';
     const rowH = 'height:20pt;';
     // 5 乙生 rows per group; first row has rowspan cells for 組、甲座號、甲姓名、說明
-    const rows = [1,2,3,4,5].map((bi, idx) => {
+    const rows = [1,2,3].map((bi, idx) => {
       const isFirst = idx === 0;
-      const rs = 'rowspan="5"';
+      const rs = 'rowspan="3"';
       return `<tr>
         ${isFirst ? `<td ${rs} style="${B}padding:3pt;text-align:center;font-weight:bold;vertical-align:middle;background:#f5f5f5;">${n}</td>
         <td ${rs} style="${B}padding:3pt;vertical-align:middle;${rowH}"></td>
@@ -457,7 +462,7 @@ function buildTeacherForm(grade, classNum, cfg) {
 </table>
 
 <div style="font-size:8.5pt;color:#555;margin-bottom:8pt;line-height:1.6;">
-  ※ 如需填寫超過 5 位乙生，請在說明欄補充或另附說明。<br>
+  ※ 如超過 3 位乙生，請在說明欄補充說明，或另寫於紙張背面。<br>
   ※ 此表填寫資料僅供編班參考，請放入信封密封後交回。
 </div>
 
@@ -529,115 +534,169 @@ function buildSubjectForm(cfg) {
   return div;
 }
 
-function buildTwinSurvey(cfg) {
+function buildTwinSurveyGrade(grade, cfg) {
   const div = document.createElement('div');
   div.className = 'print-page';
-
-  // Grade 2 classes
-  const c2 = Array.from({length: cfg.count2}, (_,i) => `20${i+1}`);
-  // Grade 4 classes
-  const c4 = Array.from({length: cfg.count4}, (_,i) => `40${i+1 < 10 ? '0'+(i+1) : i+1}`).map((_,i)=>`40${i+1}`);
-
-  const makeRow = (cells, isHeader=false) => {
-    const tag = isHeader ? 'th' : 'td';
-    return `<tr>${cells.map(c => `<${tag}>${c}</${tag}>`).join('')}</tr>`;
-  };
-
-  const grade2Headers = ['班級', ...Array.from({length:cfg.count2},(_,i)=>`20${i+1}`)];
-  const grade4Headers = ['班級', ...Array.from({length:cfg.count4},(_,i)=>`40${i+1}`)];
-  const emptyRow2 = Array(cfg.count2+1).fill('');
-  const emptyRow4 = Array(cfg.count4+1).fill('');
-
+  const count = grade === 2 ? cfg.count2 : cfg.count4;
+  const gradeLabel = grade === 2 ? '二' : '四';
+  const headers = ['項目', ...Array.from({length:count},(_,i)=>`${grade}0${i+1}`)];
   div.innerHTML = `
-    <div class="form-title">${cfg.year}學年度　二、四年級導師　雙胞胎調查表</div>
-    <div class="form-notice">
-      請各班導師確認班上是否有同年級雙（多）胞胎學生，並在對應欄位填寫：<b>有打 ✓，無打 ✗</b>。<br>
-      請於 <b>${cfg.deadlineTwin}</b> 前交予 ${cfg.place}。如有雙胞胎欲提出編班申請，請另填「同年級複數子女學生編班家長意願書」並附戶口名簿影本。
-    </div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2pt solid #000;padding-bottom:4pt;margin-bottom:8pt;">
+  <div style="font-size:13pt;font-weight:bold;">${cfg.year} 學年度　${gradeLabel}年級導師　雙（多）胞胎調查表</div>
+  <div style="font-size:9pt;color:#555;">${cfg.place}</div>
+</div>
 
-    <div style="font-weight:bold;font-size:11pt;margin-bottom:5pt;margin-top:8pt;">▍二年級</div>
-    <table class="twin-table">
-      <tr>${grade2Headers.map(h=>`<th>${h}</th>`).join('')}</tr>
-      <tr><td class="row-header">有無雙（多）胞胎<br>（有✓ 無✗）</td>${Array(cfg.count2).fill('<td></td>').join('')}</tr>
-      <tr><td class="row-header">導師簽名</td>${Array(cfg.count2).fill('<td></td>').join('')}</tr>
-    </table>
+<div style="font-size:8.5pt;border:0.5pt solid #aaa;padding:5pt 7pt;margin-bottom:10pt;line-height:1.7;background:#f7f7f7;">
+  請 <b>${gradeLabel}年級各班導師</b> 確認班上是否有同年級雙（多）胞胎學生，並在對應班級欄位填寫：<b>有請打 ✓，無請打 ✗</b>，並簽名後交回。<br>
+  請於 <b>${cfg.deadlineTwin}</b> 前交予 ${cfg.place}。<br>
+  ※ 如有雙胞胎欲申請編班（同班或不同班），請家長另填「複數子女學生編班家長意願書」並附戶口名簿影本一併送交。
+</div>
 
-    <div style="font-weight:bold;font-size:11pt;margin-bottom:5pt;margin-top:14pt;">▍四年級</div>
-    <table class="twin-table">
-      <tr>${grade4Headers.map(h=>`<th>${h}</th>`).join('')}</tr>
-      <tr><td class="row-header">有無雙（多）胞胎<br>（有✓ 無✗）</td>${Array(cfg.count4).fill('<td></td>').join('')}</tr>
-      <tr><td class="row-header">導師簽名</td>${Array(cfg.count4).fill('<td></td>').join('')}</tr>
-    </table>
+<table style="width:100%;border-collapse:collapse;font-size:10pt;">
+  <tr style="background:#222;color:#fff;">
+    ${headers.map((h,i)=>`<th style="border:0.75pt solid #555;padding:5pt 3pt;text-align:center;min-width:${i===0?'70pt':'32pt'};font-weight:500;">${h}</th>`).join('')}
+  </tr>
+  <tr>
+    <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">有無雙（多）胞胎<br><span style="font-weight:normal;">（有 ✓　無 ✗）</span></td>
+    ${Array(count).fill('<td style="border:0.75pt solid #555;height:30pt;"></td>').join('')}
+  </tr>
+  <tr>
+    <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;">導師簽名</td>
+    ${Array(count).fill('<td style="border:0.75pt solid #555;height:28pt;"></td>').join('')}
+  </tr>
+</table>
 
-    <div style="margin-top:14pt;font-size:9.5pt;color:#333;line-height:1.8;border-top:1pt solid #bbb;padding-top:6pt;">
-      ※ 各班如有雙胞胎、多胞胎欲提出編班申請（同班或不同班），請家長填寫申請書並附戶口名簿影本送至${cfg.place}申請。<br>
-      ※ 截止日期：<b>${cfg.deadlineTwin}</b>（以利進行編班會議召開事宜，感謝配合！）
-    </div>
-    <div class="form-sign-row" style="margin-top:16pt;">
-      <div class="form-sign-item">學年主任：<span class="sign-line"></span></div>
-      <div class="form-sign-item">教務主任：<span class="sign-line"></span></div>
-    </div>
+<div style="margin-top:12pt;font-size:8.5pt;color:#555;line-height:1.7;border-top:0.5pt solid #bbb;padding-top:6pt;">
+  ※ 截止日期：<b>${cfg.deadlineTwin}</b>，感謝各位導師配合！
+</div>
+<div style="display:flex;justify-content:flex-end;gap:28pt;font-size:10pt;margin-top:12pt;">
+  <span>學年主任：<span style="display:inline-block;border-bottom:0.75pt solid #000;width:72pt;height:14pt;vertical-align:bottom;"></span></span>
+  <span>教務主任：<span style="display:inline-block;border-bottom:0.75pt solid #000;width:72pt;height:14pt;vertical-align:bottom;"></span></span>
+</div>
   `;
   return div;
 }
 
 function buildTwinApp(cfg) {
+  const SL = (w='80pt') => `<span style="display:inline-block;border-bottom:1pt solid #000;min-width:${w};height:14pt;vertical-align:bottom;margin:0 2pt;"></span>`;
   const div = document.createElement('div');
   div.className = 'print-page';
   div.innerHTML = `
-    <div class="twin-app-title">${cfg.school}同年級複數子女學生「編班」家長意願書</div>
-    <div class="app-field">
-      學生 <span class="app-line" style="min-width:70pt;"></span>　身分證字號 <span class="app-line"></span>，<br>
-      學生 <span class="app-line" style="min-width:70pt;"></span>　身分證字號 <span class="app-line"></span>，<br>
-      學生 <span class="app-line" style="min-width:70pt;"></span>　身分證字號 <span class="app-line"></span>，
-    </div>
-    <div class="app-field">
-      擬申請同年級複數子女學生（如所附戶口名簿影本）編班時安置：
-    </div>
-    <div class="app-check">
-      □ <b>同班</b><br>
-      □ <b>不同班</b><br>
-      □ <b>無特別意願</b>（依電腦編班結果安置）
-    </div>
-    <div class="app-field" style="margin-top:10pt;">
-      請學校編班時准予安置調整，惟一經申請確認，依教育局之規定，不再接受變更調動。
-    </div>
-    <div class="app-field" style="text-align:right;margin-top:4pt;">
-      此致　${cfg.school}
-    </div>
-    <div class="app-sign" style="margin-top:14pt;">
-      <div style="margin-bottom:6pt;">立書申請人：<span class="app-line" style="min-width:80pt;"></span>（學生家長）</div>
-      <div style="margin-bottom:6pt;">電　話：<span class="app-line" style="min-width:120pt;"></span></div>
-      <div style="margin-bottom:6pt;">地　址：<span class="app-line" style="min-width:200pt;"></span></div>
-      <div style="text-align:right;margin-top:14pt;">中　華　民　國 <span class="app-line" style="min-width:30pt;"></span> 年 <span class="app-line" style="min-width:20pt;"></span> 月 <span class="app-line" style="min-width:20pt;"></span> 日</div>
-    </div>
-    <div class="app-sign-grid" style="margin-top:20pt;">
-      <div class="app-sign-item">承辦人：</div>
-      <div class="app-sign-item">教務主任：</div>
-      <div class="app-sign-item">校　長：</div>
-    </div>
+<div style="text-align:center;margin-bottom:4pt;">
+  <div style="font-size:10pt;color:#444;">${cfg.school}</div>
+  <div style="font-size:14pt;font-weight:bold;margin:4pt 0;">同年級複數子女學生「編班」家長意願書</div>
+  <div style="font-size:9pt;color:#666;border-bottom:2pt solid #000;padding-bottom:6pt;">（請詳填後附戶口名簿影本，送交 ${cfg.place}）</div>
+</div>
 
-    <div style="margin-top:30pt;border-top:2pt dashed #999;padding-top:16pt;">
-      <div class="twin-app-title">${cfg.school}同年級複數子女學生「改調班」家長申請書</div>
-      <div class="app-field">
-        1. 學生 <span class="app-line" style="min-width:60pt;"></span>，身分證字號 <span class="app-line"></span>，同年級複數子女（兄、姊），<br>
-        &emsp;&emsp;經電腦編班進入 <span class="app-line" style="min-width:50pt;"></span> 年 <span class="app-line" style="min-width:30pt;"></span> 班就讀<br>
-        2. 學生 <span class="app-line" style="min-width:60pt;"></span>，身分證字號 <span class="app-line"></span>，同年級複數子女（弟、妹），<br>
-        &emsp;&emsp;經電腦編班進入 <span class="app-line" style="min-width:50pt;"></span> 年 <span class="app-line" style="min-width:30pt;"></span> 班就讀
-      </div>
-      <div class="app-check">
-        申請改調班（兄、姊電腦編班結果不予更動）<br>
-        請將（弟、妹）<span class="app-line" style="min-width:60pt;"></span> 調整改編班，進入 <span class="app-line" style="min-width:30pt;"></span> 年 <span class="app-line" style="min-width:30pt;"></span> 班就讀
-      </div>
-      <div class="app-sign-grid" style="margin-top:16pt;">
-        <div class="app-sign-item">承辦人：</div>
-        <div class="app-sign-item">教務主任：</div>
-        <div class="app-sign-item">校　長：</div>
-      </div>
-      <div style="text-align:right;margin-top:10pt;font-size:10pt;">
-        中　華　民　國 <span class="app-line" style="min-width:30pt;"></span> 年 <span class="app-line" style="min-width:20pt;"></span> 月 <span class="app-line" style="min-width:20pt;"></span> 日
-      </div>
-    </div>
+<div style="margin:12pt 0;font-size:10.5pt;line-height:2.2;">
+  <div>學生姓名：${SL('90pt')} 身分證字號：${SL('110pt')}</div>
+  <div>學生姓名：${SL('90pt')} 身分證字號：${SL('110pt')}</div>
+  <div>學生姓名：${SL('90pt')} 身分證字號：${SL('110pt')}</div>
+</div>
+
+<div style="margin:8pt 0;font-size:10.5pt;">
+  擬申請同年級複數子女學生（如所附戶口名簿影本）編班時安置：
+</div>
+
+<div style="border:1pt solid #bbb;border-radius:4pt;padding:10pt 16pt;margin:8pt 0;font-size:11pt;line-height:2.4;">
+  <div>□　<b>同班</b></div>
+  <div>□　<b>不同班</b></div>
+  <div>□　<b>無特別意願</b>（依電腦編班結果安置）</div>
+</div>
+
+<div style="font-size:9.5pt;color:#444;margin:8pt 0;line-height:1.7;">
+  請學校編班時准予安置調整，惟一經申請確認，依教育局之規定，<b>不再接受變更調動</b>。
+</div>
+<div style="text-align:right;font-size:10pt;margin:4pt 0;">此致　${cfg.school}</div>
+
+<div style="margin-top:16pt;font-size:10.5pt;line-height:2.2;">
+  <div>立書申請人：${SL('90pt')}（學生家長）</div>
+  <div>聯絡電話：${SL('130pt')}</div>
+  <div>戶籍地址：${SL('220pt')}</div>
+</div>
+
+<div style="display:flex;justify-content:flex-end;margin-top:12pt;font-size:10pt;">
+  中　華　民　國 ${SL('32pt')} 年 ${SL('22pt')} 月 ${SL('22pt')} 日
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin-top:20pt;">
+  <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">承辦人</div>
+  <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">教務主任</div>
+  <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">校　長</div>
+</div>
+  `;
+  return div;
+}
+
+function buildTwinAdj(cfg) {
+  const SL = (w='80pt') => `<span style="display:inline-block;border-bottom:1pt solid #000;min-width:${w};height:14pt;vertical-align:bottom;margin:0 2pt;"></span>`;
+  const div = document.createElement('div');
+  div.className = 'print-page';
+  div.innerHTML = `
+<div style="text-align:center;margin-bottom:4pt;">
+  <div style="font-size:10pt;color:#444;">${cfg.school}</div>
+  <div style="font-size:14pt;font-weight:bold;margin:4pt 0;">同年級複數子女學生「改調班」家長申請書</div>
+  <div style="font-size:9pt;color:#666;border-bottom:2pt solid #000;padding-bottom:6pt;">（請詳填後附戶口名簿影本，送交 ${cfg.place}）</div>
+</div>
+
+<div style="margin:12pt 0;font-size:9.5pt;line-height:1.7;border:0.5pt solid #aaa;padding:7pt 10pt;background:#f7f7f7;">
+  說明：電腦編班完成後，如家長申請將複數子女中之弟妹調整改編至兄姊同班，請填寫本申請書。<br>
+  兄、姊之班級結果<b>不予更動</b>，僅調整弟妹之班級。
+</div>
+
+<table style="width:100%;border-collapse:collapse;font-size:10.5pt;margin:12pt 0;">
+  <colgroup><col style="width:22pt;"><col style="width:28pt;"><col style="width:80pt;"><col style="width:110pt;"><col></colgroup>
+  <tr style="background:#eee;">
+    <th style="border:0.75pt solid #777;padding:5pt 4pt;text-align:center;">序</th>
+    <th style="border:0.75pt solid #777;padding:5pt 4pt;text-align:center;">關係</th>
+    <th style="border:0.75pt solid #777;padding:5pt 4pt;text-align:center;">學生姓名</th>
+    <th style="border:0.75pt solid #777;padding:5pt 4pt;text-align:center;">身分證字號</th>
+    <th style="border:0.75pt solid #777;padding:5pt 4pt;text-align:center;">電腦編班結果（年班）</th>
+  </tr>
+  <tr>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;">1</td>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;font-size:9.5pt;">兄／姊<br>（不動）</td>
+    <td style="border:0.75pt solid #777;padding:4pt;height:32pt;"></td>
+    <td style="border:0.75pt solid #777;padding:4pt;"></td>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;"> 年　　班</td>
+  </tr>
+  <tr>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;">2</td>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;font-size:9.5pt;">弟／妹<br>（申請調整）</td>
+    <td style="border:0.75pt solid #777;padding:4pt;height:32pt;"></td>
+    <td style="border:0.75pt solid #777;padding:4pt;"></td>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;"> 年　　班</td>
+  </tr>
+  <tr>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;">3</td>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;font-size:9.5pt;">弟／妹<br>（申請調整）</td>
+    <td style="border:0.75pt solid #777;padding:4pt;height:32pt;"></td>
+    <td style="border:0.75pt solid #777;padding:4pt;"></td>
+    <td style="border:0.75pt solid #777;padding:4pt;text-align:center;"> 年　　班</td>
+  </tr>
+</table>
+
+<div style="font-size:10.5pt;margin:8pt 0;line-height:1.9;">
+  申請將弟妹 ${SL('70pt')} 改調至 ${SL('22pt')} 年 ${SL('22pt')} 班（與兄姊同班）就讀。
+</div>
+<div style="font-size:9.5pt;color:#444;margin:6pt 0;line-height:1.7;">
+  請學校准予調整，惟一經申請確認，依教育局規定，<b>不再接受變更調動</b>。
+</div>
+<div style="text-align:right;font-size:10pt;">此致　${cfg.school}</div>
+
+<div style="margin-top:14pt;font-size:10.5pt;line-height:2.2;">
+  <div>立書申請人：${SL('90pt')}（學生家長）</div>
+  <div>聯絡電話：${SL('130pt')}</div>
+</div>
+<div style="display:flex;justify-content:flex-end;margin-top:10pt;font-size:10pt;">
+  中　華　民　國 ${SL('32pt')} 年 ${SL('22pt')} 月 ${SL('22pt')} 日
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin-top:18pt;">
+  <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">承辦人</div>
+  <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">教務主任</div>
+  <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">校　長</div>
+</div>
   `;
   return div;
 }
@@ -662,10 +721,14 @@ function printForm(type) {
     sel.forEach(i => pages.push(buildTeacherForm(4, i, cfg)));
   } else if(type === 'subject') {
     pages.push(buildSubjectForm(cfg));
-  } else if(type === 'twin') {
-    pages.push(buildTwinSurvey(cfg));
+  } else if(type === 'twin2') {
+    pages.push(buildTwinSurveyGrade(2, cfg));
+  } else if(type === 'twin4') {
+    pages.push(buildTwinSurveyGrade(4, cfg));
   } else if(type === 'twinapp') {
     pages.push(buildTwinApp(cfg));
+  } else if(type === 'twinadj') {
+    pages.push(buildTwinAdj(cfg));
   }
 
   pages.forEach(p => {
