@@ -475,61 +475,102 @@ function buildTeacherForm(grade, classNum, cfg) {
 }
 
 function buildSubjectForm(cfg) {
+  const B = 'border:0.75pt solid #555;';
   const div = document.createElement('div');
   div.className = 'print-page';
   div.innerHTML = `
-    <div class="form-title">${cfg.year}學年度升三、五年級編班學生區分班群調查表</div>
-    <div class="form-subtitle">科任教師填寫版</div>
-    <div class="form-notice">
-      請老師提出<b>二、四年級</b>班上約<b>1-3名</b>需多費心管教；以及不宜再同班的學生名單，以作為${cfg.year}學年度編班參考。<br>
-      【註：如班上<b>無此類學生可不填</b>，仍請將此表放入信封，<b>${cfg.deadline2}</b>交予${cfg.place}。感謝！】
-    </div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2pt solid #000;padding-bottom:4pt;margin-bottom:8pt;">
+  <div style="font-size:13pt;font-weight:bold;">${cfg.year} 學年度　升三、五年級　編班學生調查表</div>
+  <div style="font-size:10pt;color:#444;">科任教師填寫版</div>
+</div>
 
-    <table class="form-table" style="margin-bottom:12pt;">
-      <tr>
-        <td style="width:90pt;font-weight:bold;border:1pt solid #555;padding:6pt;">科任老師姓名</td>
-        <td style="border:1pt solid #555;padding:6pt;height:26pt;"></td>
-        <td style="width:80pt;font-weight:bold;border:1pt solid #555;padding:6pt;">任教科目</td>
-        <td style="border:1pt solid #555;padding:6pt;height:26pt;"></td>
-      </tr>
-    </table>
+<div style="font-size:8.5pt;border:0.5pt solid #aaa;padding:5pt 7pt;margin-bottom:8pt;line-height:1.7;background:#f7f7f7;">
+  請老師填寫<b>二、四年級</b>班上<b>需多費心</b>及<b>不宜再同班</b>的學生名單，作為 ${cfg.year} 學年度編班參考。<br>
+  如班上無此類學生可不填，仍請放入信封密封後，於 <b>${cfg.deadline2}</b> 前交回 ${cfg.place}。感謝！<br>
+  ※ 以上學生<b>不包含</b>資源班、資優班學生；此表與導師填寫資料對應參考使用。
+</div>
 
-    <div class="form-section-title">▍需多費心學生名單</div>
-    <table class="form-table">
-      <tr>
-        <th style="width:28pt;">編號</th>
-        <th style="width:55pt;">班　級</th>
-        <th style="width:80pt;">學生姓名</th>
-        <th>說　明</th>
-      </tr>
-      <tr><td class="num">1</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
-      <tr><td class="num">2</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
-      <tr><td class="num">3</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
-      <tr><td class="num">4</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
-      <tr><td class="num">5</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
-    </table>
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:10pt;">
+  <colgroup><col style="width:80pt;"><col><col style="width:80pt;"><col></colgroup>
+  <tr>
+    <td style="${B}padding:5pt 7pt;background:#eee;font-weight:bold;text-align:center;">科任老師姓名</td>
+    <td style="${B}padding:5pt 7pt;height:26pt;"></td>
+    <td style="${B}padding:5pt 7pt;background:#eee;font-weight:bold;text-align:center;">任教科目</td>
+    <td style="${B}padding:5pt 7pt;"></td>
+  </tr>
+</table>
 
-    <div class="form-section-title" style="margin-top:10pt;">▍不宜再同班的學生名單</div>
-    <table class="form-table">
-      <tr>
-        <th style="width:28pt;">編號</th>
-        <th style="width:190pt;">學生班級與姓名（請填兩人以上）</th>
-        <th>說　明</th>
-      </tr>
-      <tr><td class="num">1</td><td class="tall">（　　）（　　　　）　（　　）（　　　　）</td><td class="note tall"></td></tr>
-      <tr><td class="num">2</td><td class="tall">（　　）（　　　　）　（　　）（　　　　）</td><td class="note tall"></td></tr>
-      <tr><td class="num">3</td><td class="tall">（　　）（　　　　）　（　　）（　　　　）<br>（　　）（　　　　）　（　　）（　　　　）</td><td class="note tall"></td></tr>
-    </table>
+<div style="font-size:10.5pt;font-weight:bold;background:#222;color:#fff;padding:3.5pt 7pt;margin-bottom:0;">
+  壹、需多費心學生名單　<span style="font-size:9pt;font-weight:normal;">（請填 1–5 名，含班級代號與座號，例：40101）</span>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:8pt;">
+  <colgroup>
+    <col style="width:22pt;">
+    <col style="width:46pt;">
+    <col style="width:58pt;">
+    <col>
+  </colgroup>
+  <tr style="background:#eee;">
+    <th style="${B}padding:4pt 3pt;text-align:center;">編號</th>
+    <th style="${B}padding:4pt 3pt;text-align:center;">班級＋座號<br><span style="font-size:8pt;font-weight:normal;">例：40101</span></th>
+    <th style="${B}padding:4pt 3pt;text-align:center;">學生姓名</th>
+    <th style="${B}padding:4pt 6pt;text-align:left;">說　明（行為特徵、需注意事項等）</th>
+  </tr>
+  ${[1,2,3,4,5].map(n=>`
+  <tr>
+    <td style="${B}padding:3pt;text-align:center;font-weight:bold;">${n}</td>
+    <td style="${B}padding:3pt;height:22pt;text-align:center;font-size:9pt;color:#aaa;"></td>
+    <td style="${B}padding:3pt;"></td>
+    <td style="${B}padding:3pt;"></td>
+  </tr>`).join('')}
+</table>
 
-    <div class="form-footer">
-      ※ 以上學生不包括資源班、資優班學生（資源班、資優班學生會分散於各班）<br>
-      ※ 以上資料提供編班時，與導師填寫的資料對應參考。<br>
-      ※ 此表填寫資料僅供編班參考，請放入信封密封後交回 ${cfg.place}。
-    </div>
-    <div class="form-sign-row">
-      <div class="form-sign-item">簽名：<span class="sign-line"></span></div>
-      <div class="form-sign-item">日期：<span class="sign-line"></span></div>
-    </div>
+<div style="font-size:10.5pt;font-weight:bold;background:#222;color:#fff;padding:3.5pt 7pt;margin-bottom:0;">
+  貳、不宜再同班的學生名單　<span style="font-size:9pt;font-weight:normal;">（甲生跨列合併，每位乙生各填一行；超過 3 位請寫說明欄或紙張背面）</span>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:6pt;">
+  <colgroup>
+    <col style="width:18pt;">
+    <col style="width:44pt;">
+    <col style="width:56pt;">
+    <col style="width:18pt;">
+    <col style="width:44pt;">
+    <col style="width:56pt;">
+    <col>
+  </colgroup>
+  <tr style="background:#eee;">
+    <th style="${B}padding:4pt 3pt;text-align:center;">組</th>
+    <th colspan="2" style="${B}padding:4pt 3pt;text-align:center;">學生甲<br><span style="font-size:8pt;font-weight:normal;">班級＋座號／姓名</span></th>
+    <th colspan="3" style="${B}padding:4pt 3pt;text-align:center;">不宜與甲同班之學生乙<br><span style="font-size:8pt;font-weight:normal;">（每行一位，班級＋座號／姓名）</span></th>
+    <th style="${B}padding:4pt 5pt;text-align:left;">說明（原因、衝突背景等）</th>
+  </tr>
+  ${[1,2,3,4].map(n => {
+    const rows = [1,2,3].map((bi, idx) => {
+      const isFirst = idx === 0;
+      const rs = 'rowspan="3"';
+      return `<tr>
+        ${isFirst ? `<td ${rs} style="${B}padding:3pt;text-align:center;font-weight:bold;vertical-align:middle;background:#f5f5f5;">${n}</td>
+        <td ${rs} style="${B}padding:3pt;vertical-align:middle;height:22pt;"></td>
+        <td ${rs} style="${B}padding:3pt;vertical-align:middle;"></td>` : ''}
+        <td style="${B}padding:3pt;text-align:center;font-size:8.5pt;color:#888;vertical-align:middle;">${bi}</td>
+        <td style="${B}padding:3pt;vertical-align:middle;height:22pt;"></td>
+        <td style="${B}padding:3pt;vertical-align:middle;"></td>
+        ${isFirst ? `<td ${rs} style="${B}padding:3pt;vertical-align:top;"></td>` : ''}
+      </tr>`;
+    }).join('');
+    return rows;
+  }).join('')}
+</table>
+
+<div style="font-size:8.5pt;color:#555;margin-bottom:8pt;line-height:1.6;">
+  ※ 以上學生不包含資源班、資優班學生（資源班、資優班學生編班時會自動分散各班）。<br>
+  ※ 以上資料提供編班時與導師填寫資料對應參考，請放入信封密封後交回。
+</div>
+
+<div style="display:flex;justify-content:flex-end;gap:28pt;font-size:10pt;border-top:0.5pt solid #bbb;padding-top:6pt;">
+  <span>簽　名：<span style="display:inline-block;border-bottom:0.75pt solid #000;width:72pt;height:14pt;vertical-align:bottom;"></span></span>
+  <span>填表日期：<span style="display:inline-block;border-bottom:0.75pt solid #000;width:72pt;height:14pt;vertical-align:bottom;"></span></span>
+</div>
   `;
   return div;
 }
