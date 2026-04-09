@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>調查表列印 ─ 教務組</title>
+<style>
+/* ── SCREEN STYLES (設定介面) ── */
+:root {
+  --navy:#0f2044; --navy2:#1a3060; --blue:#2d5be3; --blue-light:#e8eefb;
+  --green:#16a34a; --green-light:#dcfce7;
+  --bg:#f4f6fb; --surface:#fff; --border:#dde3f0;
+  --text:#111827; --text2:#4b5563; --text3:#9ca3af;
+  --radius:10px; --shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
+}
+@media screen {
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;}
+
+  .header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,32,68,.25);}
+  .header-title{font-size:1.1rem;font-weight:700;}
+  .header-sub{font-size:.72rem;opacity:.6;margin-top:1px;}
+  .hlink{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;}
+
+  .main{max-width:960px;margin:0 auto;padding:24px 20px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow);}
+  .card-title{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:14px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  label.lbl{font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;}
+  input[type=text],input[type=number],select{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.875rem;color:var(--text);background:#fff;outline:none;font-family:inherit;transition:border-color .2s;}
+  input:focus,select:focus{border-color:var(--blue);}
+
+  .btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.875rem;font-weight:700;font-family:inherit;transition:all .18s;display:inline-flex;align-items:center;gap:7px;}
+  .btn-print{background:var(--navy);color:#fff;}
+  .btn-print:hover{background:var(--navy2);box-shadow:0 2px 8px rgba(15,32,68,.3);}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-green:hover{background:#15803d;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-blue:hover{background:#2347c5;}
+
+  .notice{background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#1e40af;line-height:1.6;margin-bottom:14px;}
+  .class-check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-top:8px;}
+  .class-chk{display:flex;align-items:center;gap:5px;font-size:.875rem;cursor:pointer;}
+  .class-chk input{accent-color:var(--blue);width:15px;height:15px;cursor:pointer;}
+
+  /* preview wrapper - screen only */
+  #previewArea{margin-top:4px;}
+  .preview-label{font-size:.82rem;color:var(--text3);margin-bottom:8px;}
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+  body{margin:0;padding:0;background:#fff;font-family:'Microsoft JhengHei','PingFang TC','DFKai-SB',sans-serif;}
+  .no-print{display:none !important;}
+  .print-page{display:block !important;}
+}
+
+/* ── PRINT PAGE (共用) ── */
+.print-page {
+  display: none;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 16mm 18mm 14mm 18mm;
+  box-sizing: border-box;
+  background: #fff;
+  font-family: 'Microsoft JhengHei','PingFang TC','DFKai-SB',sans-serif;
+  font-size: 11pt;
+  color: #000;
+  page-break-after: always;
+}
+.print-page:last-of-type { page-break-after: avoid; }
+
+@media screen {
+  .print-page {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto 24px auto;
+    padding: 24px 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: #fff;
+    font-size: 11pt;
+    color: #000;
+  }
+}
+
+/* ── FORM CONTENT STYLES ── */
+.form-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: bold;
+  margin-bottom: 6pt;
+  line-height: 1.5;
+}
+.form-subtitle {
+  text-align: center;
+  font-size: 11pt;
+  margin-bottom: 10pt;
+  color: #333;
+  line-height: 1.5;
+}
+.form-notice {
+  font-size: 9.5pt;
+  color: #222;
+  margin-bottom: 10pt;
+  line-height: 1.7;
+  border: 1px solid #999;
+  padding: 6pt 8pt;
+  border-radius: 3pt;
+  background: #f9f9f9;
+}
+.form-notice b { color: #000; }
+.form-section-title {
+  font-size: 12pt;
+  font-weight: bold;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 4pt 8pt;
+  margin-bottom: 0;
+}
+.form-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10pt;
+  font-size: 10.5pt;
+}
+.form-table th {
+  background: #e8e8e8;
+  border: 1pt solid #555;
+  padding: 5pt 6pt;
+  text-align: center;
+  font-weight: bold;
+  font-size: 10pt;
+}
+.form-table td {
+  border: 1pt solid #555;
+  padding: 5pt 6pt;
+  vertical-align: middle;
+  min-height: 20pt;
+}
+.form-table td.num { text-align: center; width: 28pt; font-weight: bold; }
+.form-table td.name { width: 80pt; }
+.form-table td.cls { width: 55pt; text-align: center; }
+.form-table td.note { }
+.form-table td.tall { height: 30pt; }
+.form-table td.pair { width: 160pt; }
+.form-footer {
+  font-size: 9pt;
+  color: #444;
+  margin-top: 8pt;
+  line-height: 1.8;
+  border-top: 1pt solid #bbb;
+  padding-top: 6pt;
+}
+.form-sign-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24pt;
+  margin-top: 12pt;
+  font-size: 10pt;
+}
+.form-sign-item {
+  display: flex;
+  align-items: center;
+  gap: 4pt;
+}
+.sign-line {
+  display: inline-block;
+  border-bottom: 1pt solid #000;
+  width: 60pt;
+  height: 16pt;
+  vertical-align: bottom;
+}
+
+/* ── TWIN SURVEY TABLE ── */
+.twin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8pt;
+  font-size: 10pt;
+}
+.twin-table th, .twin-table td {
+  border: 1pt solid #555;
+  padding: 5pt 4pt;
+  text-align: center;
+}
+.twin-table th { background: #e8e8e8; font-weight: bold; }
+.twin-table td { height: 22pt; }
+.twin-table td.row-header { text-align: left; padding-left: 6pt; font-weight: bold; background: #f5f5f5; white-space: nowrap; }
+
+/* ── TWIN APPLICATION ── */
+.twin-app-title { font-size: 13pt; font-weight: bold; text-align: center; margin-bottom: 8pt; text-decoration: underline; }
+.app-field { margin-bottom: 8pt; font-size: 10.5pt; line-height: 2; }
+.app-line { display: inline-block; border-bottom: 1pt solid #000; min-width: 100pt; height: 14pt; vertical-align: bottom; }
+.app-check { margin: 5pt 0; font-size: 10.5pt; line-height: 1.8; }
+.app-sign { margin-top: 14pt; font-size: 10pt; }
+.app-sign-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8pt; margin-top: 8pt; }
+.app-sign-item { border: 1pt solid #aaa; padding: 8pt; min-height: 40pt; text-align: center; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<!-- ==================== SCREEN UI ==================== -->
+<div class="no-print">
+<div class="header">
+  <div>
+    <div class="header-title">🖨️ 調查表列印</div>
+    <div class="header-sub">編班調查表設定與列印</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="admin.html" class="hlink">← 後台</a>
+    <a href="index.html" class="hlink">前台</a>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- 設定區 -->
+<div class="card">
+  <div class="card-title">⚙️ 基本設定</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label class="lbl">學年度</label>
+      <input type="text" id="cfgYear" value="114" style="width:100%;">
+    </div>
+    <div class="form-group">
+      <label class="lbl">繳回日期（導師表）</label>
+      <input type="text" id="cfgDeadline1" value="4/18(五)中午前" style="width:100%;">
+    </div>
+    <div class="form-group">
+      <label class="lbl">繳回日期（科任表）</label>
+      <input type="text" id="cfgDeadline2" value="4/18(五)中午前" style="width:100%;">
+    </div>
+    <div class="form-group">
+      <label class="lbl">繳回日期（雙胞胎調查）</label>
+      <input type="text" id="cfgDeadlineTwin" value="3/26(三)中午前" style="width:100%;">
+    </div>
+    <div class="form-group">
+      <label class="lbl">繳交地點</label>
+      <input type="text" id="cfgPlace" value="教務處註冊組(112)" style="width:100%;">
+    </div>
+    <div class="form-group">
+      <label class="lbl">學校全名</label>
+      <input type="text" id="cfgSchool" value="高雄市左營區新莊國民小學" style="width:100%;">
+    </div>
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label class="lbl">2年級班數</label>
+      <input type="number" id="cfg2Count" value="6" min="1" max="12" style="width:100px;">
+    </div>
+    <div class="form-group">
+      <label class="lbl">4年級班數</label>
+      <input type="number" id="cfg4Count" value="9" min="1" max="12" style="width:100px;">
+    </div>
+  </div>
+  <div class="notice">修改上方設定後，直接點下方列印按鈕，表格內容會自動更新。</div>
+</div>
+
+<!-- 列印按鈕 -->
+<div class="card">
+  <div class="card-title">🖨️ 二升三　導師調查表</div>
+  <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px;">勾選要列印的班級（預設全部），再按列印按鈕：</div>
+  <div class="class-check-grid" id="checks2"></div>
+  <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:14px;">
+    <button class="btn btn-ghost btn-sm" onclick="checkAll(2,true)">全選</button>
+    <button class="btn btn-ghost btn-sm" onclick="checkAll(2,false)">全消</button>
+  </div>
+  <button class="btn btn-print" onclick="printForm('grade2')">🖨️ 列印勾選班級</button>
+</div>
+
+<div class="card">
+  <div class="card-title">🖨️ 四升五　導師調查表</div>
+  <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px;">勾選要列印的班級（預設全部），再按列印按鈕：</div>
+  <div class="class-check-grid" id="checks4"></div>
+  <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:14px;">
+    <button class="btn btn-ghost btn-sm" onclick="checkAll(4,true)">全選</button>
+    <button class="btn btn-ghost btn-sm" onclick="checkAll(4,false)">全消</button>
+  </div>
+  <button class="btn btn-print" onclick="printForm('grade4')">🖨️ 列印勾選班級</button>
+</div>
+
+<div class="card">
+  <div class="card-title">🖨️ 其他調查表</div>
+  <div class="btn-group">
+    <button class="btn btn-print" onclick="printForm('subject')">🖨️ 科任教師調查表</button>
+    <button class="btn btn-print" onclick="printForm('twin')">🖨️ 雙胞胎調查表</button>
+    <button class="btn btn-green" onclick="printForm('twinapp')">🖨️ 雙胞胎申請書</button>
+  </div>
+  <div style="margin-top:12px;font-size:.82rem;color:var(--text3);">
+    列印時請在瀏覽器設定：A4、直向、縮放「無」或「符合頁面」。
+  </div>
+</div>
+
+<!-- 預覽區 -->
+<div class="card" id="previewCard" style="display:none;">
+  <div class="card-title">👁 預覽</div>
+  <div class="preview-label">以下為預覽，實際列印會依設定生成正確份數。</div>
+  <div id="previewArea"></div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end no-print -->
+
+<!-- ==================== PRINT AREA ==================== -->
+<div id="printArea"></div>
+
+<script>
+// ── HELPERS ──
+function v(id){ return document.getElementById(id).value.trim(); }
+function classLabel(g,c){ return `${g}年${c}班`; }
+
+function getConfig() {
+  return {
+    year: v('cfgYear'),
+    deadline1: v('cfgDeadline1'),
+    deadline2: v('cfgDeadline2'),
+    deadlineTwin: v('cfgDeadlineTwin'),
+    place: v('cfgPlace'),
+    school: v('cfgSchool'),
+    count2: parseInt(v('cfg2Count')) || 6,
+    count4: parseInt(v('cfg4Count')) || 9,
+  };
+}
+
+// ── CLASS CHECKBOXES ──
+function initClassChecks() {
+  const cfg = getConfig();
+  buildChecks(2, cfg.count2);
+  buildChecks(4, cfg.count4);
+}
+
+function buildChecks(grade, count) {
+  const cont = document.getElementById(`checks${grade}`);
+  if(!cont) return;
+  const existing = [...cont.querySelectorAll('input[type=checkbox]')].map(c=>c.value);
+  cont.innerHTML = '';
+  for(let i=1; i<=count; i++) {
+    const id = `chk${grade}_${i}`;
+    const lbl = document.createElement('label');
+    lbl.className = 'class-chk';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.id = id; cb.value = i;
+    cb.checked = true; // default all checked
+    const span = document.createElement('span');
+    span.textContent = `${grade}年${i}班`;
+    lbl.appendChild(cb); lbl.appendChild(span);
+    cont.appendChild(lbl);
+  }
+}
+
+function checkAll(grade, val) {
+  document.querySelectorAll(`#checks${grade} input[type=checkbox]`).forEach(c=>c.checked=val);
+}
+
+function getCheckedClasses(grade) {
+  return [...document.querySelectorAll(`#checks${grade} input[type=checkbox]:checked`)].map(c=>parseInt(c.value));
+}
+
+// Re-init checkboxes when count changes
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('cfg2Count').addEventListener('change', ()=>buildChecks(2, parseInt(v('cfg2Count'))||6));
+  document.getElementById('cfg4Count').addEventListener('change', ()=>buildChecks(4, parseInt(v('cfg4Count'))||9));
+  initClassChecks();
+});
+
+// ── FORM GENERATORS ──
+
+function buildTeacherForm(grade, classNum, cfg) {
+  const isGrade2 = grade === 2;
+  const targetGrade = grade + 1;
+  const gradeLabel = isGrade2 ? '三' : '五';
+  const srcLabel = isGrade2 ? '二' : '四';
+  const div = document.createElement('div');
+  div.className = 'print-page';
+  div.innerHTML = `
+    <div class="form-title">${cfg.year}學年度升${gradeLabel}年級編班學生區分班群調查表</div>
+    <div class="form-notice">
+      請老師提出班上約<b>1-3名</b>需多費心管教；以及不宜再同班的學生名單，以作為${cfg.year}學年度編班參考。<br>
+      （註：如班上無此類學生可不填，仍請將此表放入信封，<b>${cfg.deadline1}</b>交予${cfg.place}。感謝！）
+    </div>
+
+    <div class="form-section-title">▍${srcLabel}年${classNum}班　需多費心學生名單</div>
+    <table class="form-table">
+      <tr>
+        <th style="width:28pt;">編號</th>
+        <th style="width:80pt;">學生姓名</th>
+        <th>說　明</th>
+      </tr>
+      <tr><td class="num">1</td><td class="name tall"></td><td class="note tall"></td></tr>
+      <tr><td class="num">2</td><td class="name tall"></td><td class="note tall"></td></tr>
+      <tr><td class="num">3</td><td class="name tall"></td><td class="note tall"></td></tr>
+    </table>
+
+    <div class="form-section-title" style="margin-top:10pt;">▍${srcLabel}年${classNum}班　不宜再同班的學生名單</div>
+    <table class="form-table">
+      <tr>
+        <th style="width:28pt;">編號</th>
+        <th style="width:160pt;">學生姓名（請填兩人以上，以括號標示）</th>
+        <th>說　明</th>
+      </tr>
+      <tr><td class="num">1</td><td class="pair tall">（　　　　）（　　　　）</td><td class="note tall"></td></tr>
+      <tr><td class="num">2</td><td class="pair tall">（　　　　）（　　　　）</td><td class="note tall"></td></tr>
+      <tr><td class="num">3</td><td class="pair tall">（　　　　）（　　　　）</td><td class="note tall"></td></tr>
+      <tr><td class="num">4</td><td class="pair tall">（　　　　）（　　　　）<br>（　　　　）（　　　　）</td><td class="note tall"></td></tr>
+    </table>
+
+    <div class="form-footer">
+      ※ 以上學生<b>不包括</b>資源班、資優班學生（資源班、資優班學生會分散於各班）<br>
+      ※ 此表填寫資料僅供編班參考，請放入信封密封後交回。
+    </div>
+    <div class="form-sign-row">
+      <div class="form-sign-item">導師簽名：<span class="sign-line"></span></div>
+      <div class="form-sign-item">日期：<span class="sign-line"></span></div>
+    </div>
+  `;
+  return div;
+}
+
+function buildSubjectForm(cfg) {
+  const div = document.createElement('div');
+  div.className = 'print-page';
+  div.innerHTML = `
+    <div class="form-title">${cfg.year}學年度升三、五年級編班學生區分班群調查表</div>
+    <div class="form-subtitle">科任教師填寫版</div>
+    <div class="form-notice">
+      請老師提出<b>二、四年級</b>班上約<b>1-3名</b>需多費心管教；以及不宜再同班的學生名單，以作為${cfg.year}學年度編班參考。<br>
+      【註：如班上<b>無此類學生可不填</b>，仍請將此表放入信封，<b>${cfg.deadline2}</b>交予${cfg.place}。感謝！】
+    </div>
+
+    <table class="form-table" style="margin-bottom:12pt;">
+      <tr>
+        <td style="width:90pt;font-weight:bold;border:1pt solid #555;padding:6pt;">科任老師姓名</td>
+        <td style="border:1pt solid #555;padding:6pt;height:26pt;"></td>
+        <td style="width:80pt;font-weight:bold;border:1pt solid #555;padding:6pt;">任教科目</td>
+        <td style="border:1pt solid #555;padding:6pt;height:26pt;"></td>
+      </tr>
+    </table>
+
+    <div class="form-section-title">▍需多費心學生名單</div>
+    <table class="form-table">
+      <tr>
+        <th style="width:28pt;">編號</th>
+        <th style="width:55pt;">班　級</th>
+        <th style="width:80pt;">學生姓名</th>
+        <th>說　明</th>
+      </tr>
+      <tr><td class="num">1</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
+      <tr><td class="num">2</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
+      <tr><td class="num">3</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
+      <tr><td class="num">4</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
+      <tr><td class="num">5</td><td class="cls tall"></td><td class="name tall"></td><td class="note tall"></td></tr>
+    </table>
+
+    <div class="form-section-title" style="margin-top:10pt;">▍不宜再同班的學生名單</div>
+    <table class="form-table">
+      <tr>
+        <th style="width:28pt;">編號</th>
+        <th style="width:190pt;">學生班級與姓名（請填兩人以上）</th>
+        <th>說　明</th>
+      </tr>
+      <tr><td class="num">1</td><td class="tall">（　　）（　　　　）　（　　）（　　　　）</td><td class="note tall"></td></tr>
+      <tr><td class="num">2</td><td class="tall">（　　）（　　　　）　（　　）（　　　　）</td><td class="note tall"></td></tr>
+      <tr><td class="num">3</td><td class="tall">（　　）（　　　　）　（　　）（　　　　）<br>（　　）（　　　　）　（　　）（　　　　）</td><td class="note tall"></td></tr>
+    </table>
+
+    <div class="form-footer">
+      ※ 以上學生不包括資源班、資優班學生（資源班、資優班學生會分散於各班）<br>
+      ※ 以上資料提供編班時，與導師填寫的資料對應參考。<br>
+      ※ 此表填寫資料僅供編班參考，請放入信封密封後交回 ${cfg.place}。
+    </div>
+    <div class="form-sign-row">
+      <div class="form-sign-item">簽名：<span class="sign-line"></span></div>
+      <div class="form-sign-item">日期：<span class="sign-line"></span></div>
+    </div>
+  `;
+  return div;
+}
+
+function buildTwinSurvey(cfg) {
+  const div = document.createElement('div');
+  div.className = 'print-page';
+
+  // Grade 2 classes
+  const c2 = Array.from({length: cfg.count2}, (_,i) => `20${i+1}`);
+  // Grade 4 classes
+  const c4 = Array.from({length: cfg.count4}, (_,i) => `40${i+1 < 10 ? '0'+(i+1) : i+1}`).map((_,i)=>`40${i+1}`);
+
+  const makeRow = (cells, isHeader=false) => {
+    const tag = isHeader ? 'th' : 'td';
+    return `<tr>${cells.map(c => `<${tag}>${c}</${tag}>`).join('')}</tr>`;
+  };
+
+  const grade2Headers = ['班級', ...Array.from({length:cfg.count2},(_,i)=>`20${i+1}`)];
+  const grade4Headers = ['班級', ...Array.from({length:cfg.count4},(_,i)=>`40${i+1}`)];
+  const emptyRow2 = Array(cfg.count2+1).fill('');
+  const emptyRow4 = Array(cfg.count4+1).fill('');
+
+  div.innerHTML = `
+    <div class="form-title">${cfg.year}學年度　二、四年級導師　雙胞胎調查表</div>
+    <div class="form-notice">
+      請各班導師確認班上是否有同年級雙（多）胞胎學生，並在對應欄位填寫：<b>有打 ✓，無打 ✗</b>。<br>
+      請於 <b>${cfg.deadlineTwin}</b> 前交予 ${cfg.place}。如有雙胞胎欲提出編班申請，請另填「同年級複數子女學生編班家長意願書」並附戶口名簿影本。
+    </div>
+
+    <div style="font-weight:bold;font-size:11pt;margin-bottom:5pt;margin-top:8pt;">▍二年級</div>
+    <table class="twin-table">
+      <tr>${grade2Headers.map(h=>`<th>${h}</th>`).join('')}</tr>
+      <tr><td class="row-header">有無雙（多）胞胎<br>（有✓ 無✗）</td>${Array(cfg.count2).fill('<td></td>').join('')}</tr>
+      <tr><td class="row-header">導師簽名</td>${Array(cfg.count2).fill('<td></td>').join('')}</tr>
+    </table>
+
+    <div style="font-weight:bold;font-size:11pt;margin-bottom:5pt;margin-top:14pt;">▍四年級</div>
+    <table class="twin-table">
+      <tr>${grade4Headers.map(h=>`<th>${h}</th>`).join('')}</tr>
+      <tr><td class="row-header">有無雙（多）胞胎<br>（有✓ 無✗）</td>${Array(cfg.count4).fill('<td></td>').join('')}</tr>
+      <tr><td class="row-header">導師簽名</td>${Array(cfg.count4).fill('<td></td>').join('')}</tr>
+    </table>
+
+    <div style="margin-top:14pt;font-size:9.5pt;color:#333;line-height:1.8;border-top:1pt solid #bbb;padding-top:6pt;">
+      ※ 各班如有雙胞胎、多胞胎欲提出編班申請（同班或不同班），請家長填寫申請書並附戶口名簿影本送至${cfg.place}申請。<br>
+      ※ 截止日期：<b>${cfg.deadlineTwin}</b>（以利進行編班會議召開事宜，感謝配合！）
+    </div>
+    <div class="form-sign-row" style="margin-top:16pt;">
+      <div class="form-sign-item">學年主任：<span class="sign-line"></span></div>
+      <div class="form-sign-item">教務主任：<span class="sign-line"></span></div>
+    </div>
+  `;
+  return div;
+}
+
+function buildTwinApp(cfg) {
+  const div = document.createElement('div');
+  div.className = 'print-page';
+  div.innerHTML = `
+    <div class="twin-app-title">${cfg.school}同年級複數子女學生「編班」家長意願書</div>
+    <div class="app-field">
+      學生 <span class="app-line" style="min-width:70pt;"></span>　身分證字號 <span class="app-line"></span>，<br>
+      學生 <span class="app-line" style="min-width:70pt;"></span>　身分證字號 <span class="app-line"></span>，<br>
+      學生 <span class="app-line" style="min-width:70pt;"></span>　身分證字號 <span class="app-line"></span>，
+    </div>
+    <div class="app-field">
+      擬申請同年級複數子女學生（如所附戶口名簿影本）編班時安置：
+    </div>
+    <div class="app-check">
+      □ <b>同班</b><br>
+      □ <b>不同班</b><br>
+      □ <b>無特別意願</b>（依電腦編班結果安置）
+    </div>
+    <div class="app-field" style="margin-top:10pt;">
+      請學校編班時准予安置調整，惟一經申請確認，依教育局之規定，不再接受變更調動。
+    </div>
+    <div class="app-field" style="text-align:right;margin-top:4pt;">
+      此致　${cfg.school}
+    </div>
+    <div class="app-sign" style="margin-top:14pt;">
+      <div style="margin-bottom:6pt;">立書申請人：<span class="app-line" style="min-width:80pt;"></span>（學生家長）</div>
+      <div style="margin-bottom:6pt;">電　話：<span class="app-line" style="min-width:120pt;"></span></div>
+      <div style="margin-bottom:6pt;">地　址：<span class="app-line" style="min-width:200pt;"></span></div>
+      <div style="text-align:right;margin-top:14pt;">中　華　民　國 <span class="app-line" style="min-width:30pt;"></span> 年 <span class="app-line" style="min-width:20pt;"></span> 月 <span class="app-line" style="min-width:20pt;"></span> 日</div>
+    </div>
+    <div class="app-sign-grid" style="margin-top:20pt;">
+      <div class="app-sign-item">承辦人：</div>
+      <div class="app-sign-item">教務主任：</div>
+      <div class="app-sign-item">校　長：</div>
+    </div>
+
+    <div style="margin-top:30pt;border-top:2pt dashed #999;padding-top:16pt;">
+      <div class="twin-app-title">${cfg.school}同年級複數子女學生「改調班」家長申請書</div>
+      <div class="app-field">
+        1. 學生 <span class="app-line" style="min-width:60pt;"></span>，身分證字號 <span class="app-line"></span>，同年級複數子女（兄、姊），<br>
+        &emsp;&emsp;經電腦編班進入 <span class="app-line" style="min-width:50pt;"></span> 年 <span class="app-line" style="min-width:30pt;"></span> 班就讀<br>
+        2. 學生 <span class="app-line" style="min-width:60pt;"></span>，身分證字號 <span class="app-line"></span>，同年級複數子女（弟、妹），<br>
+        &emsp;&emsp;經電腦編班進入 <span class="app-line" style="min-width:50pt;"></span> 年 <span class="app-line" style="min-width:30pt;"></span> 班就讀
+      </div>
+      <div class="app-check">
+        申請改調班（兄、姊電腦編班結果不予更動）<br>
+        請將（弟、妹）<span class="app-line" style="min-width:60pt;"></span> 調整改編班，進入 <span class="app-line" style="min-width:30pt;"></span> 年 <span class="app-line" style="min-width:30pt;"></span> 班就讀
+      </div>
+      <div class="app-sign-grid" style="margin-top:16pt;">
+        <div class="app-sign-item">承辦人：</div>
+        <div class="app-sign-item">教務主任：</div>
+        <div class="app-sign-item">校　長：</div>
+      </div>
+      <div style="text-align:right;margin-top:10pt;font-size:10pt;">
+        中　華　民　國 <span class="app-line" style="min-width:30pt;"></span> 年 <span class="app-line" style="min-width:20pt;"></span> 月 <span class="app-line" style="min-width:20pt;"></span> 日
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+// ── MAIN PRINT FUNCTION ──
+function printForm(type) {
+  const cfg = getConfig();
+  const printArea = document.getElementById('printArea');
+  const previewArea = document.getElementById('previewArea');
+  printArea.innerHTML = '';
+  previewArea.innerHTML = '';
+
+  const pages = [];
+
+  if(type === 'grade2') {
+    const sel = getCheckedClasses(2);
+    if(!sel.length){ alert('請至少勾選一個班級'); return; }
+    sel.forEach(i => pages.push(buildTeacherForm(2, i, cfg)));
+  } else if(type === 'grade4') {
+    const sel = getCheckedClasses(4);
+    if(!sel.length){ alert('請至少勾選一個班級'); return; }
+    sel.forEach(i => pages.push(buildTeacherForm(4, i, cfg)));
+  } else if(type === 'subject') {
+    pages.push(buildSubjectForm(cfg));
+  } else if(type === 'twin') {
+    pages.push(buildTwinSurvey(cfg));
+  } else if(type === 'twinapp') {
+    pages.push(buildTwinApp(cfg));
+  }
+
+  pages.forEach(p => {
+    printArea.appendChild(p.cloneNode(true));
+    previewArea.appendChild(p);
+  });
+
+  document.getElementById('previewCard').style.display = '';
+
+  // Trigger print after short delay for render
+  setTimeout(()=>{ window.print(); }, 300);
+}
+</script>
+</body>
+</html>
