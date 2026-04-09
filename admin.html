@@ -234,7 +234,8 @@ tr:hover td { background: #f8f9fd; }
   <button class="tab-btn" onclick="switchTab('newstu')">👶 新生名單</button>
   <button class="tab-btn" onclick="switchTab('teachers')">👩‍🏫 導師名單</button>
   <button class="tab-btn" onclick="switchTab('simulate')">🎲 模擬分班</button>
-  <button class="tab-btn" onclick="switchTab('overview-special')" style="border-left:2px solid var(--border);">👁 特殊生總表</button>
+  <button class="tab-btn" onclick="switchTab('twins')" style="border-left:2px solid var(--border);">👫 雙胞胎</button>
+  <button class="tab-btn" onclick="switchTab('overview-special')">👁 特殊生總表</button>
   <button class="tab-btn" onclick="switchTab('overview-rules')">📌 不能同班總表</button>
 </nav>
 
@@ -580,6 +581,112 @@ tr:hover td { background: #f8f9fd; }
   </div>
 </div>
 
+<!-- ==================== TAB: 雙胞胎管理 ==================== -->
+<div id="tab-twins" class="tab-pane">
+  <div class="two-col">
+    <div>
+      <!-- 升級生雙胞胎 -->
+      <div class="card">
+        <div class="card-title">➕ 新增雙胞胎（升級生：2年級 / 4年級）</div>
+        <div class="notice">選擇同一年級的兩位學生，設定是否要同班。模擬分班時會自動套用。</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>年級</label>
+            <select id="twGrade" onchange="updateTwinStudentSelects()">
+              <option value="2">2年級</option>
+              <option value="4">4年級</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group grow">
+            <label>學生甲</label>
+            <select id="twStu1"><option value="">─ 請先選年級 ─</option></select>
+          </div>
+          <div class="form-group grow">
+            <label>學生乙</label>
+            <select id="twStu2"><option value="">─ 請先選年級 ─</option></select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>家長意願</label>
+          <div style="display:flex;gap:16px;margin-top:5px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
+              <input type="radio" name="twPref" value="separate" checked> ❌ 分開不同班
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
+              <input type="radio" name="twPref" value="same"> ✅ 同班在一起
+            </label>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>備註（選填）</label>
+          <input type="text" id="twNote" placeholder="例：家長來電要求分班">
+        </div>
+        <button class="btn btn-primary" onclick="saveGradeTwin()">💾 儲存雙胞胎記錄</button>
+      </div>
+
+      <!-- 新生雙胞胎 -->
+      <div class="card">
+        <div class="card-title">➕ 新增雙胞胎（新生）</div>
+        <div class="form-row">
+          <div class="form-group grow">
+            <label>學生甲</label>
+            <select id="twin1"><option value="">─ 選擇新生 ─</option></select>
+          </div>
+          <div class="form-group grow">
+            <label>學生乙</label>
+            <select id="twin2"><option value="">─ 選擇新生 ─</option></select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>家長意願</label>
+          <div style="display:flex;gap:16px;margin-top:5px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
+              <input type="radio" name="twinPref" value="separate" checked> ❌ 分開不同班
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
+              <input type="radio" name="twinPref" value="same"> ✅ 同班在一起
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveTwin()">💾 儲存新生雙胞胎</button>
+      </div>
+    </div>
+
+    <div>
+      <!-- 升級生雙胞胎清單 -->
+      <div class="card">
+        <div class="card-title">📋 升級生雙胞胎清單</div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="form-group">
+            <label>篩選年級</label>
+            <select id="twViewGrade" onchange="renderGradeTwinList()">
+              <option value="">全部</option>
+              <option value="2">2年級</option>
+              <option value="4">4年級</option>
+            </select>
+          </div>
+        </div>
+        <div id="gradeTwinList"><div class="empty">尚無升級生雙胞胎記錄</div></div>
+      </div>
+
+      <!-- 新生雙胞胎清單 -->
+      <div class="card">
+        <div class="card-title">📋 新生雙胞胎清單</div>
+        <div id="twinList"><div class="empty">尚無新生雙胞胎記錄</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模擬分班後雙胞胎狀態 -->
+  <div class="card" id="twinSimCard" style="display:none;">
+    <div class="card-title">🎲 模擬分班結果 ─ 雙胞胎檢查</div>
+    <div class="notice">顯示最近一次模擬分班中，所有雙胞胎的分配結果。請確認是否符合家長意願。</div>
+    <div id="twinSimContent"></div>
+  </div>
+</div>
+
 <!-- ==================== TAB 6: 特殊生總表 ==================== -->
 <div id="tab-overview-special" class="tab-pane">
   <div class="card">
@@ -729,7 +836,8 @@ const state = {
   rules: {},      // id -> rule object
   teachers: {},   // id -> {id,name,grade,boundStudents:[]}
   newStudents: {},// id -> {id,name,gender,tags:[]}
-  twins: {},      // id -> {id,s1Name,s1Gender,s2Name,s2Gender,pref}
+  twins: {},      // id -> new students twin {id,...}
+  gradeTwins: {}, // id -> grade students twin {id,grade,s1Id,s2Id,preference,...}
   bindings: {},   // id -> {studentId,teacherId,grade}
   simResult: null,
   previewStudents: []
@@ -754,12 +862,13 @@ async function init() {
 }
 
 async function loadAll() {
-  const [stuSnap, ruleSnap, teachSnap, newStuSnap, twinSnap, bindSnap] = await Promise.all([
+  const [stuSnap, ruleSnap, teachSnap, newStuSnap, twinSnap, gradeTwinSnap, bindSnap] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('teachers').get(),
     db.collection('newStudents').get(),
     db.collection('twins').get(),
+    db.collection('gradeTwins').get(),
     db.collection('bindings').get()
   ]);
   state.students = {};
@@ -772,6 +881,8 @@ async function loadAll() {
   newStuSnap.forEach(d => { state.newStudents[d.id] = {id:d.id, ...d.data()}; });
   state.twins = {};
   twinSnap.forEach(d => { state.twins[d.id] = {id:d.id, ...d.data()}; });
+  state.gradeTwins = {};
+  gradeTwinSnap.forEach(d => { state.gradeTwins[d.id] = {id:d.id, ...d.data()}; });
   state.bindings = {};
   bindSnap.forEach(d => { state.bindings[d.id] = {id:d.id, ...d.data()}; });
 }
@@ -789,6 +900,9 @@ function renderAll() {
   renderBindingList();
   renderOverviewSpecial();
   renderOverviewRules();
+  renderGradeTwinList();
+  renderTwinList();
+  updateTwinStudentSelects();
 }
 
 // =============================================
@@ -1689,7 +1803,51 @@ function runSimulation() {
   });
   
   state.simResult = { grade, classes, violations, targetCount };
+
+  // Apply twin constraints (post-processing check & swap)
+  const gradeTwinsForSim = Object.values(state.gradeTwins).filter(t=>t.grade===grade);
+  for(const twin of gradeTwinsForSim) {
+    const cls1 = classes.find(c=>c.students.some(s=>s.id===twin.s1Id));
+    const cls2 = classes.find(c=>c.students.some(s=>s.id===twin.s2Id));
+    if(!cls1||!cls2) continue;
+    const same = cls1===cls2;
+    const want = twin.preference==='same';
+    if(want && !same) {
+      // Move s2 to cls1 (same-class twin)
+      const stu2 = cls2.students.find(s=>s.id===twin.s2Id);
+      if(stu2) {
+        cls2.students = cls2.students.filter(s=>s.id!==twin.s2Id);
+        if(stu2.gender==='M') cls2.males--; else cls2.females--;
+        if(stu2.tags.includes('bighead')) cls2.bigheads--;
+        if(stu2.tags.includes('special')) cls2.specials--;
+        if(stu2.tags.includes('gifted')) cls2.gifteds--;
+        cls1.students.push(stu2);
+        if(stu2.gender==='M') cls1.males++; else cls1.females++;
+        if(stu2.tags.includes('bighead')) cls1.bigheads++;
+        if(stu2.tags.includes('special')) cls1.specials++;
+        if(stu2.tags.includes('gifted')) cls1.gifteds++;
+      }
+    } else if(!want && same) {
+      // Move s2 to the least-loaded other class
+      const stu2 = cls2.students.find(s=>s.id===twin.s2Id);
+      if(stu2) {
+        const target = classes.filter(c=>c!==cls1).reduce((a,b)=>a.students.length<=b.students.length?a:b);
+        cls1.students = cls1.students.filter(s=>s.id!==twin.s2Id);
+        if(stu2.gender==='M') cls1.males--; else cls1.females--;
+        if(stu2.tags.includes('bighead')) cls1.bigheads--;
+        if(stu2.tags.includes('special')) cls1.specials--;
+        if(stu2.tags.includes('gifted')) cls1.gifteds--;
+        target.students.push(stu2);
+        if(stu2.gender==='M') target.males++; else target.females++;
+        if(stu2.tags.includes('bighead')) target.bigheads++;
+        if(stu2.tags.includes('special')) target.specials++;
+        if(stu2.tags.includes('gifted')) target.gifteds++;
+      }
+    }
+  }
+
   renderSimResult();
+  renderTwinSimStatus();
 }
 
 function findBestClass(student, classes, rules) {
@@ -1815,12 +1973,17 @@ function renderSimResult() {
       // Check binding
       const binding = Object.values(state.bindings).find(b=>b.studentId===s.id);
       const bindHtml = binding ? `<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.68rem;">綁 ${binding.teacherName}</span>` : '';
+      // Check twin
+      const twinRecord = Object.values(state.gradeTwins).find(t=>t.grade===grade&&(t.s1Id===s.id||t.s2Id===s.id));
+      const twinPartnerName = twinRecord ? (twinRecord.s1Id===s.id?twinRecord.s2Name:twinRecord.s1Name) : null;
+      const twinHtml = twinPartnerName ? `<span class="tag tag-twin" style="font-size:.65rem;">👫${twinPartnerName}</span>` : '';
       
       row.innerHTML = `
         <span style="color:${s.gender==='M'?'var(--blue)':'var(--pink)'};">${s.gender==='M'?'♂':'♀'}</span>
         <span class="sim-student-name">${s.name}</span>
         <span class="prev-cls">${classLabel(s.grade,s.class)}</span>
         ${tagHtml}
+        ${twinHtml}
         ${bindHtml}
       `;
       rows.appendChild(row);
@@ -2026,6 +2189,141 @@ function renderOverviewRules() {
 
   html += '</div>';
   cont.innerHTML = html;
+}
+
+
+// =============================================
+// TAB: TWINS (GRADE STUDENTS)
+// =============================================
+function updateTwinStudentSelects() {
+  const grade = parseInt(document.getElementById('twGrade').value);
+  const stus = Object.values(state.students).filter(s=>s.grade===grade)
+    .sort((a,b)=>a.class-b.class||a.number-b.number);
+  ['twStu1','twStu2'].forEach(id=>{
+    const sel=document.getElementById(id);
+    const old=sel.value;
+    sel.innerHTML='<option value="">─ 選擇學生 ─</option>';
+    stus.forEach(s=>{
+      const o=document.createElement('option'); o.value=s.id;
+      o.textContent=`${classLabel(s.grade,s.class)} ${String(s.number).padStart(2,'0')} ${s.name}`;
+      sel.appendChild(o);
+    });
+    if(old) sel.value=old;
+  });
+}
+
+async function saveGradeTwin() {
+  const grade=parseInt(document.getElementById('twGrade').value);
+  const s1Id=document.getElementById('twStu1').value;
+  const s2Id=document.getElementById('twStu2').value;
+  const pref=document.querySelector('input[name="twPref"]:checked').value;
+  const note=document.getElementById('twNote').value.trim();
+  if(!s1Id||!s2Id){showAlert('請選擇兩位學生','warn');return;}
+  if(s1Id===s2Id){showAlert('不能選擇同一位學生','warn');return;}
+  // Check duplicate
+  const dup=Object.values(state.gradeTwins).find(t=>
+    (t.s1Id===s1Id&&t.s2Id===s2Id)||(t.s1Id===s2Id&&t.s2Id===s1Id)
+  );
+  if(dup){showAlert('此組雙胞胎已存在','warn');return;}
+  const s1=state.students[s1Id];
+  const s2=state.students[s2Id];
+  const twin={grade,s1Id,s1Name:s1.name,s1Class:s1.class,s2Id,s2Name:s2.name,s2Class:s2.class,preference:pref,note};
+  const ref=await db.collection('gradeTwins').add(twin);
+  state.gradeTwins[ref.id]={id:ref.id,...twin};
+  document.getElementById('twNote').value='';
+  renderGradeTwinList();
+  showAlert(`已記錄：${s1.name} 👫 ${s2.name}`);
+}
+
+function renderGradeTwinList() {
+  const filterGrade=document.getElementById('twViewGrade').value;
+  const cont=document.getElementById('gradeTwinList');
+  let twins=Object.values(state.gradeTwins);
+  if(filterGrade) twins=twins.filter(t=>t.grade==filterGrade);
+  if(!twins.length){cont.innerHTML='<div class="empty">尚無升級生雙胞胎記錄</div>';return;}
+  cont.innerHTML='';
+  twins.sort((a,b)=>a.grade-b.grade||a.s1Name.localeCompare(b.s1Name)).forEach(t=>{
+    const prefLabel=t.preference==='same'
+      ?'<span class="tag tag-twin">✅ 同班</span>'
+      :'<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
+    const div=document.createElement('div');
+    div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;';
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <span style="font-weight:700;">${t.s1Name}</span>
+        <span style="font-size:.75rem;color:var(--text3);"> (${classLabel(t.grade,t.s1Class)})</span>
+        <span style="color:var(--text3);margin:0 6px;">👫</span>
+        <span style="font-weight:700;">${t.s2Name}</span>
+        <span style="font-size:.75rem;color:var(--text3);"> (${classLabel(t.grade,t.s2Class)})</span>
+        ${prefLabel}
+        <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-left:4px;">${t.grade}年級</span>
+      </div>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGradeTwin('${t.id}')">🗑</button>
+    </div>
+    ${t.note?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;margin-top:5px;">📝 ${t.note}</div>`:''}`;
+    cont.appendChild(div);
+  });
+}
+
+async function deleteGradeTwin(id) {
+  if(!confirm('確定刪除此雙胞胎記錄？')) return;
+  await db.collection('gradeTwins').doc(id).delete();
+  delete state.gradeTwins[id];
+  renderGradeTwinList();
+  showAlert('已刪除');
+}
+
+function renderTwinSimStatus() {
+  if(!state.simResult) return;
+  const {grade, classes} = state.simResult;
+  const gradeTwins = Object.values(state.gradeTwins).filter(t=>t.grade===grade);
+  if(!gradeTwins.length) {
+    document.getElementById('twinSimCard').style.display='none';
+    return;
+  }
+  document.getElementById('twinSimCard').style.display='';
+  const cont = document.getElementById('twinSimContent');
+
+  // Build studentId -> classNum map
+  const stuClassMap = {};
+  classes.forEach(cls=>{
+    cls.students.forEach(s=>{ stuClassMap[s.id]=cls.num; });
+  });
+
+  let allOk = true;
+  const rows = gradeTwins.map(t=>{
+    const cls1 = stuClassMap[t.s1Id];
+    const cls2 = stuClassMap[t.s2Id];
+    if(cls1===undefined||cls2===undefined) {
+      return `<div style="padding:8px 12px;border-bottom:1px solid #f0f2f8;font-size:.855rem;color:var(--text3);">
+        ${t.s1Name} 👫 ${t.s2Name} ─ 其中一人未出現在模擬結果中
+      </div>`;
+    }
+    const same = cls1===cls2;
+    const want = t.preference==='same';
+    const ok = (want&&same)||(!want&&!same);
+    if(!ok) allOk=false;
+    const statusIcon = ok?'✅':'⚠️';
+    const statusColor = ok?'var(--green)':'var(--red)';
+    const wantLabel = want?'希望同班':'希望分班';
+    const resultLabel = same?`同在第 ${cls1} 包`:`分別在第 ${cls1} 包 / 第 ${cls2} 包`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;flex-wrap:wrap;">
+      <span style="font-size:1.1rem;">${statusIcon}</span>
+      <span style="font-weight:700;">${t.s1Name}</span>
+      <span style="color:var(--text3);">👫</span>
+      <span style="font-weight:700;">${t.s2Name}</span>
+      <span style="font-size:.75rem;color:var(--text3);">${classLabel(t.grade,t.s1Class)} × ${classLabel(t.grade,t.s2Class)}</span>
+      <span class="tag" style="background:var(--bg);color:var(--text2);font-size:.68rem;">${wantLabel}</span>
+      <span style="font-weight:700;color:${statusColor};font-size:.82rem;margin-left:auto;">${resultLabel}</span>
+    </div>`;
+  }).join('');
+
+  cont.innerHTML=`
+    <div style="margin-bottom:10px;font-size:.85rem;font-weight:600;color:${allOk?'var(--green)':'var(--red)'};">
+      ${allOk?'✅ 所有雙胞胎分配符合家長意願':'⚠️ 有雙胞胎分配不符合家長意願，請手動調整'}
+    </div>
+    <div style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;">${rows}</div>
+  `;
 }
 
 // =============================================
