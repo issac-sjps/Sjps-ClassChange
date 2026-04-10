@@ -592,46 +592,31 @@ function buildTwinSurveyGrade(grade, cfg) {
   const CELL_H_SIGN  = '36pt';
   const B = 'border:0.75pt solid #555;';
 
-  // 固定每格班級欄寬，不隨班數伸縮
-  const COL_W = '60pt';   // 每班欄位固定寬度
-  const PAD_COLS = CHUNK - 0; // 每組最多班數（用來補空欄）
-
   const buildChunk = (classes, chunkIdx) => {
     const isLast = chunkIdx === chunks.length - 1;
     const marginBot = isLast ? '0' : '10pt';
-    const padCount = CHUNK - classes.length; // 需要補幾個空欄
-    const emptyHeader = padCount > 0
-      ? Array(padCount).fill(`<th style="border:none;width:${COL_W};"></th>`).join('')
-      : '';
-    const emptyCell = (h) => padCount > 0
-      ? Array(padCount).fill(`<td style="border:none;height:${h};"></td>`).join('')
-      : '';
+    // 標籤欄固定寬度，其餘班級欄平均分配剩餘空間
     return `
-<table style="border-collapse:collapse;font-size:10pt;margin-bottom:${marginBot};">
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:${marginBot};table-layout:fixed;">
   <colgroup>
     <col style="width:${ROW_LABEL_W};">
-    ${classes.map(()=>`<col style="width:${COL_W};">`).join('')}
-    ${padCount > 0 ? Array(padCount).fill(`<col style="width:${COL_W};">`).join('') : ''}
+    ${classes.map(()=>`<col>`).join('')}
   </colgroup>
   <tr style="background:#222;color:#fff;">
-    <th style="${B}padding:5pt 6pt;text-align:left;font-weight:500;width:${ROW_LABEL_W};">項目</th>
+    <th style="${B}padding:5pt 6pt;text-align:left;font-weight:500;">項目</th>
     ${classes.map(cls=>`<th style="${B}padding:5pt 3pt;text-align:center;font-weight:500;font-size:11pt;">${cls}</th>`).join('')}
-    ${emptyHeader}
   </tr>
   <tr>
     <td style="${B}padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">有無雙（多）胞胎<br><span style="font-weight:normal;">（有 ✓　無 ✗）</span></td>
     ${classes.map(()=>`<td style="${B}height:${CELL_H_CHECK};"></td>`).join('')}
-    ${emptyCell(CELL_H_CHECK)}
   </tr>
   <tr>
     <td style="${B}padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">需意願書份數<br><span style="font-size:8.5pt;font-weight:normal;">（有✓者填張數）</span></td>
     ${classes.map(()=>`<td style="${B}height:${CELL_H_CHECK};"></td>`).join('')}
-    ${emptyCell(CELL_H_CHECK)}
   </tr>
   <tr>
     <td style="${B}padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;">導師簽名</td>
     ${classes.map(()=>`<td style="${B}height:${CELL_H_SIGN};"></td>`).join('')}
-    ${emptyCell(CELL_H_SIGN)}
   </tr>
 </table>`;
   };
