@@ -484,7 +484,7 @@ function buildSubjectForm(cfg) {
   <div style="font-size:10pt;color:#444;">科任教師填寫版</div>
 </div>
 
-<div style="font-size:8.5pt;border:0.5pt solid #aaa;padding:4pt 7pt;margin-bottom:7pt;line-height:1.6;background:#f7f7f7;">
+<div style="font-size:8.5pt;border:0.5pt solid #aaa;padding:3pt 7pt;margin-bottom:6pt;line-height:1.55;background:#f7f7f7;">
   請老師填寫<b>二、四年級</b>班上<b>需多費心</b>及<b>不宜再同班</b>的學生名單，作為 ${cfg.year} 學年度編班參考。<br>
   如班上無此類學生可不填，仍請放入信封密封後，於 <b>${cfg.deadline2}</b> 前交回 ${cfg.place}。感謝！<br>
   ※ 以上學生<b>不包含</b>資源班、資優班學生；此表與導師填寫資料對應參考使用。
@@ -501,9 +501,9 @@ function buildSubjectForm(cfg) {
 </table>
 
 <div style="font-size:10.5pt;font-weight:bold;background:#222;color:#fff;padding:3pt 7pt;margin-bottom:0;">
-  壹、需多費心學生名單　<span style="font-size:9pt;font-weight:normal;">（請填 1–4 名，含班級代號與座號，例：40101）</span>
+  壹、需多費心學生名單　<span style="font-size:9pt;font-weight:normal;">（請填 1–5 名，含班級代號與座號，例：40101）</span>
 </div>
-<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:7pt;">
+<table style="width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:5pt;">
   <colgroup>
     <col style="width:22pt;">
     <col style="width:46pt;">
@@ -516,10 +516,10 @@ function buildSubjectForm(cfg) {
     <th style="${B}padding:3pt;text-align:center;">學生姓名</th>
     <th style="${B}padding:3pt 6pt;text-align:left;">說　明（行為特徵、需注意事項等）</th>
   </tr>
-  ${[1,2,3,4].map(n=>`
+  ${[1,2,3,4,5].map(n=>`
   <tr>
     <td style="${B}padding:2pt 3pt;text-align:center;font-weight:bold;">${n}</td>
-    <td style="${B}padding:2pt 3pt;height:20pt;text-align:center;font-size:9pt;"></td>
+    <td style="${B}padding:2pt 3pt;height:18pt;text-align:center;font-size:9pt;"></td>
     <td style="${B}padding:2pt 3pt;"></td>
     <td style="${B}padding:2pt 3pt;"></td>
   </tr>`).join('')}
@@ -528,7 +528,7 @@ function buildSubjectForm(cfg) {
 <div style="font-size:10.5pt;font-weight:bold;background:#222;color:#fff;padding:3pt 7pt;margin-bottom:0;">
   貳、不宜再同班的學生名單　<span style="font-size:9pt;font-weight:normal;">（甲生跨列合併，每位乙生各填一行；超過 3 位請寫說明欄或紙張背面）</span>
 </div>
-<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:5pt;">
+<table style="width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:4pt;">
   <colgroup>
     <col style="width:18pt;">
     <col style="width:44pt;">
@@ -550,10 +550,10 @@ function buildSubjectForm(cfg) {
       const rs = 'rowspan="3"';
       return `<tr>
         ${isFirst ? `<td ${rs} style="${B}padding:2pt 3pt;text-align:center;font-weight:bold;vertical-align:middle;background:#f5f5f5;">${n}</td>
-        <td ${rs} style="${B}padding:2pt 3pt;vertical-align:middle;height:19pt;"></td>
+        <td ${rs} style="${B}padding:2pt 3pt;vertical-align:middle;height:18pt;"></td>
         <td ${rs} style="${B}padding:2pt 3pt;vertical-align:middle;"></td>` : ''}
         <td style="${B}padding:2pt 3pt;text-align:center;font-size:8.5pt;color:#888;vertical-align:middle;">${bi}</td>
-        <td style="${B}padding:2pt 3pt;vertical-align:middle;height:19pt;"></td>
+        <td style="${B}padding:2pt 3pt;vertical-align:middle;height:18pt;"></td>
         <td style="${B}padding:2pt 3pt;vertical-align:middle;"></td>
         ${isFirst ? `<td ${rs} style="${B}padding:2pt 3pt;vertical-align:top;"></td>` : ''}
       </tr>`;
@@ -562,7 +562,7 @@ function buildSubjectForm(cfg) {
   }).join('')}
 </table>
 
-<div style="font-size:8.5pt;color:#555;margin-bottom:8pt;line-height:1.6;">
+<div style="font-size:8pt;color:#555;margin-bottom:5pt;line-height:1.55;">
   ※ 以上學生不包含資源班、資優班學生（資源班、資優班學生編班時會自動分散各班）。<br>
   ※ 以上資料提供編班時與導師填寫資料對應參考，請放入信封密封後交回。
 </div>
