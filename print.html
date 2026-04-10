@@ -580,7 +580,46 @@ function buildTwinSurveyGrade(grade, cfg) {
   div.className = 'print-page';
   const count = grade === 2 ? cfg.count2 : cfg.count4;
   const gradeLabel = grade === 2 ? '二' : '四';
-  const headers = ['項目', ...Array.from({length:count},(_,i)=>`${grade}0${i+1}`)];
+  const CHUNK = 4; // 每行最多4班
+
+  // 把班級拆成每組4個
+  const allClasses = Array.from({length:count}, (_,i) => `${grade}0${i+1}`);
+  const chunks = [];
+  for(let i=0;i<allClasses.length;i+=CHUNK) chunks.push(allClasses.slice(i,i+CHUNK));
+
+  const ROW_LABEL_W = '90pt';
+  const CELL_H_CHECK = '32pt';
+  const CELL_H_SIGN  = '36pt';
+  const B = 'border:0.75pt solid #555;';
+
+  const buildChunk = (classes, chunkIdx) => {
+    const isLast = chunkIdx === chunks.length - 1;
+    const marginBot = isLast ? '0' : '10pt';
+    return `
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:${marginBot};">
+  <colgroup>
+    <col style="width:${ROW_LABEL_W};">
+    ${classes.map(()=>`<col style="width:${Math.floor((100-20)/classes.length)}%;">`).join('')}
+  </colgroup>
+  <tr style="background:#222;color:#fff;">
+    <th style="${B}padding:5pt 6pt;text-align:left;font-weight:500;">項目</th>
+    ${classes.map(cls=>`<th style="${B}padding:5pt 3pt;text-align:center;font-weight:500;font-size:11pt;">${cls}</th>`).join('')}
+  </tr>
+  <tr>
+    <td style="${B}padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">有無雙（多）胞胎<br><span style="font-weight:normal;">（有 ✓　無 ✗）</span></td>
+    ${classes.map(()=>`<td style="${B}height:${CELL_H_CHECK};"></td>`).join('')}
+  </tr>
+  <tr>
+    <td style="${B}padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">需意願書份數<br><span style="font-size:8.5pt;font-weight:normal;">（有✓者填張數）</span></td>
+    ${classes.map(()=>`<td style="${B}height:${CELL_H_CHECK};"></td>`).join('')}
+  </tr>
+  <tr>
+    <td style="${B}padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;">導師簽名</td>
+    ${classes.map(()=>`<td style="${B}height:${CELL_H_SIGN};"></td>`).join('')}
+  </tr>
+</table>`;
+  };
+
   div.innerHTML = `
 <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2pt solid #000;padding-bottom:4pt;margin-bottom:8pt;">
   <div style="font-size:13pt;font-weight:bold;">${cfg.year} 學年度　${gradeLabel}年級導師　雙（多）胞胎調查表</div>
@@ -593,23 +632,7 @@ function buildTwinSurveyGrade(grade, cfg) {
   ※ 如有雙胞胎欲申請編班（同班或不同班），請家長另填「複數子女學生編班家長意願書」並附戶口名簿影本一併送交。
 </div>
 
-<table style="width:100%;border-collapse:collapse;font-size:10pt;">
-  <tr style="background:#222;color:#fff;">
-    ${headers.map((h,i)=>`<th style="border:0.75pt solid #555;padding:5pt 3pt;text-align:center;min-width:${i===0?'80pt':'32pt'};font-weight:500;">${h}</th>`).join('')}
-  </tr>
-  <tr>
-    <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">有無雙（多）胞胎<br><span style="font-weight:normal;">（有 ✓　無 ✗）</span></td>
-    ${Array(count).fill('<td style="border:0.75pt solid #555;height:28pt;"></td>').join('')}
-  </tr>
-  <tr>
-    <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">需意願書份數<br><span style="font-size:8.5pt;font-weight:normal;">（有✓者填張數）</span></td>
-    ${Array(count).fill('<td style="border:0.75pt solid #555;height:28pt;"></td>').join('')}
-  </tr>
-  <tr>
-    <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;">導師簽名</td>
-    ${Array(count).fill('<td style="border:0.75pt solid #555;height:28pt;"></td>').join('')}
-  </tr>
-</table>
+${chunks.map((cls, idx) => buildChunk(cls, idx)).join('')}
 
 <div style="margin-top:12pt;font-size:8.5pt;color:#555;line-height:1.7;border-top:0.5pt solid #bbb;padding-top:6pt;">
   ※ 截止日期：<b>${cfg.deadlineTwin}</b>，感謝各位導師配合！
