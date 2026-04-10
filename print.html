@@ -231,19 +231,19 @@
     </div>
     <div class="form-group">
       <label class="lbl">繳回日期（導師表）</label>
-      <input type="text" id="cfgDeadline1" value="4/18(五)中午前" style="width:100%;">
+      <input type="text" id="cfgDeadline1" value="4/24(五)下班前" style="width:100%;">
     </div>
     <div class="form-group">
       <label class="lbl">繳回日期（科任表）</label>
-      <input type="text" id="cfgDeadline2" value="4/18(五)中午前" style="width:100%;">
+      <input type="text" id="cfgDeadline2" value="4/24(五)下班前" style="width:100%;">
     </div>
     <div class="form-group">
       <label class="lbl">繳回日期（雙胞胎調查）</label>
-      <input type="text" id="cfgDeadlineTwin" value="3/26(三)中午前" style="width:100%;">
+      <input type="text" id="cfgDeadlineTwin" value="4/24(五)下班前" style="width:100%;">
     </div>
     <div class="form-group">
       <label class="lbl">繳交地點</label>
-      <input type="text" id="cfgPlace" value="教務處註冊組(112)" style="width:100%;">
+      <input type="text" id="cfgPlace" value="教務處註冊組(#112)" style="width:100%;">
     </div>
     <div class="form-group">
       <label class="lbl">學校全名</label>
@@ -544,7 +544,7 @@ function buildSubjectForm(cfg) {
     <th colspan="3" style="${B}padding:3pt;text-align:center;">不宜與甲同班之學生乙<br><span style="font-size:8pt;font-weight:normal;">（每行一位，班級＋座號／姓名）</span></th>
     <th style="${B}padding:3pt 5pt;text-align:left;">說明（原因、衝突背景等）</th>
   </tr>
-  ${[1,2,3].map(n => {
+  ${[1,2,3,4].map(n => {
     const rows = [1,2,3].map((bi, idx) => {
       const isFirst = idx === 0;
       const rs = 'rowspan="3"';
