@@ -595,11 +595,15 @@ function buildTwinSurveyGrade(grade, cfg) {
 
 <table style="width:100%;border-collapse:collapse;font-size:10pt;">
   <tr style="background:#222;color:#fff;">
-    ${headers.map((h,i)=>`<th style="border:0.75pt solid #555;padding:5pt 3pt;text-align:center;min-width:${i===0?'70pt':'32pt'};font-weight:500;">${h}</th>`).join('')}
+    ${headers.map((h,i)=>`<th style="border:0.75pt solid #555;padding:5pt 3pt;text-align:center;min-width:${i===0?'80pt':'32pt'};font-weight:500;">${h}</th>`).join('')}
   </tr>
   <tr>
     <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">有無雙（多）胞胎<br><span style="font-weight:normal;">（有 ✓　無 ✗）</span></td>
-    ${Array(count).fill('<td style="border:0.75pt solid #555;height:30pt;"></td>').join('')}
+    ${Array(count).fill('<td style="border:0.75pt solid #555;height:28pt;"></td>').join('')}
+  </tr>
+  <tr>
+    <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;white-space:nowrap;">需意願書份數<br><span style="font-size:8.5pt;font-weight:normal;">（有✓者填張數）</span></td>
+    ${Array(count).fill('<td style="border:0.75pt solid #555;height:28pt;"></td>').join('')}
   </tr>
   <tr>
     <td style="border:0.75pt solid #555;padding:5pt 6pt;font-size:9.5pt;background:#f5f5f5;font-weight:bold;">導師簽名</td>
