@@ -56,6 +56,7 @@
   body{margin:0;padding:0;background:#fff;font-family:'Microsoft JhengHei','PingFang TC','DFKai-SB',sans-serif;}
   .no-print{display:none !important;}
   .print-page{display:block !important;}
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 }
 
 /* ── PRINT PAGE (共用) ── */
@@ -299,7 +300,8 @@
     <button class="btn btn-ghost" onclick="printForm('twinadj')">🖨️ 複數子女改調班申請書</button>
   </div>
   <div style="margin-top:12px;font-size:.82rem;color:var(--text3);">
-    列印時請在瀏覽器設定：A4、直向、縮放「無」或「符合頁面」。
+    列印時請在瀏覽器設定：A4、直向、縮放「無」或「符合頁面」。<br>
+    <span style="color:#dc2626;font-weight:600;">⚠ 請在「更多設定」中勾選「背景圖形」，確保黑色標題列正確列印。</span>
   </div>
 </div>
 
