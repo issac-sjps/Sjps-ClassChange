@@ -174,7 +174,9 @@ select:focus, input:focus { border-color: var(--blue); }
 
 <nav class="tabs">
   <button class="tab-btn active" onclick="switchTab('classlist', this)">📚 各班名單</button>
-  <button class="tab-btn" onclick="switchTab('specials', this)">👁 特殊生總表</button>
+  <button class="tab-btn" onclick="switchTab('bighead', this)">⚠ 大頭</button>
+  <button class="tab-btn" onclick="switchTab('special', this)">🔵 鑑輔生</button>
+  <button class="tab-btn" onclick="switchTab('gifted', this)">⭐ 資優生</button>
   <button class="tab-btn" onclick="switchTab('rules', this)">📌 不能同班總表</button>
   <button class="tab-btn" onclick="switchTab('twins', this)">👫 雙胞胎名單</button>
 </nav>
@@ -208,31 +210,52 @@ select:focus, input:focus { border-color: var(--blue); }
   </div>
 </div>
 
-<!-- TAB 2: 特殊生總表 -->
-<div id="tab-specials" class="tab-pane">
+<!-- TAB: 大頭 -->
+<div id="tab-bighead" class="tab-pane">
   <div class="filter-bar">
     <div class="form-group">
       <label class="fl">年級</label>
-      <select id="spGrade" onchange="renderSpecials()">
+      <select id="bhGrade" onchange="renderSpecialTab('bighead','bhGrade','bhSummary','bhContent')">
         <option value="">全部</option>
         <option value="2">2年級</option>
         <option value="4">4年級</option>
       </select>
     </div>
+  </div>
+  <div id="bhSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="bhContent"><div class="card"><div class="empty">載入中…</div></div></div>
+</div>
+
+<!-- TAB: 鑑輔生 -->
+<div id="tab-special" class="tab-pane">
+  <div class="filter-bar">
     <div class="form-group">
-      <label class="fl">篩選標記</label>
-      <select id="spTag" onchange="renderSpecials()">
-        <option value="">全部特殊標記</option>
-        <option value="bighead">⚠ 大頭</option>
-        <option value="special">🔵 鑑輔生</option>
-        <option value="gifted">⭐ 資優生</option>
+      <label class="fl">年級</label>
+      <select id="spGrade2" onchange="renderSpecialTab('special','spGrade2','spSummary2','spContent2')">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
       </select>
     </div>
   </div>
-  <div id="specialsSummary" style="margin-bottom:16px;"></div>
-  <div class="ov-grid" id="specialsContent">
-    <div class="card"><div class="empty">載入中…</div></div>
+  <div id="spSummary2" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="spContent2"><div class="card"><div class="empty">載入中…</div></div></div>
+</div>
+
+<!-- TAB: 資優生 -->
+<div id="tab-gifted" class="tab-pane">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="gfGrade" onchange="renderSpecialTab('gifted','gfGrade','gfSummary','gfContent')">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
   </div>
+  <div id="gfSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="gfContent"><div class="card"><div class="empty">載入中…</div></div></div>
 </div>
 
 <!-- TAB 3: 不能同班總表 -->
@@ -370,7 +393,9 @@ async function initApp() {
     document.getElementById('updatedLbl').textContent='最後更新：'+new Date().toLocaleTimeString('zh-TW');
     populateClassFilters();
     renderClassList();
-    renderSpecials();
+    renderSpecialTab('bighead','bhGrade','bhSummary','bhContent');
+    renderSpecialTab('special','spGrade2','spSummary2','spContent2');
+    renderSpecialTab('gifted','gfGrade','gfSummary','gfContent');
     renderRules();
     renderTwinsTab();
   } catch(e) {
@@ -487,77 +512,56 @@ function renderClassList() {
   }
 }
 
-// ── TAB 2: SPECIALS ──
-function renderSpecials() {
-  const filterGrade = document.getElementById('spGrade').value;
-  const filterTag   = document.getElementById('spTag').value;
-  const cont = document.getElementById('specialsContent');
-  const summary = document.getElementById('specialsSummary');
+// ── TABS: 大頭 / 鑑輔生 / 資優生 ──
+function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
+  const filterGrade = document.getElementById(gradeSelId).value;
+  const cont    = document.getElementById(contId);
+  const summary = document.getElementById(summaryId);
+  const tagColor  = {bighead:'var(--red)',special:'var(--purple)',gifted:'var(--gold)'}[tag];
+  const tagLabel  = {bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[tag];
+  const tagClass  = {bighead:'tag-bighead',special:'tag-special',gifted:'tag-gifted'}[tag];
 
   const map={};
   Object.values(state.students).forEach(s=>{
     if(filterGrade && s.grade!=filterGrade) return;
-    const has = filterTag ? s.tags.includes(filterTag) : (s.tags.includes('bighead')||s.tags.includes('special')||s.tags.includes('gifted'));
-    if(!has) return;
+    if(!s.tags.includes(tag)) return;
     const key=`${s.grade}-${s.class}`;
     if(!map[key]) map[key]={grade:s.grade,class:s.class,students:[]};
     map[key].students.push(s);
   });
 
   const keys=Object.keys(map).sort();
-  if(!keys.length){ cont.innerHTML='<div class="card"><div class="empty">無符合條件的特殊標記學生</div></div>'; summary.innerHTML=''; return; }
+  if(!keys.length){
+    cont.innerHTML=`<div class="card"><div class="empty">目前無${tagLabel}學生</div></div>`;
+    summary.innerHTML=''; return;
+  }
 
-  let totalBH=0,totalSP=0,totalGF=0;
-  Object.values(map).forEach(({students})=>{
-    students.forEach(s=>{
-      if(s.tags.includes('bighead')) totalBH++;
-      if(s.tags.includes('special')) totalSP++;
-      if(s.tags.includes('gifted'))  totalGF++;
-    });
-  });
+  const total = Object.values(map).reduce((a,{students})=>a+students.length,0);
   summary.innerHTML=`<div class="stats-row">
-    <div class="stat-box"><div class="stat-num" style="color:var(--red);">${totalBH}</div><div class="stat-lbl">大頭</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--purple);">${totalSP}</div><div class="stat-lbl">鑑輔生</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--gold);">${totalGF}</div><div class="stat-lbl">資優生</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:${tagColor};">${total}</div><div class="stat-lbl">${tagLabel}人數</div></div>
     <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">涉及班級</div></div>
   </div>`;
 
   cont.innerHTML='';
-  for(const key of keys) {
+  for(const key of keys){
     const {grade,class:cls,students}=map[key];
-    const bh=students.filter(s=>s.tags.includes('bighead')).length;
-    const sp=students.filter(s=>s.tags.includes('special')).length;
-    const gf=students.filter(s=>s.tags.includes('gifted')).length;
-    const badges=[
-      bh?`<span class="tag tag-bighead" style="font-size:.65rem;">大頭 ${bh}</span>`:'',
-      sp?`<span class="tag tag-special" style="font-size:.65rem;">鑑輔生 ${sp}</span>`:'',
-      gf?`<span class="tag tag-gifted" style="font-size:.65rem;">資優生 ${gf}</span>`:''
-    ].filter(Boolean).join('');
-
-    const tagOrder=t=>t.tags.includes('special')?0:t.tags.includes('bighead')?1:t.tags.includes('gifted')?2:3;
-    const sorted=[...students].sort((a,b)=>tagOrder(a)-tagOrder(b)||a.number-b.number);
-
+    const sorted=[...students].sort((a,b)=>a.number-b.number);
     const rowsHtml=sorted.map(s=>{
-      const tgs=[
-        s.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':'',
-        s.tags.includes('special')?'<span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>':'',
-        s.tags.includes('gifted')?'<span class="tag tag-gifted" style="font-size:.65rem;">資優生</span>':''
-      ].filter(Boolean).join('');
       const binding=Object.values(state.bindings).find(b=>b.studentId===s.id);
       const bindHtml=binding?`<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.63rem;">綁 ${binding.teacherName}</span>`:'';
       const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
       return `<div class="ov-row">
         <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+        <span class="stu-num" style="font-size:.75rem;color:var(--text3);">${String(s.number).padStart(2,'0')}</span>
         <span style="font-weight:600;flex:1;">${s.name}</span>
-        ${tgs} ${bindHtml}
+        ${bindHtml}
       </div>`;
     }).join('');
-
     const div=document.createElement('div'); div.className='ov-card';
     div.innerHTML=`
       <div class="ov-head ov-head-blue">
         <span class="ov-head-title">${classLabel(grade,cls)}</span>
-        <div style="display:flex;gap:4px;">${badges}</div>
+        <span class="ov-head-sub">${students.length} 位${tagLabel}</span>
       </div>
       ${rowsHtml}
     `;
