@@ -223,6 +223,7 @@ tr:hover td { background: #f8f9fd; }
       <button onclick="signOut()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;">🚪 登出</button>
       <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">前台 →</a>
       <a href="admin-users.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">👥 權限管理</a>
+      <a href="print.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">🖨️ 列印調查表</a>
     </div>
     <div style="font-size:.72rem;color:rgba(255,255,255,.6);">👤 <span id="userEmailBadge"></span></div>
   </div>
@@ -235,7 +236,9 @@ tr:hover td { background: #f8f9fd; }
   <button class="tab-btn" onclick="switchTab('teachers')">👩‍🏫 導師名單</button>
   <button class="tab-btn" onclick="switchTab('simulate')">🎲 模擬分班</button>
   <button class="tab-btn" onclick="switchTab('twins')" style="border-left:2px solid var(--border);">👫 雙胞胎</button>
-  <button class="tab-btn" onclick="switchTab('overview-special')">👁 特殊生總表</button>
+  <button class="tab-btn" onclick="switchTab('ov-bighead')">⚠ 大頭</button>
+  <button class="tab-btn" onclick="switchTab('ov-special')">🔵 鑑輔生</button>
+  <button class="tab-btn" onclick="switchTab('ov-gifted')">⭐ 資優生</button>
   <button class="tab-btn" onclick="switchTab('overview-rules')">📌 不能同班總表</button>
 </nav>
 
@@ -687,31 +690,58 @@ tr:hover td { background: #f8f9fd; }
   </div>
 </div>
 
-<!-- ==================== TAB 6: 特殊生總表 ==================== -->
-<div id="tab-overview-special" class="tab-pane">
+<!-- ==================== TAB: 大頭 ==================== -->
+<div id="tab-ov-bighead" class="tab-pane">
   <div class="card">
-    <div class="card-title">👁 特殊生總表 <span>供老師快速瀏覽 ─ 僅顯示有標記的學生</span></div>
+    <div class="card-title">⚠ 大頭名單 <span>需多費心管教的學生，依班級顯示</span></div>
     <div class="form-row" style="margin-bottom:0;">
       <div class="form-group">
         <label>顯示年級</label>
-        <select id="ovSpecGrade" onchange="renderOverviewSpecial()">
+        <select id="ovBHGrade" onchange="renderOverviewTag('bighead','ovBHGrade','ovBHContent')">
           <option value="">全部</option>
           <option value="2">2年級</option>
           <option value="4">4年級</option>
         </select>
       </div>
+    </div>
+  </div>
+  <div id="ovBHContent"></div>
+</div>
+
+<!-- ==================== TAB: 鑑輔生 ==================== -->
+<div id="tab-ov-special" class="tab-pane">
+  <div class="card">
+    <div class="card-title">🔵 鑑輔生名單 <span>特殊需求學生，依班級顯示</span></div>
+    <div class="form-row" style="margin-bottom:0;">
       <div class="form-group">
-        <label>篩選標記</label>
-        <select id="ovSpecTag" onchange="renderOverviewSpecial()">
-          <option value="">全部特殊標記</option>
-          <option value="bighead">⚠ 大頭</option>
-          <option value="special">🔵 鑑輔生</option>
-          <option value="gifted">⭐ 資優生</option>
+        <label>顯示年級</label>
+        <select id="ovSPGrade" onchange="renderOverviewTag('special','ovSPGrade','ovSPContent')">
+          <option value="">全部</option>
+          <option value="2">2年級</option>
+          <option value="4">4年級</option>
         </select>
       </div>
     </div>
   </div>
-  <div id="ovSpecContent"></div>
+  <div id="ovSPContent"></div>
+</div>
+
+<!-- ==================== TAB: 資優生 ==================== -->
+<div id="tab-ov-gifted" class="tab-pane">
+  <div class="card">
+    <div class="card-title">⭐ 資優生名單 <span>資優班學生，依班級顯示</span></div>
+    <div class="form-row" style="margin-bottom:0;">
+      <div class="form-group">
+        <label>顯示年級</label>
+        <select id="ovGFGrade" onchange="renderOverviewTag('gifted','ovGFGrade','ovGFContent')">
+          <option value="">全部</option>
+          <option value="2">2年級</option>
+          <option value="4">4年級</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div id="ovGFContent"></div>
 </div>
 
 <!-- ==================== TAB 7: 不能同班總表 ==================== -->
@@ -898,7 +928,9 @@ function renderAll() {
   updateBindStudentList();
   updateBindTeacherList();
   renderBindingList();
-  renderOverviewSpecial();
+  renderOverviewTag('bighead','ovBHGrade','ovBHContent');
+  renderOverviewTag('special','ovSPGrade','ovSPContent');
+  renderOverviewTag('gifted','ovGFGrade','ovGFContent');
   renderOverviewRules();
   renderGradeTwinList();
   renderTwinList();
@@ -2017,18 +2049,18 @@ function exportSimResult() {
 }
 
 // =============================================
-// TAB 6: OVERVIEW - SPECIAL STUDENTS
+// TABS: 大頭 / 鑑輔生 / 資優生
 // =============================================
-function renderOverviewSpecial() {
-  const filterGrade = document.getElementById('ovSpecGrade').value;
-  const filterTag   = document.getElementById('ovSpecTag').value;
-  const cont = document.getElementById('ovSpecContent');
+function renderOverviewTag(tag, gradeSelId, contId) {
+  const filterGrade = document.getElementById(gradeSelId).value;
+  const filterTag   = tag;
+  const cont = document.getElementById(contId);
 
   // Group students by grade → class, only those with relevant tags
   const map = {}; // "grade-class" -> {grade, class, students[]}
   Object.values(state.students).forEach(s => {
     if(filterGrade && s.grade != filterGrade) return;
-    const hasTag = filterTag ? s.tags.includes(filterTag) : (s.tags.includes('bighead')||s.tags.includes('special')||s.tags.includes('gifted'));
+    const hasTag = s.tags.includes(filterTag);
     if(!hasTag) return;
     const key = `${s.grade}-${s.class}`;
     if(!map[key]) map[key] = { grade:s.grade, class:s.class, students:[] };
@@ -2048,11 +2080,12 @@ function renderOverviewSpecial() {
     });
   });
 
+  const tagColor = {'bighead':'var(--red)','special':'var(--purple)','gifted':'var(--gold)'}[filterTag]||'var(--navy)';
+  const tagLabelMap = {'bighead':'大頭','special':'鑑輔生','gifted':'資優生'};
+  const totalTagged = Object.values(map).reduce((a,{students})=>a+students.filter(s=>s.tags.includes(filterTag)).length, 0);
   let html = `<div class="card" style="margin-bottom:16px;">
     <div class="stats-row">
-      <div class="stat-box"><div class="stat-num" style="color:var(--red);">${totalBH}</div><div class="stat-lbl">大頭</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--purple);">${totalSP}</div><div class="stat-lbl">鑑輔生</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--gold);">${totalGF}</div><div class="stat-lbl">資優生</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:${tagColor};">${totalTagged}</div><div class="stat-lbl">${tagLabelMap[filterTag]||filterTag}</div></div>
       <div class="stat-box"><div class="stat-num">${Object.keys(map).length}</div><div class="stat-lbl">涉及班級數</div></div>
     </div>
   </div>`;
