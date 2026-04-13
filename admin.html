@@ -588,27 +588,32 @@ tr:hover td { background: #f8f9fd; }
 <div id="tab-twins" class="tab-pane">
   <div class="two-col">
     <div>
-      <!-- 升級生雙胞胎 -->
+      <!-- 升級生多胞胎 -->
       <div class="card">
-        <div class="card-title">➕ 新增雙胞胎（升級生：2年級 / 4年級）</div>
-        <div class="notice">選擇同一年級的兩位學生，設定是否要同班。模擬分班時會自動套用。</div>
-        <div class="form-row">
+        <div class="card-title">➕ 新增多胞胎（升級生：2年級 / 4年級）</div>
+        <div class="notice">輸入座號（如 <b>40102</b>）或姓名搜尋，加入後可繼續新增（支援三胞胎、四胞胎）。至少需 2 位學生才可儲存。</div>
+        <div class="form-row" style="align-items:flex-end;">
           <div class="form-group">
             <label>年級</label>
-            <select id="twGrade" onchange="updateTwinStudentSelects()">
+            <select id="twGrade" onchange="twClearMembers()">
               <option value="2">2年級</option>
               <option value="4">4年級</option>
             </select>
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-group grow">
-            <label>學生甲</label>
-            <select id="twStu1"><option value="">─ 請先選年級 ─</option></select>
+            <label>搜尋學生（輸入座號如 40102，或姓名）</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="twSearch" placeholder="輸入座號或姓名…" oninput="twSearchStudents()" style="flex:1;">
+              <div style="position:relative;">
+                <div id="twDropdown" style="display:none;position:absolute;top:100%;left:0;min-width:220px;background:#fff;border:1.5px solid var(--border);border-radius:8px;box-shadow:var(--shadow);z-index:50;max-height:220px;overflow-y:auto;"></div>
+              </div>
+            </div>
           </div>
-          <div class="form-group grow">
-            <label>學生乙</label>
-            <select id="twStu2"><option value="">─ 請先選年級 ─</option></select>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;">已加入的學生（<span id="twMemberCount">0</span> 位）</label>
+          <div id="twMemberList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;min-height:32px;padding:6px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);">
+            <span style="font-size:.8rem;color:var(--text3);" id="twMemberEmpty">尚未加入任何學生</span>
           </div>
         </div>
         <div class="form-group" style="margin-bottom:12px;">
@@ -626,7 +631,7 @@ tr:hover td { background: #f8f9fd; }
           <label>備註（選填）</label>
           <input type="text" id="twNote" placeholder="例：家長來電要求分班">
         </div>
-        <button class="btn btn-primary" onclick="saveGradeTwin()">💾 儲存雙胞胎記錄</button>
+        <button class="btn btn-primary" onclick="saveGradeTwin()">💾 儲存多胞胎記錄</button>
       </div>
 
       <!-- 新生雙胞胎 -->
@@ -660,7 +665,7 @@ tr:hover td { background: #f8f9fd; }
     <div>
       <!-- 升級生雙胞胎清單 -->
       <div class="card">
-        <div class="card-title">📋 升級生雙胞胎清單</div>
+        <div class="card-title">📋 升級生多胞胎清單</div>
         <div class="form-row" style="margin-bottom:12px;">
           <div class="form-group">
             <label>篩選年級</label>
@@ -2226,80 +2231,159 @@ function renderOverviewRules() {
 
 
 // =============================================
-// TAB: TWINS (GRADE STUDENTS)
+// TAB: 多胞胎 (GRADE STUDENTS)
 // =============================================
-function updateTwinStudentSelects() {
+let twMembers = []; // 目前正在新增的多胞胎成員清單 [{id, name, class, number}]
+
+function twClearMembers() {
+  twMembers = [];
+  twRenderMembers();
+  document.getElementById('twSearch').value = '';
+  document.getElementById('twDropdown').style.display = 'none';
+}
+
+function twSearchStudents() {
+  const q = document.getElementById('twSearch').value.trim();
   const grade = parseInt(document.getElementById('twGrade').value);
-  const stus = Object.values(state.students).filter(s=>s.grade===grade)
-    .sort((a,b)=>a.class-b.class||a.number-b.number);
-  ['twStu1','twStu2'].forEach(id=>{
-    const sel=document.getElementById(id);
-    const old=sel.value;
-    sel.innerHTML='<option value="">─ 選擇學生 ─</option>';
-    stus.forEach(s=>{
-      const o=document.createElement('option'); o.value=s.id;
-      o.textContent=`${classLabel(s.grade,s.class)} ${String(s.number).padStart(2,'0')} ${s.name}`;
-      sel.appendChild(o);
-    });
-    if(old) sel.value=old;
+  const dropdown = document.getElementById('twDropdown');
+  if(!q) { dropdown.style.display='none'; return; }
+
+  const stus = Object.values(state.students).filter(s => {
+    if(s.grade !== grade) return false;
+    // 座號搜尋：輸入 40102 → grade=4, class=01, number=02
+    const numCode = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
+    const altCode = `${s.grade}${s.class}${String(s.number).padStart(2,'0')}`;
+    return numCode.includes(q) || altCode.includes(q) || s.name.includes(q);
+  }).slice(0, 10);
+
+  if(!stus.length) { dropdown.innerHTML='<div style="padding:10px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dropdown.style.display=''; return; }
+
+  dropdown.innerHTML = '';
+  stus.forEach(s => {
+    const alreadyIn = twMembers.some(m => m.id === s.id);
+    const btn = document.createElement('div');
+    btn.style.cssText = `padding:8px 12px;font-size:.875rem;cursor:${alreadyIn?'default':'pointer'};display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);color:${alreadyIn?'var(--text3)':'var(--text)'};background:${alreadyIn?'var(--bg)':'#fff'};`;
+    const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+    btn.innerHTML = `<span style="color:${gc};">${s.gender==='M'?'♂':'♀'}</span>
+      <span style="font-size:.78rem;color:var(--text3);">${s.grade}0${s.class}${String(s.number).padStart(2,'0')}</span>
+      <span style="font-weight:600;">${s.name}</span>
+      <span style="font-size:.75rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+      ${alreadyIn?'<span style="margin-left:auto;font-size:.72rem;color:var(--text3);">已加入</span>':''}`;
+    if(!alreadyIn) {
+      btn.onmouseenter = () => btn.style.background = 'var(--blue-light)';
+      btn.onmouseleave = () => btn.style.background = '#fff';
+      btn.onclick = () => {
+        twMembers.push({id:s.id, name:s.name, class:s.class, number:s.number, grade:s.grade});
+        twRenderMembers();
+        document.getElementById('twSearch').value = '';
+        dropdown.style.display = 'none';
+      };
+    }
+    dropdown.appendChild(btn);
+  });
+  dropdown.style.display = '';
+}
+
+// 點擊外部關閉 dropdown
+document.addEventListener('click', e => {
+  const dd = document.getElementById('twDropdown');
+  if(dd && !e.target.closest('#twSearch') && !e.target.closest('#twDropdown')) dd.style.display='none';
+});
+
+function twRenderMembers() {
+  const list = document.getElementById('twMemberList');
+  const empty = document.getElementById('twMemberEmpty');
+  const count = document.getElementById('twMemberCount');
+  count.textContent = twMembers.length;
+  if(!twMembers.length) {
+    empty.style.display='';
+    list.querySelectorAll('.tw-chip').forEach(el=>el.remove());
+    return;
+  }
+  empty.style.display='none';
+  // Remove old chips
+  list.querySelectorAll('.tw-chip').forEach(el=>el.remove());
+  twMembers.forEach((m, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'tw-chip';
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:3px 10px 3px 8px;font-size:.82rem;';
+    chip.innerHTML = `<span style="font-weight:600;">${m.name}</span><span style="font-size:.72rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>
+      <button onclick="twRemoveMember(${idx})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:0;margin-left:2px;line-height:1;">✕</button>`;
+    list.appendChild(chip);
   });
 }
 
+function twRemoveMember(idx) {
+  twMembers.splice(idx, 1);
+  twRenderMembers();
+}
+
 async function saveGradeTwin() {
-  const grade=parseInt(document.getElementById('twGrade').value);
-  const s1Id=document.getElementById('twStu1').value;
-  const s2Id=document.getElementById('twStu2').value;
-  const pref=document.querySelector('input[name="twPref"]:checked').value;
-  const note=document.getElementById('twNote').value.trim();
-  if(!s1Id||!s2Id){showAlert('請選擇兩位學生','warn');return;}
-  if(s1Id===s2Id){showAlert('不能選擇同一位學生','warn');return;}
-  // Check duplicate
-  const dup=Object.values(state.gradeTwins).find(t=>
-    (t.s1Id===s1Id&&t.s2Id===s2Id)||(t.s1Id===s2Id&&t.s2Id===s1Id)
-  );
-  if(dup){showAlert('此組雙胞胎已存在','warn');return;}
-  const s1=state.students[s1Id];
-  const s2=state.students[s2Id];
-  const twin={grade,s1Id,s1Name:s1.name,s1Class:s1.class,s2Id,s2Name:s2.name,s2Class:s2.class,preference:pref,note};
-  const ref=await db.collection('gradeTwins').add(twin);
-  state.gradeTwins[ref.id]={id:ref.id,...twin};
-  document.getElementById('twNote').value='';
+  const grade = parseInt(document.getElementById('twGrade').value);
+  const pref  = document.querySelector('input[name="twPref"]:checked').value;
+  const note  = document.getElementById('twNote').value.trim();
+
+  if(twMembers.length < 2) { showAlert('請至少加入 2 位學生','warn'); return; }
+
+  // Check unique ids
+  const ids = twMembers.map(m=>m.id);
+  if(new Set(ids).size !== ids.length) { showAlert('有重複的學生','warn'); return; }
+
+  const twin = {
+    grade, preference: pref, note,
+    members: twMembers.map(m=>({id:m.id, name:m.name, class:m.class, number:m.number})),
+    count: twMembers.length,
+    // keep s1/s2 for backward compat with simulation
+    s1Id: twMembers[0].id, s1Name: twMembers[0].name, s1Class: twMembers[0].class,
+    s2Id: twMembers[1].id, s2Name: twMembers[1].name, s2Class: twMembers[1].class,
+  };
+
+  const ref = await db.collection('gradeTwins').add(twin);
+  state.gradeTwins[ref.id] = {id:ref.id, ...twin};
+  twMembers = [];
+  twRenderMembers();
+  document.getElementById('twNote').value = '';
+  document.getElementById('twSearch').value = '';
   renderGradeTwinList();
-  showAlert(`已記錄：${s1.name} 👫 ${s2.name}`);
+  showAlert(`已記錄：${twin.members.map(m=>m.name).join(' 👫 ')}`);
 }
 
 function renderGradeTwinList() {
-  const filterGrade=document.getElementById('twViewGrade').value;
-  const cont=document.getElementById('gradeTwinList');
-  let twins=Object.values(state.gradeTwins);
-  if(filterGrade) twins=twins.filter(t=>t.grade==filterGrade);
-  if(!twins.length){cont.innerHTML='<div class="empty">尚無升級生雙胞胎記錄</div>';return;}
+  const filterGrade = document.getElementById('twViewGrade').value;
+  const cont = document.getElementById('gradeTwinList');
+  let twins = Object.values(state.gradeTwins);
+  if(filterGrade) twins = twins.filter(t=>t.grade==filterGrade);
+  if(!twins.length) { cont.innerHTML='<div class="empty">尚無升級生多胞胎記錄</div>'; return; }
   cont.innerHTML='';
-  twins.sort((a,b)=>a.grade-b.grade||a.s1Name.localeCompare(b.s1Name)).forEach(t=>{
-    const prefLabel=t.preference==='same'
-      ?'<span class="tag tag-twin">✅ 同班</span>'
-      :'<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
-    const div=document.createElement('div');
+  twins.sort((a,b)=>a.grade-b.grade||(a.members?a.members[0].name:a.s1Name).localeCompare(b.members?b.members[0].name:b.s1Name)).forEach(t=>{
+    const members = t.members || [
+      {id:t.s1Id,name:t.s1Name,class:t.s1Class},
+      {id:t.s2Id,name:t.s2Name,class:t.s2Class}
+    ];
+    const prefLabel = t.preference==='same'
+      ? '<span class="tag tag-twin">✅ 同班</span>'
+      : '<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
+    const countLabel = members.length === 2 ? '雙胞胎' : members.length === 3 ? '三胞胎' : `${members.length}胞胎`;
+    const nameHtml = members.map(m=>`<span style="font-weight:700;">${m.name}</span><span style="font-size:.73rem;color:var(--text3);"> (${classLabel(t.grade,m.class)})</span>`).join('<span style="color:var(--text3);margin:0 4px;">👫</span>');
+    const div = document.createElement('div');
     div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;';
-    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <span style="font-weight:700;">${t.s1Name}</span>
-        <span style="font-size:.75rem;color:var(--text3);"> (${classLabel(t.grade,t.s1Class)})</span>
-        <span style="color:var(--text3);margin:0 6px;">👫</span>
-        <span style="font-weight:700;">${t.s2Name}</span>
-        <span style="font-size:.75rem;color:var(--text3);"> (${classLabel(t.grade,t.s2Class)})</span>
-        ${prefLabel}
-        <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-left:4px;">${t.grade}年級</span>
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+          ${nameHtml}
+          ${prefLabel}
+          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;">${t.grade}年級・${countLabel}</span>
+        </div>
+        ${t.note?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;">📝 ${t.note}</div>`:''}
       </div>
       <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGradeTwin('${t.id}')">🗑</button>
-    </div>
-    ${t.note?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;margin-top:5px;">📝 ${t.note}</div>`:''}`;
+    </div>`;
     cont.appendChild(div);
   });
 }
 
 async function deleteGradeTwin(id) {
-  if(!confirm('確定刪除此雙胞胎記錄？')) return;
+  if(!confirm('確定刪除此多胞胎記錄？')) return;
   await db.collection('gradeTwins').doc(id).delete();
   delete state.gradeTwins[id];
   renderGradeTwinList();
