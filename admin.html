@@ -235,7 +235,8 @@ tr:hover td { background: #f8f9fd; }
   <button class="tab-btn" onclick="switchTab('newstu')">👶 新生名單</button>
   <button class="tab-btn" onclick="switchTab('teachers')">👩‍🏫 導師名單</button>
   <button class="tab-btn" onclick="switchTab('simulate')">🎲 模擬分班</button>
-  <button class="tab-btn" onclick="switchTab('twins')" style="border-left:2px solid var(--border);">👫 雙胞胎</button>
+  <button class="tab-btn" onclick="switchTab('special-entry')" style="border-left:2px solid var(--border);">🏷️ 特殊生導入</button>
+  <button class="tab-btn" onclick="switchTab('twins')">👫 雙胞胎</button>
   <button class="tab-btn" onclick="switchTab('ov-bighead')">⚠ 大頭</button>
   <button class="tab-btn" onclick="switchTab('ov-special')">🔵 鑑輔生</button>
   <button class="tab-btn" onclick="switchTab('ov-gifted')">⭐ 資優生</button>
@@ -602,6 +603,61 @@ tr:hover td { background: #f8f9fd; }
   </div>
 </div>
 
+<!-- ==================== TAB: 特殊生導入 ==================== -->
+<div id="tab-special-entry" class="tab-pane">
+  <div class="notice" style="margin-bottom:16px;">
+    輸入座號（如 <b>40102</b>）或姓名搜尋，找到學生後點擊加入對應類別。已在名單中的學生會標示「已標記」。
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+
+    <!-- 大頭 -->
+    <div class="card">
+      <div class="card-title">⚠ 大頭名單</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label>搜尋學生</label>
+        <input type="text" id="entryBHSearch" placeholder="座號或姓名…" oninput="entrySearch('bighead','entryBHSearch','entryBHDropdown','entryBHList')" autocomplete="off">
+        <div id="entryBHDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
+      </div>
+      <div style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:5px;">待加入清單</div>
+      <div id="entryBHList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
+        <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="entryCommit('bighead','entryBHList')">⚠ 加入大頭名單</button>
+    </div>
+
+    <!-- 鑑輔生 -->
+    <div class="card">
+      <div class="card-title">🔵 鑑輔生名單</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label>搜尋學生</label>
+        <input type="text" id="entrySPSearch" placeholder="座號或姓名…" oninput="entrySearch('special','entrySPSearch','entrySPDropdown','entrySPList')" autocomplete="off">
+        <div id="entrySPDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
+      </div>
+      <div style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:5px;">待加入清單</div>
+      <div id="entrySPList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
+        <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="entryCommit('special','entrySPList')" style="background:var(--purple);">🔵 加入鑑輔生名單</button>
+    </div>
+
+    <!-- 資優生 -->
+    <div class="card">
+      <div class="card-title">⭐ 資優生名單</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label>搜尋學生</label>
+        <input type="text" id="entryGFSearch" placeholder="座號或姓名…" oninput="entrySearch('gifted','entryGFSearch','entryGFDropdown','entryGFList')" autocomplete="off">
+        <div id="entryGFDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
+      </div>
+      <div style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:5px;">待加入清單</div>
+      <div id="entryGFList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
+        <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
+      </div>
+      <button class="btn btn-warning btn-sm" onclick="entryCommit('gifted','entryGFList')">⭐ 加入資優生名單</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- ==================== TAB: 雙胞胎管理 ==================== -->
 <div id="tab-twins" class="tab-pane">
   <div class="two-col">
@@ -893,7 +949,8 @@ const state = {
   gradeTwins: {}, // id -> grade students twin {id,grade,s1Id,s2Id,preference,...}
   bindings: {},   // id -> {studentId,teacherId,grade}
   simResult: null,
-  previewStudents: []
+  previewStudents: [],
+  studentNotes: {}  // studentId -> [{id,text,teacher,createdAt}]
 };
 
 // =============================================
@@ -915,15 +972,17 @@ async function init() {
 }
 
 async function loadAll() {
-  const [stuSnap, ruleSnap, teachSnap, newStuSnap, twinSnap, gradeTwinSnap, bindSnap] = await Promise.all([
+  const [stuSnap, ruleSnap, teachSnap, newStuSnap, twinSnap, gradeTwinSnap, bindSnap, notesSnap] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('teachers').get(),
     db.collection('newStudents').get(),
     db.collection('twins').get(),
     db.collection('gradeTwins').get(),
-    db.collection('bindings').get()
+    db.collection('bindings').get(),
+    db.collection('studentNotes').get()
   ]);
+  state.studentNotes = {};
   state.students = {};
   stuSnap.forEach(d => { state.students[d.id] = {id:d.id, ...d.data()}; });
   state.rules = {};
@@ -938,6 +997,12 @@ async function loadAll() {
   gradeTwinSnap.forEach(d => { state.gradeTwins[d.id] = {id:d.id, ...d.data()}; });
   state.bindings = {};
   bindSnap.forEach(d => { state.bindings[d.id] = {id:d.id, ...d.data()}; });
+  state.studentNotes = {};
+  notesSnap.forEach(d => {
+    const note = {id:d.id, ...d.data()};
+    if(!state.studentNotes[note.studentId]) state.studentNotes[note.studentId] = [];
+    state.studentNotes[note.studentId].push(note);
+  });
 }
 
 function renderAll() {
@@ -2210,10 +2275,18 @@ function renderOverviewTag(tag, gradeSelId, contId) {
       const binding = Object.values(state.bindings).find(b=>b.studentId===s.id);
       const bindHtml = binding ? `<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.65rem;">綁 ${binding.teacherName}</span>` : '';
       const genColor = s.gender==='M' ? 'var(--blue)' : 'var(--pink)';
-      return `<div style="display:flex;align-items:center;gap:7px;padding:6px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;">
-        <span style="color:${genColor};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
-        <span style="font-weight:600;flex:1;">${s.name}</span>
-        ${tgs} ${bindHtml}
+      const noteCount = (state.studentNotes[s.id]||[]).length;
+      const noteContId = 'notes_'+s.id+'_'+filterTag;
+      return `<div>
+        <div style="display:flex;align-items:center;gap:7px;padding:6px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;">
+          <span style="color:${genColor};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+          <span style="font-weight:600;flex:1;">${s.name}</span>
+          ${tgs} ${bindHtml}
+          <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.78rem;color:var(--blue);padding:2px 6px;border-radius:4px;border:1px solid var(--blue-light);">
+            💬 說明${noteCount>0?` (${noteCount})`:''}
+          </button>
+        </div>
+        <div id="${noteContId}" style="display:none;padding:8px 14px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;">載入中…</div>
       </div>`;
     }).join('');
 
@@ -2528,6 +2601,169 @@ function renderTwinSimStatus() {
     </div>
     <div style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;">${rows}</div>
   `;
+}
+
+
+// =============================================
+// TAB: 特殊生導入
+// =============================================
+const entryPending = { bighead:[], special:[], gifted:[] };
+
+function entrySearch(tag, searchId, dropdownId, listId) {
+  const q  = document.getElementById(searchId).value.trim();
+  const dd = document.getElementById(dropdownId);
+  if(!q) { dd.style.display='none'; return; }
+
+  const stus = Object.values(state.students).filter(s => {
+    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
+    return code.includes(q) || s.name.includes(q);
+  }).slice(0, 12);
+
+  if(!stus.length) { dd.innerHTML='<div style="padding:9px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dd.style.display=''; return; }
+
+  dd.innerHTML='';
+  stus.forEach(s => {
+    const alreadyTagged = s.tags.includes(tag);
+    const alreadyPending = entryPending[tag].some(m=>m.id===s.id);
+    const row = document.createElement('div');
+    const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+    const tagColors = {bighead:'var(--red)',special:'var(--purple)',gifted:'var(--gold)'};
+    const tagNames  = {bighead:'已標記大頭',special:'已標記鑑輔生',gifted:'已標記資優生'};
+    const disabled = alreadyTagged || alreadyPending;
+    row.style.cssText=`padding:8px 12px;cursor:${disabled?'default':'pointer'};display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);background:${disabled?'var(--bg)':'#fff'};`;
+    row.innerHTML=`<span style="color:${gc};">${s.gender==='M'?'♂':'♀'}</span>
+      <span style="font-size:.76rem;color:var(--text3);">${s.grade}0${s.class}${String(s.number).padStart(2,'0')}</span>
+      <span style="font-weight:600;">${s.name}</span>
+      <span style="font-size:.73rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+      ${alreadyTagged?`<span style="margin-left:auto;font-size:.7rem;font-weight:700;color:${tagColors[tag]};">${tagNames[tag]}</span>`:''}
+      ${alreadyPending&&!alreadyTagged?'<span style="margin-left:auto;font-size:.7rem;color:var(--text3);">待加入</span>':''}`;
+    if(!disabled) {
+      row.onmouseenter = () => row.style.background='var(--blue-light)';
+      row.onmouseleave = () => row.style.background='#fff';
+      row.onclick = () => {
+        entryPending[tag].push({id:s.id, name:s.name, class:s.class, grade:s.grade});
+        document.getElementById(searchId).value='';
+        dd.style.display='none';
+        entryRenderList(tag, listId);
+      };
+    }
+    dd.appendChild(row);
+  });
+  dd.style.display='';
+}
+
+function entryRenderList(tag, listId) {
+  const cont  = document.getElementById(listId);
+  const empty = cont.querySelector('.entry-empty');
+  cont.querySelectorAll('.entry-chip').forEach(el=>el.remove());
+  const list  = entryPending[tag];
+  if(!list.length) { if(empty) empty.style.display=''; return; }
+  if(empty) empty.style.display='none';
+  list.forEach((m, idx) => {
+    const chip = document.createElement('div');
+    chip.className='entry-chip';
+    chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 7px;font-size:.8rem;';
+    chip.innerHTML=`<span style="font-weight:600;">${m.name}</span><span style="font-size:.7rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>
+      <button onclick="entryPending['${tag}'].splice(${idx},1);entryRenderList('${tag}','${listId}');" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.82rem;padding:0;margin-left:1px;">✕</button>`;
+    cont.appendChild(chip);
+  });
+}
+
+async function entryCommit(tag, listId) {
+  const list = entryPending[tag];
+  if(!list.length) { showAlert('請先搜尋並加入學生','warn'); return; }
+  try {
+    const batch = db.batch();
+    list.forEach(m => {
+      const stu = state.students[m.id];
+      if(!stu.tags.includes(tag)) {
+        stu.tags.push(tag);
+        batch.update(db.collection('students').doc(m.id), { tags: stu.tags });
+      }
+    });
+    await batch.commit();
+    const names = list.map(m=>m.name).join('、');
+    entryPending[tag] = [];
+    entryRenderList(tag, listId);
+    renderOverviewTag(tag, {bighead:'ovBHGrade',special:'ovSPGrade',gifted:'ovGFGrade'}[tag], {bighead:'ovBHContent',special:'ovSPContent',gifted:'ovGFContent'}[tag]);
+    renderGradeStats();
+    renderUploadedClasses();
+    showAlert(`已將 ${names} 加入${{bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[tag]}名單`);
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+// 點外部關閉 entry dropdowns
+document.addEventListener('click', e => {
+  ['entryBHDropdown','entrySPDropdown','entryGFDropdown'].forEach(id => {
+    const dd = document.getElementById(id);
+    const searchId = id.replace('Dropdown','Search');
+    if(dd && !e.target.closest('#'+id) && !e.target.closest('#'+searchId)) dd.style.display='none';
+  });
+});
+
+// =============================================
+// 學生說明（多老師）
+// =============================================
+function toggleNotes(studentId, containerId) {
+  const cont = document.getElementById(containerId);
+  if(!cont) return;
+  if(cont.style.display === 'none') {
+    cont.style.display = '';
+    renderStudentNotes(studentId, containerId);
+  } else {
+    cont.style.display = 'none';
+  }
+}
+
+async function addStudentNote(studentId, text, teacher) {
+  if(!text.trim()) return;
+  const note = {
+    studentId, text: text.trim(), teacher: teacher.trim()||'匿名',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  const ref = await db.collection('studentNotes').add(note);
+  if(!state.studentNotes[studentId]) state.studentNotes[studentId] = [];
+  state.studentNotes[studentId].push({id:ref.id, ...note, createdAt: new Date()});
+  return ref.id;
+}
+
+async function deleteStudentNote(noteId, studentId) {
+  await db.collection('studentNotes').doc(noteId).delete();
+  state.studentNotes[studentId] = (state.studentNotes[studentId]||[]).filter(n=>n.id!==noteId);
+}
+
+// 渲染大頭卡片（含說明）的輔助函數，傳入 student 物件，回傳說明 HTML
+function renderStudentNotes(studentId, containerId) {
+  const notes = state.studentNotes[studentId] || [];
+  const cont  = document.getElementById(containerId);
+  if(!cont) return;
+
+  const notesHtml = notes.length
+    ? notes.map(n => {
+        const dt = n.createdAt instanceof Date ? n.createdAt.toLocaleDateString('zh-TW') : '';
+        return `<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
+          <div style="flex:1;font-size:.84rem;">${n.text}</div>
+          <div style="font-size:.75rem;color:var(--text3);white-space:nowrap;">${n.teacher}${dt?' · '+dt:''}</div>
+          <button onclick="deleteStudentNote('${n.id}','${studentId}').then(()=>renderStudentNotes('${studentId}','${containerId}'))" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.8rem;padding:0;">🗑</button>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:.82rem;color:var(--text3);padding:4px 0;">尚無說明</div>';
+
+  cont.innerHTML = `
+    <div style="margin-bottom:6px;">${notesHtml}</div>
+    <div style="display:flex;gap:6px;">
+      <input type="text" placeholder="老師姓名" id="noteTeacher_${studentId}" style="width:80px;">
+      <input type="text" placeholder="新增說明…" id="noteText_${studentId}" style="flex:1;" onkeydown="if(event.key==='Enter')submitNote('${studentId}','${containerId}')">
+      <button class="btn btn-primary btn-sm" onclick="submitNote('${studentId}','${containerId}')">新增</button>
+    </div>`;
+}
+
+async function submitNote(studentId, containerId) {
+  const text    = (document.getElementById('noteText_'+studentId)||{}).value||'';
+  const teacher = (document.getElementById('noteTeacher_'+studentId)||{}).value||'';
+  if(!text.trim()) return;
+  await addStudentNote(studentId, text, teacher);
+  renderStudentNotes(studentId, containerId);
 }
 
 // =============================================
