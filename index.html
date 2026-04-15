@@ -357,7 +357,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ── STATE ──
-const state = { students:{}, rules:{}, bindings:{}, gradeTwins:{}, twins:{}, newStudents:{} };
+const state = { students:{}, rules:{}, bindings:{}, gradeTwins:{}, twins:{}, newStudents:{}, studentNotes:{} };
 
 // ── HELPERS ──
 function classLabel(g,c){ return `${g}年${c}班`; }
@@ -374,13 +374,14 @@ function switchTab(name, btn) {
 async function initApp() {
   if(!firebase.apps.length) return;
   try {
-    const [stuSnap, ruleSnap, bindSnap, gradeTwinSnap, twinSnap, newStuSnap] = await Promise.all([
+    const [stuSnap, ruleSnap, bindSnap, gradeTwinSnap, twinSnap, newStuSnap, notesSnap] = await Promise.all([
       db.collection('students').get(),
       db.collection('separationRules').get(),
       db.collection('bindings').get(),
       db.collection('gradeTwins').get(),
       db.collection('twins').get(),
-      db.collection('newStudents').get()
+      db.collection('newStudents').get(),
+      db.collection('studentNotes').get()
     ]);
     stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
     ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
@@ -388,6 +389,12 @@ async function initApp() {
     gradeTwinSnap.forEach(d=>{ state.gradeTwins[d.id]={id:d.id,...d.data()}; });
     twinSnap.forEach(d=>{ state.twins[d.id]={id:d.id,...d.data()}; });
     newStuSnap.forEach(d=>{ state.newStudents[d.id]={id:d.id,...d.data()}; });
+    state.studentNotes={};
+    notesSnap.forEach(d=>{
+      const note={id:d.id,...d.data()};
+      if(!state.studentNotes[note.studentId]) state.studentNotes[note.studentId]=[];
+      state.studentNotes[note.studentId].push(note);
+    });
     document.getElementById('dbDot').className='db-dot ok';
     document.getElementById('dbStatus').textContent='資料已載入';
     document.getElementById('updatedLbl').textContent='最後更新：'+new Date().toLocaleTimeString('zh-TW');
@@ -550,11 +557,26 @@ function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
       const binding=Object.values(state.bindings).find(b=>b.studentId===s.id);
       const bindHtml=binding?`<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.63rem;">綁 ${binding.teacherName}</span>`:'';
       const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
-      return `<div class="ov-row">
-        <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
-        <span class="stu-num" style="font-size:.75rem;color:var(--text3);">${String(s.number).padStart(2,'0')}</span>
-        <span style="font-weight:600;flex:1;">${s.name}</span>
-        ${bindHtml}
+      const notes=state.studentNotes[s.id]||[];
+      const noteContId='notes_idx_'+s.id+'_'+tag;
+      const notesHtml = notes.length
+        ? notes.map(n=>{
+            const dt=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleDateString('zh-TW'):'';
+            return `<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);">
+              <div style="flex:1;font-size:.83rem;color:var(--text);">${n.text}</div>
+              <div style="font-size:.73rem;color:var(--text3);white-space:nowrap;">${n.teacher}${dt?' · '+dt:''}</div>
+            </div>`;
+          }).join('')
+        : '';
+      return `<div>
+        <div class="ov-row" style="cursor:${notes.length?'pointer':'default'};" onclick="${notes.length?`toggleIndexNotes('${noteContId}')`:''}" title="${notes.length?'點擊展開說明':''}">
+          <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+          <span class="stu-num" style="font-size:.75rem;color:var(--text3);">${String(s.number).padStart(2,'0')}</span>
+          <span style="font-weight:600;flex:1;">${s.name}</span>
+          ${bindHtml}
+          ${notes.length?`<span style="font-size:.72rem;color:var(--blue);border:1px solid var(--blue-light);border-radius:4px;padding:1px 6px;">💬 ${notes.length} 則說明</span>`:''}
+        </div>
+        ${notes.length?`<div id="${noteContId}" style="display:none;padding:6px 14px 8px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;font-size:.83rem;">${notesHtml}</div>`:''}
       </div>`;
     }).join('');
     const div=document.createElement('div'); div.className='ov-card';
@@ -567,6 +589,11 @@ function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
     `;
     cont.appendChild(div);
   }
+}
+
+function toggleIndexNotes(contId) {
+  const el = document.getElementById(contId);
+  if(el) el.style.display = el.style.display==='none' ? '' : 'none';
 }
 
 // ── TAB 3: RULES ──
