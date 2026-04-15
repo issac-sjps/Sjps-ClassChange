@@ -336,26 +336,43 @@ tr:hover td { background: #f8f9fd; }
 
       <div class="card">
         <div class="card-title">➕ 新增不能同班規則</div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>目標學生（此班）</label>
-          <select id="ruleTarget">
-            <option value="">─ 請先選擇班級 ─</option>
-          </select>
+        <div class="notice" style="margin-bottom:12px;">輸入座號（如 <b>40102</b>）或姓名搜尋學生。目標學生填一位，不能同班的學生可加入多位。</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">
+          <!-- 目標學生 -->
+          <div>
+            <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">目標學生（此班，填一位）</label>
+            <div style="display:flex;gap:6px;margin-bottom:6px;">
+              <input type="text" id="ruleTargetSearch" placeholder="座號或姓名…" oninput="ruleSearchTarget()" style="flex:1;" autocomplete="off">
+            </div>
+            <div id="ruleTargetDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-bottom:6px;"></div>
+            <div id="ruleTargetChip" style="min-height:32px;padding:4px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);font-size:.855rem;">
+              <span style="color:var(--text3);font-size:.8rem;">尚未選擇</span>
+            </div>
+            <input type="hidden" id="ruleTargetId">
+          </div>
+
+          <!-- 不能同班學生 -->
+          <div>
+            <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">不能同班的學生（可加入多位，跨班）</label>
+            <div style="display:flex;gap:6px;margin-bottom:6px;">
+              <input type="text" id="ruleSepSearch" placeholder="座號或姓名…" oninput="ruleSearchSep()" style="flex:1;" autocomplete="off">
+            </div>
+            <div id="ruleSepDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-bottom:6px;"></div>
+            <div id="ruleSepChips" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:4px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);">
+              <span style="color:var(--text3);font-size:.8rem;" id="ruleSepEmpty">尚未加入任何學生</span>
+            </div>
+          </div>
         </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>不能同班的學生（可多選，跨班）</label>
-          <div class="check-list" id="ruleSepList"><div class="empty">請先選擇年級與班級</div></div>
-        </div>
+
         <div class="form-group" style="margin-bottom:10px;">
           <label>規則類型</label>
-          <div style="display:flex;gap:12px;margin-top:4px;">
+          <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap;">
             <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
               <input type="radio" name="ruleType" value="uni" checked> 單向隔離（目標不能跟選定學生同班，選定學生互相可以同班）
             </label>
-          </div>
-          <div style="display:flex;gap:12px;margin-top:6px;">
             <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="ruleType" value="group"> 群組隔離（所有選定學生包含目標全部都要分到不同班）
+              <input type="radio" name="ruleType" value="group"> 群組隔離（所有學生包含目標全部都要分到不同班）
             </label>
           </div>
         </div>
@@ -364,6 +381,7 @@ tr:hover td { background: #f8f9fd; }
           <input type="text" id="ruleReason" placeholder="例：過去有嚴重衝突、家長要求分開…">
         </div>
         <button class="btn btn-primary" onclick="saveRule()">💾 新增規則</button>
+        <button class="btn btn-ghost" style="margin-left:8px;" onclick="ruleClearForm()">清除</button>
       </div>
     </div>
 
@@ -939,7 +957,7 @@ function renderAll() {
   renderOverviewRules();
   renderGradeTwinList();
   renderTwinList();
-  updateTwinStudentSelects();
+  twClearMembers();
 }
 
 // =============================================
@@ -1196,6 +1214,10 @@ async function deleteClass(grade, cls) {
 // =============================================
 // TAB 2: SEPARATION RULES
 // =============================================
+// 記錄目前選的目標學生和隔離學生
+let ruleTargetStu  = null;  // {id, name, class, grade}
+let ruleSepStudents = [];   // [{id, name, class, grade}]
+
 function onRuleGradeChange() {
   updateClassOptions('ruleGrade','ruleClass');
   onRuleClassChange();
@@ -1203,10 +1225,8 @@ function onRuleGradeChange() {
 
 function onRuleClassChange() {
   const grade = parseInt(document.getElementById('ruleGrade').value);
-  const cls = parseInt(document.getElementById('ruleClass').value);
+  const cls   = parseInt(document.getElementById('ruleClass').value);
   renderBigheadWarning(grade, cls);
-  populateRuleTargetSelect(grade, cls);
-  populateRuleSepList(grade, cls);
   renderRuleList();
   updateRuleViewClassOptions();
 }
@@ -1221,92 +1241,159 @@ function renderBigheadWarning(grade, cls) {
     <div style="font-size:.8rem;color:var(--text2);margin-top:8px;">此班有 ${bigheads.length} 位大頭，請確認是否有遺漏要隔離的組合</div>`;
 }
 
-function populateRuleTargetSelect(grade, cls) {
-  const sel = document.getElementById('ruleTarget');
-  const stus = Object.values(state.students).filter(s=>s.grade===grade&&s.class===cls).sort((a,b)=>a.number-b.number);
-  sel.innerHTML = '<option value="">─ 選擇目標學生 ─</option>';
-  stus.forEach(s=>{
-    const o = document.createElement('option');
-    o.value = s.id;
-    o.textContent = `${String(s.number).padStart(2,'0')} ${s.name}${s.tags.includes('bighead')?' ⚠':''}`;
-    sel.appendChild(o);
+// ── 搜尋共用函數 ──
+function ruleSearchStudents(q, grade) {
+  if(!q) return [];
+  return Object.values(state.students).filter(s => {
+    if(s.grade !== grade) return false;
+    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
+    return code.includes(q) || s.name.includes(q);
+  }).slice(0, 12);
+}
+
+function ruleStudentItemHtml(s) {
+  const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+  const bh = s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>' : '';
+  const sp = s.tags.includes('special') ? '<span class="tag tag-special" style="font-size:.63rem;">鑑輔生</span>' : '';
+  return `<span style="color:${gc};">${s.gender==='M'?'♂':'♀'}</span>
+    <span style="font-size:.76rem;color:var(--text3);">${s.grade}0${s.class}${String(s.number).padStart(2,'0')}</span>
+    <span style="font-weight:600;">${s.name}</span>
+    <span style="font-size:.73rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+    ${bh}${sp}`;
+}
+
+// ── 目標學生搜尋 ──
+function ruleSearchTarget() {
+  const grade = parseInt(document.getElementById('ruleGrade').value);
+  const q     = document.getElementById('ruleTargetSearch').value.trim();
+  const dd    = document.getElementById('ruleTargetDropdown');
+  const stus  = ruleSearchStudents(q, grade);
+  if(!q || !stus.length) { dd.style.display='none'; return; }
+  dd.innerHTML='';
+  stus.forEach(s => {
+    const row = document.createElement('div');
+    row.style.cssText='padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);';
+    row.innerHTML = ruleStudentItemHtml(s);
+    row.onmouseenter = () => row.style.background='var(--blue-light)';
+    row.onmouseleave = () => row.style.background='';
+    row.onclick = () => {
+      ruleTargetStu = {id:s.id, name:s.name, class:s.class, grade:s.grade};
+      document.getElementById('ruleTargetId').value = s.id;
+      document.getElementById('ruleTargetSearch').value = '';
+      dd.style.display='none';
+      renderRuleTargetChip();
+    };
+    dd.appendChild(row);
+  });
+  dd.style.display='';
+}
+
+function renderRuleTargetChip() {
+  const chip = document.getElementById('ruleTargetChip');
+  if(!ruleTargetStu) {
+    chip.innerHTML='<span style="color:var(--text3);font-size:.8rem;">尚未選擇</span>'; return;
+  }
+  const s = state.students[ruleTargetStu.id];
+  const bh = s&&s.tags.includes('bighead')?' <span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':'';
+  chip.innerHTML=`<div style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--blue);border-radius:99px;padding:3px 10px 3px 8px;font-size:.82rem;">
+    <span style="font-weight:600;">${ruleTargetStu.name}</span>
+    <span style="font-size:.72rem;color:var(--text3);">${classLabel(ruleTargetStu.grade,ruleTargetStu.class)}</span>
+    ${bh}
+    <button onclick="ruleTargetStu=null;document.getElementById('ruleTargetId').value='';renderRuleTargetChip();" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:0;margin-left:2px;">✕</button>
+  </div>`;
+}
+
+// ── 隔離學生搜尋 ──
+function ruleSearchSep() {
+  const grade = parseInt(document.getElementById('ruleGrade').value);
+  const q     = document.getElementById('ruleSepSearch').value.trim();
+  const dd    = document.getElementById('ruleSepDropdown');
+  const stus  = ruleSearchStudents(q, grade);
+  if(!q || !stus.length) { dd.style.display='none'; return; }
+  dd.innerHTML='';
+  stus.forEach(s => {
+    const already = ruleSepStudents.some(m=>m.id===s.id);
+    const row = document.createElement('div');
+    row.style.cssText=`padding:7px 12px;cursor:${already?'default':'pointer'};display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);color:${already?'var(--text3)':'var(--text)'};background:${already?'var(--bg)':'#fff'};`;
+    row.innerHTML = ruleStudentItemHtml(s) + (already?'<span style="margin-left:auto;font-size:.72rem;color:var(--text3);">已加入</span>':'');
+    if(!already) {
+      row.onmouseenter = () => row.style.background='var(--blue-light)';
+      row.onmouseleave = () => row.style.background='#fff';
+      row.onclick = () => {
+        ruleSepStudents.push({id:s.id, name:s.name, class:s.class, grade:s.grade});
+        document.getElementById('ruleSepSearch').value='';
+        dd.style.display='none';
+        renderRuleSepChips();
+      };
+    }
+    dd.appendChild(row);
+  });
+  dd.style.display='';
+}
+
+function renderRuleSepChips() {
+  const cont  = document.getElementById('ruleSepChips');
+  const empty = document.getElementById('ruleSepEmpty');
+  cont.querySelectorAll('.rule-chip').forEach(el=>el.remove());
+  if(!ruleSepStudents.length) { empty.style.display=''; return; }
+  empty.style.display='none';
+  ruleSepStudents.forEach((m, idx) => {
+    const s = state.students[m.id];
+    const bh = s&&s.tags.includes('bighead')?' <span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
+    const chip = document.createElement('div');
+    chip.className='rule-chip';
+    chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 7px;font-size:.8rem;';
+    chip.innerHTML=`<span style="font-weight:600;">${m.name}</span><span style="font-size:.7rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>${bh}
+      <button onclick="ruleSepStudents.splice(${idx},1);renderRuleSepChips();" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.82rem;padding:0;margin-left:1px;">✕</button>`;
+    cont.appendChild(chip);
   });
 }
 
-function populateRuleSepList(grade, cls) {
-  const cont = document.getElementById('ruleSepList');
-  const targetCls = cls;
-  const allStus = Object.values(state.students).filter(s=>s.grade===grade).sort((a,b)=> a.class!==b.class ? a.class-b.class : a.number-b.number);
-  
-  cont.innerHTML = '';
-  let currentClass = null;
-  
-  for(const s of allStus) {
-    if(s.class === targetCls) continue; // exclude same class (can add cross-class only)
-    // Actually include all except we can also include same-class students for group rules
-    // Let me include all students in grade for flexibility
-  }
-  
-  // Include all students in grade including same class
-  const allSorted = Object.values(state.students).filter(s=>s.grade===grade).sort((a,b)=> a.class!==b.class ? a.class-b.class : a.number-b.number);
-  
-  for(const s of allSorted) {
-    if(s.class !== currentClass) {
-      currentClass = s.class;
-      const div = document.createElement('div');
-      div.style.cssText = 'font-size:.75rem;font-weight:700;color:var(--text3);padding:4px 8px 2px;';
-      div.textContent = classLabel(grade, s.class);
-      cont.appendChild(div);
-    }
-    const item = document.createElement('div');
-    item.className = 'check-item';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.value = s.id; cb.id = 'chk_'+s.id;
-    const lbl = document.createElement('label');
-    lbl.htmlFor = 'chk_'+s.id;
-    lbl.className = 'check-item-label';
-    lbl.innerHTML = `${String(s.number).padStart(2,'0')} ${s.name}${s.tags.includes('bighead')?' <span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':''}${s.tags.includes('special')?' <span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>':''}`;
-    item.appendChild(cb); item.appendChild(lbl);
-    cont.appendChild(item);
-  }
+// 點外部關閉 dropdown
+document.addEventListener('click', e => {
+  if(!e.target.closest('#ruleTargetSearch')&&!e.target.closest('#ruleTargetDropdown'))
+    document.getElementById('ruleTargetDropdown').style.display='none';
+  if(!e.target.closest('#ruleSepSearch')&&!e.target.closest('#ruleSepDropdown'))
+    document.getElementById('ruleSepDropdown').style.display='none';
+});
+
+function ruleClearForm() {
+  ruleTargetStu=null; ruleSepStudents=[];
+  document.getElementById('ruleTargetId').value='';
+  document.getElementById('ruleTargetSearch').value='';
+  document.getElementById('ruleSepSearch').value='';
+  document.getElementById('ruleReason').value='';
+  renderRuleTargetChip(); renderRuleSepChips();
 }
 
 async function saveRule() {
-  const grade = parseInt(document.getElementById('ruleGrade').value);
+  const grade     = parseInt(document.getElementById('ruleGrade').value);
   const fromClass = parseInt(document.getElementById('ruleClass').value);
-  const targetId = document.getElementById('ruleTarget').value;
-  const reason = document.getElementById('ruleReason').value.trim();
-  const ruleType = document.querySelector('input[name="ruleType"]:checked').value;
-  
-  if(!targetId) { showAlert('請選擇目標學生','warn'); return; }
-  
-  const checked = [...document.querySelectorAll('#ruleSepList input[type=checkbox]:checked')];
-  if(!checked.length) { showAlert('請至少選擇一位要隔離的學生','warn'); return; }
-  
-  const targetStu = state.students[targetId];
-  const sepStudents = checked.map(cb => {
-    const s = state.students[cb.value];
-    return { id: s.id, name: s.name, class: s.class };
-  });
-  
+  const ruleType  = document.querySelector('input[name="ruleType"]:checked').value;
+  const reason    = document.getElementById('ruleReason').value.trim();
+
+  if(!ruleTargetStu)        { showAlert('請選擇目標學生','warn'); return; }
+  if(!ruleSepStudents.length) { showAlert('請至少加入一位要隔離的學生','warn'); return; }
+  if(ruleSepStudents.some(m=>m.id===ruleTargetStu.id)) { showAlert('目標學生不能同時在隔離名單中','warn'); return; }
+
+  const targetStu  = state.students[ruleTargetStu.id];
+  const sepStudents = ruleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
+
   const rule = {
     grade, fromClass,
-    targetStudentId: targetId,
+    targetStudentId: ruleTargetStu.id,
     targetStudentName: targetStu.name,
-    targetStudentClass: fromClass,
+    targetStudentClass: ruleTargetStu.class,
     separateFrom: sepStudents,
-    type: ruleType,
-    reason,
+    type: ruleType, reason,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  
+
   try {
     const ref = await db.collection('separationRules').add(rule);
-    state.rules[ref.id] = { id: ref.id, ...rule, createdAt: new Date() };
+    state.rules[ref.id] = { id:ref.id, ...rule, createdAt: new Date() };
     showAlert('規則已新增');
-    document.getElementById('ruleTarget').value = '';
-    document.getElementById('ruleReason').value = '';
-    document.querySelectorAll('#ruleSepList input[type=checkbox]').forEach(c=>c.checked=false);
+    ruleClearForm();
     renderRuleList();
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
