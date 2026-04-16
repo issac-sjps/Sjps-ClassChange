@@ -441,6 +441,7 @@ function buildTeacherForm(grade, classNum, cfg) {
     <th style="border:0.75pt solid #555;padding:4pt 3pt;text-align:center;">組</th>
     <th colspan="2" style="border:0.75pt solid #555;padding:4pt 3pt;text-align:center;">學生甲<br><span style="font-size:8pt;font-weight:normal;">（座號／姓名）</span></th>
     <th colspan="3" style="border:0.75pt solid #555;padding:4pt 3pt;text-align:center;">不宜與甲同班之學生乙<br><span style="font-size:8pt;font-weight:normal;">（每行一位，座號／姓名）</span></th>
+    <th style="border:0.75pt solid #555;padding:4pt 3pt;text-align:center;width:42pt;">隔離方式</th>
     <th style="border:0.75pt solid #555;padding:4pt 5pt;text-align:left;">說明（原因、衝突背景等）</th>
   </tr>
   ${[1,2,3,4].map(n => {
@@ -466,6 +467,7 @@ function buildTeacherForm(grade, classNum, cfg) {
 
 <div style="font-size:8.5pt;color:#555;margin-bottom:8pt;line-height:1.6;">
   ※ 如超過 3 位乙生，請在說明欄補充說明，或另寫於紙張背面。<br>
+  ※ <b>隔離方式</b>：「甲避乙」= 甲不能與乙同班，但多名乙生之間可同班；「全拆開」= 甲與所有乙生全部須分到不同班。<br>
   ※ 此表填寫資料僅供編班參考，請放入信封密封後交回。
 </div>
 
@@ -559,6 +561,7 @@ function buildSubjectForm(cfg) {
         <td style="${B}padding:2pt 3pt;text-align:center;font-size:8.5pt;color:#888;vertical-align:middle;">${bi}</td>
         <td style="${B}padding:2pt 3pt;vertical-align:middle;height:18pt;"></td>
         <td style="${B}padding:2pt 3pt;vertical-align:middle;"></td>
+        ${isFirst ? `<td ${rs} style="${B}padding:2pt 3pt;vertical-align:top;font-size:8pt;color:#555;">□ 甲避乙<br>□ 全拆開</td>` : ''}
         ${isFirst ? `<td ${rs} style="${B}padding:2pt 3pt;vertical-align:top;"></td>` : ''}
       </tr>`;
     }).join('');
