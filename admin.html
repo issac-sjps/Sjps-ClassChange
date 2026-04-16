@@ -315,20 +315,12 @@ tr:hover td { background: #f8f9fd; }
   <div class="two-col">
     <div>
       <div class="card">
-        <div class="card-title">🏫 選擇班級</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>年級</label>
-            <select id="ruleGrade" onchange="onRuleGradeChange()">
-              <option value="2">2年級</option>
-              <option value="4">4年級</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>班級</label>
-            <select id="ruleClass" onchange="onRuleClassChange()"></select>
-          </div>
+        <div class="card-title">🎯 年級篩選</div>
+        <div style="display:flex;gap:10px;">
+          <button id="ruleGradeBtn2" class="btn btn-primary" onclick="setRuleGrade(2)">2年級</button>
+          <button id="ruleGradeBtn4" class="btn btn-ghost" onclick="setRuleGrade(4)">4年級</button>
         </div>
+        <input type="hidden" id="ruleGrade" value="2">
       </div>
 
       <div class="card" id="bigheadWarnCard" style="display:none;">
@@ -380,7 +372,7 @@ tr:hover td { background: #f8f9fd; }
         </div>
         <div class="form-group" style="margin-bottom:12px;">
           <label>備註原因</label>
-          <input type="text" id="ruleReason" placeholder="例：過去有嚴重衝突、家長要求分開…">
+          <textarea id="ruleReason" placeholder="例：過去有嚴重衝突、家長要求分開…" style="min-height:80px;resize:vertical;font-family:inherit;font-size:.875rem;"></textarea>
         </div>
         <button class="btn btn-primary" onclick="saveRule()">💾 新增規則</button>
         <button class="btn btn-ghost" style="margin-left:8px;" onclick="ruleClearForm()">清除</button>
@@ -865,6 +857,48 @@ tr:hover td { background: #f8f9fd; }
   <div id="nqContent"><div class="card"><div class="empty">請切換至此頁以載入說明</div></div></div>
 </div>
 
+<!-- ==================== MODAL: 說明輸入 ==================== -->
+<div class="modal-bg" id="noteModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title" id="noteModalTitle">💬 新增說明</div>
+    <textarea id="noteModalText" style="width:100%;min-height:120px;resize:vertical;font-family:inherit;font-size:.9rem;border:1.5px solid var(--border);border-radius:8px;padding:10px;outline:none;margin-bottom:10px;" placeholder="輸入說明內容…"></textarea>
+    <input type="hidden" id="noteModalStudentId">
+    <input type="hidden" id="noteModalNoteId">
+    <input type="hidden" id="noteModalContainerId">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('noteModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveNoteModal()">💾 儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: 編輯規則 ==================== -->
+<div class="modal-bg" id="editRuleModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-title">✏️ 編輯規則</div>
+    <input type="hidden" id="editRuleId">
+    <div class="form-group" style="margin-bottom:10px;">
+      <label>規則類型</label>
+      <div style="display:flex;gap:14px;margin-top:5px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;cursor:pointer;">
+          <input type="radio" name="editRuleType" value="uni"> 單向隔離（目標不能跟選定學生同班，選定學生互相可以同班）
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;cursor:pointer;">
+          <input type="radio" name="editRuleType" value="group"> 群組隔離（所有學生包含目標全部都要分到不同班）
+        </label>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>備註原因</label>
+      <textarea id="editRuleReason" style="width:100%;min-height:100px;resize:vertical;font-family:inherit;font-size:.875rem;border:1.5px solid var(--border);border-radius:8px;padding:8px;outline:none;" placeholder="備註原因…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('editRuleModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveEditRule()">💾 儲存修改</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== MODAL: 導師綁定 ==================== -->
 <div class="modal-bg" id="bindModal">
   <div class="modal">
@@ -991,7 +1025,7 @@ async function init() {
     console.error(e);
   }
   updateClassOptions('upGrade','upClass');
-  updateClassOptions('ruleGrade','ruleClass');
+  setRuleGrade(2);
   renderAll();
 }
 
@@ -1308,26 +1342,27 @@ let ruleTargetStu  = null;  // {id, name, class, grade}
 let ruleSepStudents = [];   // [{id, name, class, grade}]
 
 function onRuleGradeChange() {
-  updateClassOptions('ruleGrade','ruleClass');
-  onRuleClassChange();
-}
-
-function onRuleClassChange() {
   const grade = parseInt(document.getElementById('ruleGrade').value);
-  const cls   = parseInt(document.getElementById('ruleClass').value);
-  renderBigheadWarning(grade, cls);
+  renderBigheadWarning(grade, 0);
   renderRuleList();
   updateRuleViewClassOptions();
 }
 
+function onRuleClassChange() {
+  onRuleGradeChange();
+}
+
 function renderBigheadWarning(grade, cls) {
-  const bigheads = Object.values(state.students).filter(s=>s.grade===grade&&s.class===cls&&s.tags.includes('bighead'));
+  // cls=0 means show all bigheads for the grade
+  const bigheads = Object.values(state.students).filter(s=>
+    s.grade===grade && s.tags.includes('bighead') && (cls===0 || s.class===cls)
+  );
   const card = document.getElementById('bigheadWarnCard');
   const list = document.getElementById('bigheadWarnList');
   if(!bigheads.length) { card.style.display='none'; return; }
   card.style.display='';
-  list.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;">${bigheads.map(s=>`<span class="tag tag-bighead">⚠ ${s.name}</span>`).join('')}</div>
-    <div style="font-size:.8rem;color:var(--text2);margin-top:8px;">此班有 ${bigheads.length} 位大頭，請確認是否有遺漏要隔離的組合</div>`;
+  list.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;">${bigheads.map(s=>`<span class="tag tag-bighead">⚠ ${s.name} <span style="font-size:.7rem;opacity:.7;">(${classLabel(s.grade,s.class)})</span></span>`).join('')}</div>
+    <div style="font-size:.8rem;color:var(--text2);margin-top:8px;">此年級共 ${bigheads.length} 位大頭，請確認是否有遺漏要隔離的組合</div>`;
 }
 
 // ── 搜尋共用函數 ──
@@ -1538,24 +1573,43 @@ function renderRuleList() {
     
     const div = document.createElement('div');
     div.className = 'rule-card';
+    // 目標學生 座號+性別
+    const tCode = targetStu ? `${targetStu.grade}0${targetStu.class}${String(targetStu.number).padStart(2,'0')}` : '';
+    const tGc   = targetStu ? (targetStu.gender==='M'?'var(--blue)':'var(--pink)') : '';
+    const tGlyph= targetStu ? (targetStu.gender==='M'?'♂':'♀') : '';
     div.innerHTML = `
       <div class="rule-card-header">
-        <div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
+            <span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${tCode}</span>
+            <span style="color:${tGc};font-size:.82rem;">${tGlyph}</span>
             <span class="rule-target-name">${r.targetStudentName}</span>
             <span class="rule-from-class">（${classLabel(r.grade,r.targetStudentClass)}）</span>
             ${isBighead?'<span class="tag tag-bighead">大頭</span>':''}
             <span class="rule-type-badge ${r.type==='group'?'rule-type-group':'rule-type-uni'}">${r.type==='group'?'群組隔離':'單向隔離'}</span>
           </div>
-          <div class="rule-sep-list">↳ 不能同班：${(r.separateFrom||[]).map(s=>{
-            const stu = state.students[s.id];
-            const bh = stu&&stu.tags.includes('bighead')?' ⚠':'';
-            return `<b>${s.name}</b>${bh}（${classLabel(r.grade,s.class)}）`;
-          }).join('、')}</div>
-          ${r.reason?`<div class="rule-reason">📝 ${r.reason}</div>`:''}
+          <div style="padding-left:6px;border-left:2px solid var(--border);margin-bottom:4px;">
+            <div style="font-size:.72rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
+            ${(r.separateFrom||[]).map(s=>{
+              const stu = state.students[s.id];
+              const bh  = stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
+              const gc  = stu?(stu.gender==='M'?'var(--blue)':'var(--pink)'):'var(--text3)';
+              const code= stu?`${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}`:'';
+              const glyph=stu?(stu.gender==='M'?'♂':'♀'):'';
+              return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;font-size:.855rem;">
+                <span style="font-size:.72rem;font-family:monospace;color:var(--text3);min-width:38px;">${code}</span>
+                <span style="color:${gc};font-size:.78rem;">${glyph}</span>
+                <span style="font-weight:600;">${s.name}</span>${bh}
+              </div>`;
+            }).join('')}
+          </div>
+          ${r.reason?`<div class="rule-reason" style="background:var(--bg);padding:4px 8px;border-radius:4px;font-size:.8rem;">📝 ${r.reason}</div>`:''}
           ${sepBigheads.length?`<div class="rule-bighead-warn">⚠ 隔離對象中有大頭學生：${sepBigheads.map(s=>s.name).join('、')}</div>`:''}
         </div>
-        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRule('${r.id}')">🗑</button>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px;">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditRule('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRule('${r.id}')">🗑</button>
+        </div>
       </div>
     `;
     cont.appendChild(div);
@@ -2806,6 +2860,7 @@ function renderStudentNotes(studentId, containerId) {
         return `<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
           <div style="flex:1;font-size:.84rem;line-height:1.5;">${n.text}</div>
           <div style="font-size:.72rem;color:var(--text3);white-space:nowrap;margin-top:1px;">${dt}</div>
+          <button onclick="openNoteModal('${studentId}','${containerId}','${n.id}',${JSON.stringify(n.text)})" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:.78rem;padding:0 2px;flex-shrink:0;">✏️</button>
           <button onclick="deleteStudentNote('${n.id}','${studentId}').then(()=>renderStudentNotes('${studentId}','${containerId}'))" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.8rem;padding:0;flex-shrink:0;">🗑</button>
         </div>`;
       }).join('')
@@ -2813,10 +2868,7 @@ function renderStudentNotes(studentId, containerId) {
 
   cont.innerHTML = `
     <div style="margin-bottom:8px;">${notesHtml}</div>
-    <div style="display:flex;gap:6px;">
-      <input type="text" placeholder="輸入說明，按 Enter 儲存…" id="noteText_${studentId}" style="flex:1;" onkeydown="if(event.key==='Enter')submitNote('${studentId}','${containerId}')">
-      <button class="btn btn-primary btn-sm" onclick="submitNote('${studentId}','${containerId}')">新增</button>
-    </div>`;
+    <button class="btn btn-primary btn-sm" onclick="openNoteModal('${studentId}','${containerId}','','')">＋ 新增說明</button>`;
 }
 
 async function submitNote(studentId, containerId) {
@@ -2876,6 +2928,7 @@ function renderNotesQuery() {
       return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 16px;border-bottom:1px solid #f0f2f8;">
         <div style="flex:1;font-size:.875rem;line-height:1.55;">${n.text}</div>
         <div style="font-size:.73rem;color:var(--text3);white-space:nowrap;margin-top:2px;">${dt}</div>
+        <button onclick="openNoteModal('${stu.id}','','${n.id}',${JSON.stringify(n.text)})" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:.78rem;padding:0 2px;flex-shrink:0;">✏️</button>
         <button onclick="deleteStudentNote('${n.id}','${stu.id}').then(()=>renderNotesQuery())" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.8rem;padding:0;flex-shrink:0;">🗑</button>
       </div>`;
     }).join('');
@@ -2892,10 +2945,7 @@ function renderNotesQuery() {
       </div>
       ${noteRows}
       <div style="padding:8px 14px;background:#fafbff;">
-        <div style="display:flex;gap:6px;">
-          <input type="text" placeholder="新增說明，按 Enter…" id="nqText_${stu.id}" style="flex:1;font-size:.85rem;" onkeydown="if(event.key==='Enter')nqSubmitNote('${stu.id}')">
-          <button class="btn btn-primary btn-sm" onclick="nqSubmitNote('${stu.id}')">新增</button>
-        </div>
+        <button class="btn btn-primary btn-sm" onclick="openNoteModal('${stu.id}','','','')">＋ 新增說明</button>
       </div>`;
     cont.appendChild(div);
   });
@@ -2908,6 +2958,74 @@ async function nqSubmitNote(studentId) {
   input.value='';
   await addStudentNote(studentId, text);
   renderNotesQuery();
+}
+
+
+// ── 年級按鈕 ──
+function setRuleGrade(grade) {
+  document.getElementById('ruleGrade').value = grade;
+  document.getElementById('ruleGradeBtn2').className = grade===2?'btn btn-primary':'btn btn-ghost';
+  document.getElementById('ruleGradeBtn4').className = grade===4?'btn btn-primary':'btn btn-ghost';
+  onRuleGradeChange();
+}
+
+// ── 編輯規則 Modal ──
+function openEditRule(id) {
+  const r = state.rules[id];
+  if(!r) return;
+  document.getElementById('editRuleId').value = id;
+  document.querySelector(`input[name="editRuleType"][value="${r.type||'uni'}"]`).checked = true;
+  document.getElementById('editRuleReason').value = r.reason||'';
+  openModal('editRuleModal');
+}
+
+async function saveEditRule() {
+  const id     = document.getElementById('editRuleId').value;
+  const type   = document.querySelector('input[name="editRuleType"]:checked').value;
+  const reason = document.getElementById('editRuleReason').value.trim();
+  try {
+    await db.collection('separationRules').doc(id).update({ type, reason });
+    state.rules[id].type   = type;
+    state.rules[id].reason = reason;
+    closeModal('editRuleModal');
+    renderRuleList();
+    showAlert('規則已更新');
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+// ── 說明 Modal ──
+function openNoteModal(studentId, containerId, noteId, existingText) {
+  document.getElementById('noteModalStudentId').value = studentId;
+  document.getElementById('noteModalContainerId').value = containerId;
+  document.getElementById('noteModalNoteId').value = noteId||'';
+  document.getElementById('noteModalText').value = existingText||'';
+  document.getElementById('noteModalTitle').textContent = noteId ? '✏️ 編輯說明' : '💬 新增說明';
+  openModal('noteModal');
+  setTimeout(()=>document.getElementById('noteModalText').focus(), 100);
+}
+
+async function saveNoteModal() {
+  const stuId  = document.getElementById('noteModalStudentId').value;
+  const noteId = document.getElementById('noteModalNoteId').value;
+  const contId = document.getElementById('noteModalContainerId').value;
+  const text   = document.getElementById('noteModalText').value.trim();
+  if(!text) { showAlert('請輸入說明內容','warn'); return; }
+  try {
+    if(noteId) {
+      // 編輯既有說明
+      await db.collection('studentNotes').doc(noteId).update({ text });
+      const notes = state.studentNotes[stuId]||[];
+      const n = notes.find(n=>n.id===noteId);
+      if(n) n.text = text;
+    } else {
+      // 新增說明
+      await addStudentNote(stuId, text);
+    }
+    closeModal('noteModal');
+    if(contId) renderStudentNotes(stuId, contId);
+    renderNotesQuery();
+    showAlert(noteId?'說明已更新':'說明已新增');
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
 
 // =============================================
