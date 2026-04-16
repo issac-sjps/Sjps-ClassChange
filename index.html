@@ -561,10 +561,10 @@ function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
       const noteContId='notes_idx_'+s.id+'_'+tag;
       const notesHtml = notes.length
         ? notes.map(n=>{
-            const dt=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleDateString('zh-TW'):'';
+            const dt=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
             return `<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);">
               <div style="flex:1;font-size:.83rem;color:var(--text);">${n.text}</div>
-              <div style="font-size:.73rem;color:var(--text3);white-space:nowrap;">${n.teacher}${dt?' · '+dt:''}</div>
+              <div style="font-size:.73rem;color:var(--text3);white-space:nowrap;">${dt}</div>
             </div>`;
           }).join('')
         : '';
