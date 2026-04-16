@@ -2306,11 +2306,11 @@ function renderOverviewTag(tag, gradeSelId, contId) {
           <span style="color:${genColor};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
           <span style="font-weight:600;flex:1;">${s.name}</span>
           ${tgs} ${bindHtml}
-          <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.78rem;color:var(--blue);padding:2px 6px;border-radius:4px;border:1px solid var(--blue-light);">
-            💬 說明${noteCount>0?` (${noteCount})`:''}
+          <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.78rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 6px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">
+            💬 ${noteCount>0?`說明 (${noteCount})`:'新增說明'}
           </button>
         </div>
-        <div id="${noteContId}" style="display:none;padding:8px 14px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;">載入中…</div>
+        <div id="${noteContId}" style="display:${noteCount>0?'':'none'};padding:8px 14px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;"></div>
       </div>`;
     }).join('');
 
@@ -2375,28 +2375,41 @@ function renderOverviewRules() {
       const targetStu = state.students[r.targetStudentId];
       const isBH = targetStu && targetStu.tags.includes('bighead');
       const typeBadge = r.type==='group'
-        ? '<span class="rule-type-badge rule-type-group" style="font-size:.65rem;">群組</span>'
-        : '<span class="rule-type-badge rule-type-uni" style="font-size:.65rem;">單向</span>';
+        ? '<span class="rule-type-badge rule-type-group">群組</span>'
+        : '<span class="rule-type-badge rule-type-uni">單向</span>';
 
-      const sepHtml = (r.separateFrom||[]).map(s=>{
+      // 目標學生：座號+姓名格式
+      const targetCode = targetStu
+        ? `${targetStu.grade}0${targetStu.class}${String(targetStu.number).padStart(2,'0')}`
+        : '';
+
+      // 隔離學生清單，每人一行
+      const sepRows = (r.separateFrom||[]).map(s=>{
         const stu = state.students[s.id];
-        const bh = stu&&stu.tags.includes('bighead') ? ' <span class="tag tag-bighead" style="font-size:.62rem;">大頭</span>' : '';
-        const sameClass = s.class === cls;
-        return `<span style="font-size:.82rem;">${sameClass?'<b>':''}${s.name}${sameClass?'</b>':''}<span style="font-size:.72rem;color:var(--text3);"> (${classLabel(grade,s.class)})</span>${bh}</span>`;
-      }).join('<span style="color:var(--text3);margin:0 3px;">╱</span>');
+        const bh  = stu&&stu.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>' : '';
+        const sp  = stu&&stu.tags.includes('special')  ? '<span class="tag tag-special" style="font-size:.6rem;">鑑輔生</span>' : '';
+        const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
+        const gc  = stu ? (stu.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
+        return `<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">
+          <span style="font-size:.75rem;font-family:monospace;color:var(--text3);min-width:40px;">${code}</span>
+          <span style="color:${gc};font-size:.78rem;">${stu?(stu.gender==='M'?'♂':'♀'):''}</span>
+          <span style="font-weight:600;font-size:.875rem;">${s.name}</span>
+          ${bh}${sp}
+        </div>`;
+      }).join('');
 
-      return `<div style="padding:8px 12px;border-bottom:1px solid #f0f2f8;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
-          <span style="font-weight:700;font-size:.9rem;">${r.targetStudentName}</span>
-          <span style="font-size:.75rem;color:var(--text3);">(${classLabel(grade,r.targetStudentClass)})</span>
-          ${isBH?'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':''}
+      return `<div style="padding:10px 14px;border-bottom:1px solid #f0f2f8;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="font-size:.75rem;font-family:monospace;color:var(--text3);">${targetCode}</span>
+          <span style="font-weight:700;font-size:.95rem;">${r.targetStudentName}</span>
+          ${isBH?'<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':''}
           ${typeBadge}
         </div>
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-left:10px;">
-          <span style="font-size:.78rem;color:var(--text3);margin-right:2px;">不能同班：</span>
-          ${sepHtml}
+        <div style="padding-left:6px;border-left:2px solid var(--border);">
+          <div style="font-size:.72rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
+          ${sepRows}
         </div>
-        ${r.reason?`<div style="font-size:.75rem;color:var(--text3);font-style:italic;padding-left:10px;margin-top:3px;">📝 ${r.reason}</div>`:''}
+        ${r.reason?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;margin-top:6px;padding:4px 8px;background:var(--bg);border-radius:4px;">📝 ${r.reason}</div>`:''}
       </div>`;
     }).join('');
 
@@ -2737,6 +2750,19 @@ function toggleNotes(studentId, containerId) {
   } else {
     cont.style.display = 'none';
   }
+}
+
+// 初始化：有說明的學生預設展開
+function initNotesForTag(tag, gradeSelId, contId) {
+  // After renderOverviewTag renders, find all open note containers and populate
+  setTimeout(() => {
+    document.querySelectorAll(`[id^="notes_"][id$="_${tag}"]`).forEach(el => {
+      if(el.style.display !== 'none') {
+        const stuId = el.id.replace('notes_','').replace(`_${tag}`,'');
+        renderStudentNotes(stuId, el.id);
+      }
+    });
+  }, 50);
 }
 
 async function addStudentNote(studentId, text) {
