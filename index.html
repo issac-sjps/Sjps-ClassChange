@@ -643,20 +643,34 @@ function renderRules() {
       const typeBadge=r.type==='group'
         ?'<span class="rule-type-badge rule-type-group">群組</span>'
         :'<span class="rule-type-badge rule-type-uni">單向</span>';
-      const sepHtml=(r.separateFrom||[]).map(s=>{
+      const targetStuObj = state.students[r.targetStudentId];
+      const targetCode = targetStuObj
+        ? `${targetStuObj.grade}0${targetStuObj.class}${String(targetStuObj.number).padStart(2,'0')}`
+        : '';
+      const sepRows=(r.separateFrom||[]).map(s=>{
         const stu=state.students[s.id];
-        const bh=stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.62rem;">大頭</span>':'';
-        return `${s.name}<span style="font-size:.72rem;color:var(--text3);"> (${classLabel(r.grade,s.class)})</span>${bh}`;
-      }).join(' ╱ ');
+        const bh=stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
+        const code=stu?`${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}`:'';
+        const gc=stu?(stu.gender==='M'?'var(--blue)':'var(--pink)'):'var(--text3)';
+        return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;">
+          <span style="font-size:.73rem;font-family:monospace;color:var(--text3);min-width:38px;">${code}</span>
+          <span style="color:${gc};font-size:.76rem;">${stu?(stu.gender==='M'?'♂':'♀'):''}</span>
+          <span style="font-weight:600;font-size:.86rem;">${s.name}</span>
+          ${bh}
+        </div>`;
+      }).join('');
       return `<div class="rule-ov-row">
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
+          <span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${targetCode}</span>
           <span class="rule-target">${r.targetStudentName}</span>
-          <span class="rule-cls-lbl">(${classLabel(r.grade,r.targetStudentClass)})</span>
           ${isBH?'<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':''}
           ${typeBadge}
         </div>
-        <div class="rule-sep">↳ 不能同班：${sepHtml}</div>
-        ${r.reason?`<div class="rule-reason-txt">📝 ${r.reason}</div>`:''}
+        <div style="padding-left:6px;border-left:2px solid var(--color-border-tertiary,#dde3f0);">
+          <div style="font-size:.7rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
+          ${sepRows}
+        </div>
+        ${r.reason?`<div class="rule-reason-txt" style="margin-top:5px;">📝 ${r.reason}</div>`:''}
       </div>`;
     }).join('');
     const div=document.createElement('div'); div.className='ov-card';
