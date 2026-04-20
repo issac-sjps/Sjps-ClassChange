@@ -2364,7 +2364,7 @@ function renderOverviewTag(tag, gradeSelId, contId) {
             💬 ${noteCount>0?`說明 (${noteCount})`:'新增說明'}
           </button>
         </div>
-        <div id="${noteContId}" style="display:${noteCount>0?'':'none'};padding:8px 14px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;"></div>
+        <div id="${noteContId}" style="display:none;padding:8px 14px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;"></div>
       </div>`;
     }).join('');
 
@@ -2379,6 +2379,21 @@ function renderOverviewTag(tag, gradeSelId, contId) {
 
   html += '</div>';
   cont.innerHTML = html;
+
+  // 有說明的學生：render 內容並預設展開
+  Object.values(map).forEach(({students}) => {
+    students.forEach(s => {
+      const notes = state.studentNotes[s.id] || [];
+      if(notes.length) {
+        const contId = 'notes_' + s.id + '_' + filterTag;
+        const el = document.getElementById(contId);
+        if(el) {
+          el.style.display = '';
+          renderStudentNotes(s.id, contId);
+        }
+      }
+    });
+  });
 }
 
 // =============================================
@@ -2478,6 +2493,21 @@ function renderOverviewRules() {
 
   html += '</div>';
   cont.innerHTML = html;
+
+  // 有說明的學生：render 內容並預設展開
+  Object.values(map).forEach(({students}) => {
+    students.forEach(s => {
+      const notes = state.studentNotes[s.id] || [];
+      if(notes.length) {
+        const contId = 'notes_' + s.id + '_' + filterTag;
+        const el = document.getElementById(contId);
+        if(el) {
+          el.style.display = '';
+          renderStudentNotes(s.id, contId);
+        }
+      }
+    });
+  });
 }
 
 
