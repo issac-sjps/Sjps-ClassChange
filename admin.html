@@ -1492,7 +1492,7 @@ function ruleClearForm() {
 
 async function saveRule() {
   const grade     = parseInt(document.getElementById('ruleGrade').value);
-  const fromClass = parseInt(document.getElementById('ruleClass').value);
+  const fromClass = ruleTargetStu ? ruleTargetStu.class : 0;
   const ruleType  = document.querySelector('input[name="ruleType"]:checked').value;
   const reason    = document.getElementById('ruleReason').value.trim();
 
@@ -2380,20 +2380,7 @@ function renderOverviewTag(tag, gradeSelId, contId) {
   html += '</div>';
   cont.innerHTML = html;
 
-  // 有說明的學生：render 內容並預設展開
-  Object.values(map).forEach(({students}) => {
-    students.forEach(s => {
-      const notes = state.studentNotes[s.id] || [];
-      if(notes.length) {
-        const contId = 'notes_' + s.id + '_' + filterTag;
-        const el = document.getElementById(contId);
-        if(el) {
-          el.style.display = '';
-          renderStudentNotes(s.id, contId);
-        }
-      }
-    });
-  });
+
 }
 
 // =============================================
@@ -2494,21 +2481,7 @@ function renderOverviewRules() {
   html += '</div>';
   cont.innerHTML = html;
 
-  // 有說明的學生：render 內容並預設展開
-  Object.values(map).forEach(({students}) => {
-    students.forEach(s => {
-      const notes = state.studentNotes[s.id] || [];
-      if(notes.length) {
-        const contId = 'notes_' + s.id + '_' + filterTag;
-        const el = document.getElementById(contId);
-        if(el) {
-          el.style.display = '';
-          renderStudentNotes(s.id, contId);
-        }
-      }
-    });
-  });
-}
+
 
 
 // =============================================
