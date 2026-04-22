@@ -2358,6 +2358,7 @@ function renderOverviewTag(tag, gradeSelId, contId) {
       return `<div>
         <div style="display:flex;align-items:center;gap:7px;padding:6px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;">
           <span style="color:${genColor};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+          <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
           <span style="font-weight:600;flex:1;">${s.name}</span>
           ${tgs} ${bindHtml}
           <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.78rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 6px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">
