@@ -874,9 +874,27 @@ tr:hover td { background: #f8f9fd; }
 
 <!-- ==================== MODAL: 編輯規則 ==================== -->
 <div class="modal-bg" id="editRuleModal">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal" style="max-width:600px;">
     <div class="modal-title">✏️ 編輯規則</div>
     <input type="hidden" id="editRuleId">
+
+    <!-- 目標學生（唯讀顯示） -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">目標學生</label>
+      <div id="editRuleTargetDisplay" style="padding:6px 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
+    </div>
+
+    <!-- 不能同班學生：可新增/移除 -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">不能同班的學生（可新增或移除）</label>
+      <div id="editRuleSepChips" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:6px;"></div>
+      <div style="position:relative;">
+        <input type="text" id="editRuleSepSearch" placeholder="輸入座號或姓名新增…" oninput="editRuleSearchSep()" autocomplete="off" style="width:100%;">
+        <div id="editRuleSepDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);z-index:60;"></div>
+      </div>
+    </div>
+
+    <!-- 規則類型 -->
     <div class="form-group" style="margin-bottom:10px;">
       <label>規則類型</label>
       <div style="display:flex;gap:14px;margin-top:5px;flex-wrap:wrap;">
@@ -888,9 +906,11 @@ tr:hover td { background: #f8f9fd; }
         </label>
       </div>
     </div>
+
+    <!-- 備註 -->
     <div class="form-group" style="margin-bottom:12px;">
       <label>備註原因</label>
-      <textarea id="editRuleReason" style="width:100%;min-height:100px;resize:vertical;font-family:inherit;font-size:.875rem;border:1.5px solid var(--border);border-radius:8px;padding:8px;outline:none;" placeholder="備註原因…"></textarea>
+      <textarea id="editRuleReason" style="width:100%;min-height:90px;resize:vertical;font-family:inherit;font-size:.875rem;border:1.5px solid var(--border);border-radius:8px;padding:8px;outline:none;" placeholder="備註原因…"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('editRuleModal')">取消</button>
@@ -2972,25 +2992,119 @@ function setRuleGrade(grade) {
 }
 
 // ── 編輯規則 Modal ──
+// 編輯規則時，暫存乙生清單
+let editRuleSepStudents = [];
+
 function openEditRule(id) {
   const r = state.rules[id];
   if(!r) return;
   document.getElementById('editRuleId').value = id;
   document.querySelector(`input[name="editRuleType"][value="${r.type||'uni'}"]`).checked = true;
   document.getElementById('editRuleReason').value = r.reason||'';
+  document.getElementById('editRuleSepSearch').value = '';
+  document.getElementById('editRuleSepDropdown').style.display = 'none';
+
+  // 顯示目標學生
+  const targetStu = state.students[r.targetStudentId];
+  const tCode = targetStu ? `${targetStu.grade}0${targetStu.class}${String(targetStu.number).padStart(2,'0')}` : '';
+  const tGc   = targetStu ? (targetStu.gender==='M'?'var(--blue)':'var(--pink)') : '';
+  const tBH   = targetStu&&targetStu.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>' : '';
+  document.getElementById('editRuleTargetDisplay').innerHTML =
+    `<span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${tCode}</span>
+     <span style="color:${tGc};margin:0 4px;">${targetStu?(targetStu.gender==='M'?'♂':'♀'):''}</span>
+     <span style="font-weight:700;">${r.targetStudentName}</span>
+     <span style="font-size:.75rem;color:var(--text3);"> (${classLabel(r.grade, r.targetStudentClass)})</span>
+     ${tBH}`;
+
+  // 載入目前的乙生清單
+  editRuleSepStudents = (r.separateFrom||[]).map(s => {
+    const stu = state.students[s.id];
+    return { id:s.id, name:s.name, class:s.class, grade: stu?stu.grade:r.grade };
+  });
+  renderEditRuleSepChips();
   openModal('editRuleModal');
 }
+
+function editRuleSearchSep() {
+  const id    = document.getElementById('editRuleId').value;
+  const r     = state.rules[id];
+  const grade = r ? r.grade : 2;
+  const q     = document.getElementById('editRuleSepSearch').value.trim();
+  const dd    = document.getElementById('editRuleSepDropdown');
+  if(!q) { dd.style.display='none'; return; }
+
+  const stus = ruleSearchStudents(q, grade);
+  if(!stus.length) { dd.innerHTML='<div style="padding:9px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dd.style.display=''; return; }
+
+  dd.innerHTML='';
+  stus.forEach(s => {
+    const already = editRuleSepStudents.some(m=>m.id===s.id) || s.id === r.targetStudentId;
+    const row = document.createElement('div');
+    row.style.cssText=`padding:7px 12px;cursor:${already?'default':'pointer'};display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);background:${already?'var(--bg)':'#fff'};`;
+    row.innerHTML = ruleStudentItemHtml(s) + (already?'<span style="margin-left:auto;font-size:.72rem;color:var(--text3);">已在名單</span>':'');
+    if(!already) {
+      row.onmouseenter = () => row.style.background='var(--blue-light)';
+      row.onmouseleave = () => row.style.background='#fff';
+      row.onclick = () => {
+        editRuleSepStudents.push({id:s.id, name:s.name, class:s.class, grade:s.grade});
+        document.getElementById('editRuleSepSearch').value='';
+        dd.style.display='none';
+        renderEditRuleSepChips();
+      };
+    }
+    dd.appendChild(row);
+  });
+  dd.style.display='';
+}
+
+function renderEditRuleSepChips() {
+  const cont = document.getElementById('editRuleSepChips');
+  cont.innerHTML='';
+  if(!editRuleSepStudents.length) {
+    cont.innerHTML='<span style="font-size:.8rem;color:var(--text3);">尚無隔離學生</span>'; return;
+  }
+  editRuleSepStudents.forEach((m, idx) => {
+    const s   = state.students[m.id];
+    const bh  = s&&s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>' : '';
+    const gc  = s ? (s.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
+    const code = s ? `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}` : '';
+    const chip = document.createElement('div');
+    chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 7px;font-size:.8rem;';
+    chip.innerHTML=`<span style="font-size:.72rem;font-family:monospace;color:var(--text3);">${code}</span>
+      <span style="color:${gc};font-size:.78rem;">${s?(s.gender==='M'?'♂':'♀'):''}</span>
+      <span style="font-weight:600;">${m.name}</span>
+      <span style="font-size:.7rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>${bh}
+      <button onclick="editRuleSepStudents.splice(${idx},1);renderEditRuleSepChips();"
+        style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.82rem;padding:0;margin-left:1px;">✕</button>`;
+    cont.appendChild(chip);
+  });
+}
+
+// 點外部關閉 editRule dropdown
+document.addEventListener('click', e => {
+  if(!e.target.closest('#editRuleSepSearch')&&!e.target.closest('#editRuleSepDropdown')) {
+    const dd = document.getElementById('editRuleSepDropdown');
+    if(dd) dd.style.display='none';
+  }
+});
 
 async function saveEditRule() {
   const id     = document.getElementById('editRuleId').value;
   const type   = document.querySelector('input[name="editRuleType"]:checked').value;
   const reason = document.getElementById('editRuleReason').value.trim();
+
+  if(!editRuleSepStudents.length) { showAlert('請至少保留一位隔離學生','warn'); return; }
+
+  const separateFrom = editRuleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
+
   try {
-    await db.collection('separationRules').doc(id).update({ type, reason });
-    state.rules[id].type   = type;
-    state.rules[id].reason = reason;
+    await db.collection('separationRules').doc(id).update({ type, reason, separateFrom });
+    state.rules[id].type         = type;
+    state.rules[id].reason       = reason;
+    state.rules[id].separateFrom = separateFrom;
     closeModal('editRuleModal');
     renderRuleList();
+    renderOverviewRules();
     showAlert('規則已更新');
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
