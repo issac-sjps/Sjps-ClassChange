@@ -668,23 +668,46 @@ ${chunks.map((cls, idx) => buildChunk(cls, idx)).join('')}
 
 function buildTwinApp(cfg) {
   const SL = (w='80pt') => `<span style="display:inline-block;border-bottom:1pt solid #000;min-width:${w};height:14pt;vertical-align:bottom;margin:0 2pt;"></span>`;
+  const SLsm = (w='40pt') => `<span style="display:inline-block;border-bottom:1pt solid #000;min-width:${w};height:14pt;vertical-align:bottom;margin:0 2pt;"></span>`;
   const div = document.createElement('div');
   div.className = 'print-page';
   div.innerHTML = `
-<div style="text-align:center;margin-bottom:4pt;">
-  <div style="font-size:10pt;color:#444;">${cfg.school}</div>
-  <div style="font-size:14pt;font-weight:bold;margin:4pt 0;">同年級複數子女學生「編班」家長意願書</div>
-  <div style="font-size:9pt;color:#666;border-bottom:2pt solid #000;padding-bottom:6pt;">（請詳填後附戶口名簿影本，送交 ${cfg.place}）</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4pt;">
+  <div style="flex:1;text-align:center;">
+    <div style="font-size:10pt;color:#444;">${cfg.school}</div>
+    <div style="font-size:14pt;font-weight:bold;margin:4pt 0;">同年級複數子女學生「編班」家長意願書</div>
+    <div style="font-size:9pt;color:#666;border-bottom:2pt solid #000;padding-bottom:6pt;">（請詳填後送交 ${cfg.place}）</div>
+  </div>
+  <div style="border:1pt solid #aaa;border-radius:4pt;padding:6pt 10pt;font-size:9.5pt;white-space:nowrap;margin-left:10pt;margin-top:4pt;text-align:center;min-width:90pt;">
+    <div style="font-size:8pt;color:#888;margin-bottom:4pt;">收件班級（老師填）</div>
+    <span style="font-size:10.5pt;">${SLsm('22pt')} 年 ${SLsm('22pt')} 班</span>
+  </div>
 </div>
 
-<div style="margin:12pt 0;font-size:10.5pt;line-height:2.2;">
-  <div>學生姓名：${SL('90pt')} 身分證字號：${SL('110pt')}</div>
-  <div>學生姓名：${SL('90pt')} 身分證字號：${SL('110pt')}</div>
-  <div>學生姓名：${SL('90pt')} 身分證字號：${SL('110pt')}</div>
+<table style="width:100%;border-collapse:collapse;font-size:10.5pt;margin:12pt 0 6pt;">
+  <colgroup>
+    <col style="width:36pt;">
+    <col style="width:34pt;">
+    <col>
+    <col style="width:130pt;">
+  </colgroup>
+  <tr style="background:#f0f0f0;">
+    <th style="border:0.75pt solid #888;padding:4pt;text-align:center;font-size:9.5pt;">班　級</th>
+    <th style="border:0.75pt solid #888;padding:4pt;text-align:center;font-size:9.5pt;">座　號</th>
+    <th style="border:0.75pt solid #888;padding:4pt;text-align:center;font-size:9.5pt;">學生姓名</th>
+    <th style="border:0.75pt solid #888;padding:4pt;text-align:center;font-size:9.5pt;">身分證字號</th>
+  </tr>
+  <tr><td style="border:0.75pt solid #888;padding:3pt;height:24pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td></tr>
+  <tr><td style="border:0.75pt solid #888;padding:3pt;height:24pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td></tr>
+  <tr><td style="border:0.75pt solid #888;padding:3pt;height:24pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td><td style="border:0.75pt solid #888;padding:3pt;"></td></tr>
+</table>
+
+<div style="font-size:8.5pt;color:#555;margin-bottom:8pt;line-height:1.7;border:0.5pt solid #ccc;padding:5pt 8pt;border-radius:3pt;background:#fafafa;">
+  ※ 若兩位孩子<b>現就讀不同班</b>，請各班分別填寫一張繳回；若<b>同班</b>則只需繳交一張，由孩子現就讀班級導師收齊即可。
 </div>
 
 <div style="margin:8pt 0;font-size:10.5pt;">
-  擬申請同年級複數子女學生（如所附戶口名簿影本）編班時安置：
+  擬申請同年級複數子女學生編班時安置：
 </div>
 
 <div style="border:1pt solid #bbb;border-radius:4pt;padding:10pt 16pt;margin:8pt 0;font-size:11pt;line-height:2.4;">
@@ -698,17 +721,17 @@ function buildTwinApp(cfg) {
 </div>
 <div style="text-align:right;font-size:10pt;margin:4pt 0;">此致　${cfg.school}</div>
 
-<div style="margin-top:16pt;font-size:10.5pt;line-height:2.2;">
+<div style="margin-top:14pt;font-size:10.5pt;line-height:2.2;">
   <div>立書申請人：${SL('90pt')}（學生家長）</div>
   <div>聯絡電話：${SL('130pt')}</div>
   <div>戶籍地址：${SL('220pt')}</div>
 </div>
 
-<div style="display:flex;justify-content:flex-end;margin-top:12pt;font-size:10pt;">
+<div style="display:flex;justify-content:flex-end;margin-top:10pt;font-size:10pt;">
   中　華　民　國 ${SL('32pt')} 年 ${SL('22pt')} 月 ${SL('22pt')} 日
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin-top:20pt;">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8pt;margin-top:18pt;">
   <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">承辦人</div>
   <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">教務主任</div>
   <div style="border:1pt solid #bbb;padding:8pt;min-height:44pt;text-align:center;font-size:10pt;">校　長</div>
