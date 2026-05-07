@@ -661,6 +661,7 @@ function renderRules() {
       }).join('');
       return `<div class="rule-ov-row">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
+          ${r.groupCode?`<span style="font-size:.8rem;font-weight:800;font-family:monospace;color:var(--blue);background:var(--blue-light);border:1px solid var(--blue);border-radius:5px;padding:1px 6px;">${r.groupCode}</span>`:''}
           <span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${targetCode}</span>
           <span class="rule-target">${r.targetStudentName}</span>
           ${isBH?'<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':''}
