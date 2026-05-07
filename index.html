@@ -3,967 +3,347 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>後台管理 ─ 編班系統</title>
+<title>編班名單查詢 ─ 教務組</title>
 <style>
 :root {
-  --navy: #0f2044;
-  --navy2: #1a3060;
-  --blue: #2d5be3;
-  --blue-light: #e8eefb;
-  --amber: #d97706;
-  --amber-light: #fef3c7;
-  --red: #dc2626;
-  --red-light: #fee2e2;
-  --purple: #7c3aed;
-  --purple-light: #ede9fe;
-  --gold: #b45309;
-  --gold-light: #fef9c3;
-  --green: #16a34a;
-  --green-light: #dcfce7;
-  --pink: #be185d;
-  --pink-light: #fce7f3;
-  --teal: #0d9488;
-  --teal-light: #ccfbf1;
-  --bg: #f4f6fb;
-  --surface: #fff;
-  --border: #dde3f0;
-  --text: #111827;
-  --text2: #4b5563;
-  --text3: #9ca3af;
-  --radius: 10px;
-  --shadow: 0 1px 4px rgba(15,32,68,.08), 0 4px 16px rgba(15,32,68,.06);
+  --navy: #0f2044; --navy2: #1a3060; --blue: #2d5be3; --blue-light: #e8eefb;
+  --red: #dc2626; --red-light: #fee2e2; --purple: #7c3aed; --purple-light: #ede9fe;
+  --gold: #b45309; --gold-light: #fef9c3; --green: #16a34a;
+  --pink: #be185d; --pink-light: #fce7f3; --teal: #0d9488; --teal-light: #ccfbf1;
+  --amber: #d97706; --amber-light: #fef3c7;
+  --bg: #f4f6fb; --surface: #fff; --border: #dde3f0;
+  --text: #111827; --text2: #4b5563; --text3: #9ca3af;
+  --radius: 10px; --shadow: 0 1px 4px rgba(15,32,68,.08), 0 4px 16px rgba(15,32,68,.06);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+body { font-family: 'Microsoft JhengHei','PingFang TC','Noto Sans TC',system-ui,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+/* LOCK SCREEN */
+.lock-screen {
+  position: fixed; inset: 0; background: linear-gradient(135deg, var(--navy) 0%, #1e3a6e 50%, var(--navy2) 100%);
+  display: flex; align-items: center; justify-content: center; z-index: 999; padding: 20px;
+}
+.lock-box {
+  background: rgba(255,255,255,.06); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 20px;
+  padding: 48px 40px; width: 100%; max-width: 380px; text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,.4);
+}
+.lock-icon { font-size: 3.5rem; margin-bottom: 16px; }
+.lock-title { color: #fff; font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+.lock-sub { color: rgba(255,255,255,.6); font-size: .85rem; margin-bottom: 32px; }
+.lock-input {
+  width: 100%; padding: 14px 18px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.1); color: #fff; font-size: 1rem; text-align: center;
+  letter-spacing: .15em; outline: none; font-family: inherit; transition: border-color .2s;
+  margin-bottom: 14px;
+}
+.lock-input::placeholder { color: rgba(255,255,255,.4); letter-spacing: 0; }
+.lock-input:focus { border-color: rgba(255,255,255,.5); }
+.lock-btn {
+  width: 100%; padding: 13px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--blue); color: #fff; font-size: 1rem; font-weight: 700;
+  font-family: inherit; transition: all .2s;
+}
+.lock-btn:hover { background: #2347c5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,91,227,.4); }
+.lock-error { color: #fca5a5; font-size: .85rem; margin-top: 10px; min-height: 20px; }
 
 /* HEADER */
 .header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%); color: #fff; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 60px; box-shadow: 0 2px 12px rgba(15,32,68,.25); position: sticky; top: 0; z-index: 100; }
 .header-left { display: flex; align-items: center; gap: 12px; }
-.header-icon { font-size: 1.5rem; }
-.header-title { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
-.header-sub { font-size: 0.75rem; opacity: 0.65; margin-top: 1px; }
-.db-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border-radius: 99px; padding: 4px 12px; font-size: 0.75rem; }
+.header-title { font-size: 1.1rem; font-weight: 700; }
+.header-sub { font-size: .72rem; opacity: .6; margin-top: 1px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.db-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border-radius: 99px; padding: 4px 12px; font-size: .75rem; }
 .db-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; transition: background .4s; }
 .db-dot.ok { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
-.db-dot.err { background: #f87171; }
+.lock-btn-small { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); color: #fff; border-radius: 8px; padding: 5px 12px; font-size: .78rem; cursor: pointer; font-family: inherit; transition: background .2s; }
+.lock-btn-small:hover { background: rgba(255,255,255,.25); }
 
 /* TABS */
-.tabs { background: var(--surface); border-bottom: 2px solid var(--border); display: flex; gap: 0; overflow-x: auto; padding: 0 16px; position: sticky; top: 60px; z-index: 90; }
-.tab-btn { padding: 13px 18px; border: none; background: none; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--text2); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: color .2s, border-color .2s; display: flex; align-items: center; gap: 6px; }
+.tabs { background: var(--surface); border-bottom: 2px solid var(--border); display: flex; overflow-x: auto; padding: 0 16px; position: sticky; top: 60px; z-index: 90; }
+.tab-btn { padding: 13px 20px; border: none; background: none; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--text2); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: color .2s, border-color .2s; font-family: inherit; display: flex; align-items: center; gap: 6px; }
 .tab-btn:hover { color: var(--blue); }
 .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
 
 /* LAYOUT */
 .tab-pane { display: none; padding: 24px; max-width: 1280px; margin: 0 auto; }
 .tab-pane.active { display: block; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-@media(max-width: 900px) { .two-col,.three-col { grid-template-columns: 1fr; } }
 
-/* CARDS */
+/* CARD */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
-.card-title { font-size: 0.95rem; font-weight: 700; color: var(--navy); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-.card-title span { margin-left: auto; font-size: 0.8rem; font-weight: 400; color: var(--text3); }
+.card-title { font-size: .95rem; font-weight: 700; color: var(--navy); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.card-title span { margin-left: auto; font-size: .78rem; font-weight: 400; color: var(--text3); }
 
 /* FORM */
-.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px; }
-.form-group { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
-.form-group.grow { flex: 1; }
-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); letter-spacing: 0.04em; }
-select, input[type=text], input[type=number], textarea {
-  border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px;
-  font-size: 0.875rem; color: var(--text); background: #fff; outline: none;
-  font-family: inherit; transition: border-color .2s, box-shadow .2s;
-}
-select:focus, input:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(45,91,227,.12); }
-textarea { resize: vertical; min-height: 180px; font-family: monospace; font-size: 0.82rem; line-height: 1.6; }
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+label.fl { font-size: .75rem; font-weight: 700; color: var(--text2); letter-spacing: .04em; }
+select, input[type=text] { border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: .875rem; color: var(--text); background: #fff; outline: none; font-family: inherit; transition: border-color .2s; }
+select:focus, input:focus { border-color: var(--blue); }
 
-/* BUTTONS */
-.btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 600; font-family: inherit; transition: all .18s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.btn-primary { background: var(--blue); color: #fff; }
-.btn-primary:hover { background: #2347c5; box-shadow: 0 2px 8px rgba(45,91,227,.3); }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-danger:hover { background: #b91c1c; }
-.btn-ghost { background: transparent; color: var(--text2); border: 1.5px solid var(--border); }
-.btn-ghost:hover { background: var(--bg); border-color: var(--blue); color: var(--blue); }
-.btn-success { background: var(--green); color: #fff; }
-.btn-success:hover { background: #15803d; }
-.btn-warning { background: var(--amber); color: #fff; }
-.btn-sm { padding: 5px 10px; font-size: 0.8rem; border-radius: 6px; }
-.btn-icon { padding: 6px 8px; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-
-/* TAGS */
-.tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; }
+/* TAG */
+.tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; font-size: .72rem; font-weight: 700; }
 .tag-bighead { background: var(--red-light); color: var(--red); }
 .tag-special { background: var(--purple-light); color: var(--purple); }
 .tag-gifted { background: var(--gold-light); color: var(--gold); }
-.tag-twin { background: var(--teal-light); color: var(--teal); }
 .tag-male { background: var(--blue-light); color: var(--blue); }
 .tag-female { background: var(--pink-light); color: var(--pink); }
-.tag-rule { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
 
-/* TAG TOGGLE BUTTONS */
-.tag-toggle { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; cursor: pointer; border: 1.5px dashed; background: transparent; transition: all .15s; font-family: inherit; }
-.tag-toggle.bighead { border-color: var(--red); color: var(--red); }
-.tag-toggle.bighead.on { background: var(--red-light); border-style: solid; }
-.tag-toggle.special { border-color: var(--purple); color: var(--purple); }
-.tag-toggle.special.on { background: var(--purple-light); border-style: solid; }
-.tag-toggle.gifted { border-color: var(--gold); color: var(--gold); }
-.tag-toggle.gifted.on { background: var(--gold-light); border-style: solid; }
+/* STAT */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 80px; }
+.stat-num { font-size: 1.5rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.stat-lbl { font-size: .7rem; color: var(--text3); margin-top: 3px; font-weight: 600; }
 
 /* STUDENT GRID */
-.student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
-.s-card { border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; background: #fff; }
-.s-card.male { border-left: 3px solid var(--blue); }
-.s-card.female { border-left: 3px solid var(--pink); }
-.s-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.s-name { font-weight: 700; font-size: 0.9rem; }
-.s-num { font-size: 0.75rem; color: var(--text3); }
-.s-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.class-card { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.class-head { padding: 10px 14px; background: var(--navy); display: flex; justify-content: space-between; align-items: center; }
+.class-head-title { font-weight: 800; color: #fff; font-size: .95rem; }
+.class-head-counts { display: flex; gap: 6px; font-size: .75rem; }
+.class-stats { display: flex; gap: 8px; padding: 7px 12px; background: #f8f9fd; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.stu-row { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-bottom: 1px solid #f0f2f8; font-size: .855rem; }
+.stu-row:last-child { border-bottom: none; }
+.stu-row.male { background: rgba(219,234,254,.2); }
+.stu-row.female { background: rgba(252,231,243,.15); }
+.stu-name { font-weight: 600; flex: 1; }
+.stu-num { font-size: .72rem; color: var(--text3); }
 
-/* TABLE */
-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-th { background: var(--bg); padding: 9px 12px; text-align: left; font-size: 0.78rem; font-weight: 700; color: var(--text2); border-bottom: 2px solid var(--border); }
-td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: #f8f9fd; }
+/* OVERVIEW GRIDS */
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.ov-card { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.ov-head { padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; }
+.ov-head-blue { background: var(--navy); }
+.ov-head-title { font-weight: 800; color: #fff; }
+.ov-head-sub { font-size: .78rem; color: rgba(255,255,255,.7); }
+.ov-row { display: flex; align-items: center; gap: 7px; padding: 6px 14px; border-bottom: 1px solid #f0f2f8; font-size: .855rem; }
+.ov-row:last-child { border-bottom: none; }
 
-/* RULE CARDS */
-.rule-card { border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
-.rule-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.rule-target-name { font-weight: 700; font-size: 0.9rem; }
-.rule-from-class { font-size: 0.75rem; color: var(--text3); }
-.rule-sep-list { font-size: 0.85rem; color: var(--text2); margin-bottom: 4px; }
-.rule-reason { font-size: 0.8rem; color: var(--text3); font-style: italic; }
-.rule-bighead-warn { font-size: 0.75rem; color: var(--red); font-weight: 600; margin-top: 4px; }
-.rule-type-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+/* RULE CARD */
+.rule-ov-row { padding: 8px 12px; border-bottom: 1px solid #f0f2f8; }
+.rule-ov-row:last-child { border-bottom: none; }
+.rule-target { font-weight: 700; font-size: .9rem; }
+.rule-cls-lbl { font-size: .73rem; color: var(--text3); }
+.rule-sep { font-size: .82rem; color: var(--text2); padding-left: 10px; margin-top: 3px; }
+.rule-reason-txt { font-size: .75rem; color: var(--text3); font-style: italic; padding-left: 10px; margin-top: 2px; }
+.rule-type-badge { font-size: .68rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
 .rule-type-uni { background: #fef3c7; color: #92400e; }
 .rule-type-group { background: var(--red-light); color: var(--red); }
 
-/* STATS */
-.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-.stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; text-align: center; min-width: 90px; }
-.stat-num { font-size: 1.6rem; font-weight: 800; color: var(--navy); line-height: 1; }
-.stat-lbl { font-size: 0.72rem; color: var(--text3); margin-top: 3px; font-weight: 600; }
-
-/* SIM RESULT */
-.sim-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.sim-class-card { border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-.sim-class-head { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
-.sim-class-title { font-size: 1rem; font-weight: 800; color: #fff; }
-.sim-class-counts { display: flex; gap: 8px; font-size: 0.75rem; color: rgba(255,255,255,.85); }
-.sim-class-stats { display: flex; gap: 12px; padding: 8px 14px; background: #f8f9fd; font-size: 0.78rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
-.sim-stat-item { display: flex; align-items: center; gap: 4px; }
-.sim-student-row { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-bottom: 1px solid #f0f2f8; font-size: 0.855rem; }
-.sim-student-row:last-child { border-bottom: none; }
-.sim-student-row.male { background: rgba(219,234,254,.25); }
-.sim-student-row.female { background: rgba(252,231,243,.2); }
-.sim-student-name { font-weight: 600; flex: 1; }
-.prev-cls { font-size: 0.72rem; color: var(--text3); background: var(--bg); padding: 1px 6px; border-radius: 4px; }
-.sim-warn { background: var(--red-light); border: 1px solid #fca5a5; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; color: var(--red); margin-bottom: 12px; }
-
-/* Sim class header colors */
-.sh-1 { background: #2d5be3; }
-.sh-2 { background: #7c3aed; }
-.sh-3 { background: #db2777; }
-.sh-4 { background: #ea580c; }
-.sh-5 { background: #ca8a04; }
-.sh-6 { background: #16a34a; }
-.sh-7 { background: #0891b2; }
-.sh-8 { background: #0d9488; }
-.sh-9 { background: #9333ea; }
-
-/* ALERTS */
-.alert { padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; }
-.alert-info { background: var(--blue-light); color: #1e40af; }
-.alert-warn { background: var(--amber-light); color: #92400e; }
-.alert-bighead { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
-
-/* MODAL */
-.modal-bg { display: none; position: fixed; inset: 0; background: rgba(15,32,68,.45); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-.modal-bg.show { display: flex; }
-.modal { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(15,32,68,.25); }
-.modal-title { font-size: 1.05rem; font-weight: 800; color: var(--navy); margin-bottom: 16px; }
-.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
-
-/* CHECKBOXES */
-.check-list { max-height: 280px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px; }
-.check-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; cursor: pointer; transition: background .15s; }
-.check-item:hover { background: var(--bg); }
-.check-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--blue); cursor: pointer; }
-.check-item-label { font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 6px; flex: 1; }
-
 /* MISC */
-.empty { text-align: center; padding: 32px; color: var(--text3); font-size: 0.9rem; }
-.pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.class-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: 0.8rem; font-weight: 600; color: var(--navy); cursor: pointer; transition: all .15s; }
-.class-badge:hover, .class-badge.sel { background: var(--blue); color: #fff; border-color: var(--blue); }
-.sep-line { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-.notice { background: linear-gradient(135deg, var(--blue-light), #f0f4ff); border: 1px solid #c7d4f7; border-radius: 8px; padding: 10px 14px; font-size: 0.82rem; color: #1e40af; margin-bottom: 14px; line-height: 1.5; }
+.empty { text-align: center; padding: 32px; color: var(--text3); font-size: .9rem; }
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 18px; background: var(--surface); padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.updated-lbl { font-size: .75rem; color: var(--text3); margin-left: auto; }
 </style>
 </head>
 <body>
 
+<!-- ==================== LOCK SCREEN ==================== -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🏫</div>
+    <div class="lock-title">編班名單查詢系統</div>
+    <div class="lock-sub">輸入查詢密碼以繼續<br>如需取得密碼請洽教務組</div>
+    <input class="lock-input" type="password" id="pwInput" placeholder="輸入密碼" maxlength="20"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="lock-btn" onclick="checkPw()">🔓 進入查詢</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="mainApp" style="display:none;">
+
 <div class="header">
   <div class="header-left">
-    <div class="header-icon">📋</div>
     <div>
-      <div class="header-title">編班名單整理系統</div>
-      <div class="header-sub">後台管理 ─ 僅限管理員</div>
+      <div class="header-title">📋 編班名單查詢</div>
+      <div class="header-sub">僅供查閱，如需修改請洽教務組</div>
     </div>
   </div>
-  <div id="adminBar" style="display:none;flex-direction:column;align-items:flex-end;gap:5px;">
-    <div style="display:flex;align-items:center;gap:8px;">
+  <div class="header-right">
       <div class="db-badge">
         <div class="db-dot" id="dbDot"></div>
         <span id="dbStatus">連接中...</span>
       </div>
-      <button onclick="signOut()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;">🚪 登出</button>
-      <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">前台 →</a>
-      <a href="admin-users.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">👥 權限管理</a>
-      <a href="print.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">🖨️ 列印調查表</a>
+      <a href="admin.html" class="lock-btn-small" style="text-decoration:none;">🔧 後台管理</a>
+      <button class="lock-btn-small" onclick="lockOut()">🔒 鎖定</button>
     </div>
-    <div style="font-size:.72rem;color:rgba(255,255,255,.6);">👤 <span id="userEmailBadge"></span></div>
-  </div>
 </div>
 
 <nav class="tabs">
-  <button class="tab-btn active" onclick="switchTab('students')">📚 學生名單</button>
-  <button class="tab-btn" onclick="switchTab('rules')">🚫 不能同班</button>
-  <button class="tab-btn" onclick="switchTab('newstu')">👶 新生名單</button>
-  <button class="tab-btn" onclick="switchTab('teachers')">👩‍🏫 導師名單</button>
-  <button class="tab-btn" onclick="switchTab('simulate')">🎲 模擬分班</button>
-  <button class="tab-btn" onclick="switchTab('special-entry')" style="border-left:2px solid var(--border);">🏷️ 特殊生導入</button>
-  <button class="tab-btn" onclick="switchTab('twins')">👫 雙胞胎</button>
-  <button class="tab-btn" onclick="switchTab('ov-bighead')">⚠ 大頭</button>
-  <button class="tab-btn" onclick="switchTab('ov-special')">🔵 鑑輔生</button>
-  <button class="tab-btn" onclick="switchTab('ov-gifted')">⭐ 資優生</button>
-  <button class="tab-btn" onclick="switchTab('overview-rules')">📌 不能同班總表</button>
-  <button class="tab-btn" onclick="switchTab('notes-query');renderNotesQuery()">📝 說明查詢</button>
+  <button class="tab-btn active" onclick="switchTab('classlist', this)">📚 各班名單</button>
+  <button class="tab-btn" onclick="switchTab('bighead', this)">⚠ 大頭</button>
+  <button class="tab-btn" onclick="switchTab('special', this)">🔵 鑑輔生</button>
+  <button class="tab-btn" onclick="switchTab('gifted', this)">⭐ 資優生</button>
+  <button class="tab-btn" onclick="switchTab('rules', this)">📌 不能同班總表</button>
+  <button class="tab-btn" onclick="switchTab('twins', this)">👫 雙胞胎名單</button>
 </nav>
 
-<!-- ==================== TAB 1: 學生名單 ==================== -->
-<div id="tab-students" class="tab-pane active">
-  <div class="two-col">
-    <div>
-      <div class="card">
-        <div class="card-title">📤 上傳班級名單</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>年級</label>
-            <select id="upGrade" onchange="updateClassOptions('upGrade','upClass')">
-              <option value="2">2年級</option>
-              <option value="4">4年級</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>班級</label>
-            <select id="upClass"></select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>貼上名單（格式：座號 姓名，01~15/19 男生，21~開始 女生）</label>
-          <textarea id="upText" placeholder="01 王小明&#10;02 李大華&#10;21 林小美&#10;22 陳美玲"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="parseAndPreview()">📋 解析預覽</button>
-          <button class="btn btn-ghost" onclick="clearUpload()">清除</button>
-        </div>
-      </div>
-
-      <div class="card" id="previewCard" style="display:none;">
-        <div class="card-title">👀 預覽與標記 <span id="previewInfo"></span></div>
-        <div class="notice">點擊標籤來開啟／關閉標記，完成後按「儲存至資料庫」</div>
-        <div class="student-grid" id="previewGrid"></div>
-        <hr class="sep-line">
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button class="btn btn-success" onclick="saveClassToDb()">💾 儲存至資料庫</button>
-        </div>
-      </div>
+<!-- TAB 1: 各班名單 -->
+<div id="tab-classlist" class="tab-pane active">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="clGrade" onchange="renderClassList()">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
     </div>
-
-    <div>
-      <div class="card">
-        <div class="card-title">📂 已上傳班級</div>
-        <div class="form-row" style="margin-bottom:14px;">
-          <div class="form-group">
-            <label>篩選年級</label>
-            <select id="viewGrade" onchange="renderUploadedClasses()">
-              <option value="">全部</option>
-              <option value="2">2年級</option>
-              <option value="4">4年級</option>
-            </select>
-          </div>
-        </div>
-        <div id="uploadedClassList"><div class="empty">尚無資料</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📊 年級統計</div>
-        <div id="gradeStats">
-          <div class="empty">載入中...</div>
-        </div>
-      </div>
+    <div class="form-group">
+      <label class="fl">班級</label>
+      <select id="clClass" onchange="renderClassList()">
+        <option value="">全部班級</option>
+      </select>
     </div>
+    <div class="form-group">
+      <label class="fl">搜尋學生</label>
+      <input type="text" id="clSearch" placeholder="輸入姓名關鍵字" oninput="renderClassList()" style="width:160px;">
+    </div>
+    <span class="updated-lbl" id="updatedLbl"></span>
+  </div>
+  <div id="classListSummary" style="margin-bottom:16px;"></div>
+  <div class="class-grid" id="classListContent">
+    <div class="card"><div class="empty">載入中…</div></div>
   </div>
 </div>
 
-<!-- ==================== TAB 2: 不能同班 ==================== -->
+<!-- TAB: 大頭 -->
+<div id="tab-bighead" class="tab-pane">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="bhGrade" onchange="renderSpecialTab('bighead','bhGrade','bhSummary','bhContent')">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
+  </div>
+  <div id="bhSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="bhContent"><div class="card"><div class="empty">載入中…</div></div></div>
+</div>
+
+<!-- TAB: 鑑輔生 -->
+<div id="tab-special" class="tab-pane">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="spGrade2" onchange="renderSpecialTab('special','spGrade2','spSummary2','spContent2')">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
+  </div>
+  <div id="spSummary2" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="spContent2"><div class="card"><div class="empty">載入中…</div></div></div>
+</div>
+
+<!-- TAB: 資優生 -->
+<div id="tab-gifted" class="tab-pane">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="gfGrade" onchange="renderSpecialTab('gifted','gfGrade','gfSummary','gfContent')">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
+    </div>
+  </div>
+  <div id="gfSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="gfContent"><div class="card"><div class="empty">載入中…</div></div></div>
+</div>
+
+<!-- TAB 3: 不能同班總表 -->
 <div id="tab-rules" class="tab-pane">
-  <div class="two-col">
-    <div>
-      <div class="card">
-        <div class="card-title">🎯 年級篩選</div>
-        <div style="display:flex;gap:10px;">
-          <button id="ruleGradeBtn2" class="btn btn-primary" onclick="setRuleGrade(2)">2年級</button>
-          <button id="ruleGradeBtn4" class="btn btn-ghost" onclick="setRuleGrade(4)">4年級</button>
-        </div>
-        <input type="hidden" id="ruleGrade" value="2">
-      </div>
-
-      <div class="card" id="bigheadWarnCard" style="display:none;">
-        <div class="card-title">⚠️ 此班大頭提醒</div>
-        <div id="bigheadWarnList"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">➕ 新增不能同班規則</div>
-        <div class="notice" style="margin-bottom:12px;">輸入座號（如 <b>40102</b>）或姓名搜尋學生。目標學生填一位，不能同班的學生可加入多位。</div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">
-          <!-- 目標學生 -->
-          <div>
-            <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">目標學生（此班，填一位）</label>
-            <div style="display:flex;gap:6px;margin-bottom:6px;">
-              <input type="text" id="ruleTargetSearch" placeholder="座號或姓名…" oninput="ruleSearchTarget()" style="flex:1;" autocomplete="off">
-            </div>
-            <div id="ruleTargetDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-bottom:6px;"></div>
-            <div id="ruleTargetChip" style="min-height:32px;padding:4px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);font-size:.855rem;">
-              <span style="color:var(--text3);font-size:.8rem;">尚未選擇</span>
-            </div>
-            <input type="hidden" id="ruleTargetId">
-          </div>
-
-          <!-- 不能同班學生 -->
-          <div>
-            <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">不能同班的學生（可加入多位，跨班）</label>
-            <div style="display:flex;gap:6px;margin-bottom:6px;">
-              <input type="text" id="ruleSepSearch" placeholder="座號或姓名…" oninput="ruleSearchSep()" style="flex:1;" autocomplete="off">
-            </div>
-            <div id="ruleSepDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-bottom:6px;"></div>
-            <div id="ruleSepChips" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:4px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);">
-              <span style="color:var(--text3);font-size:.8rem;" id="ruleSepEmpty">尚未加入任何學生</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>規則類型</label>
-          <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="ruleType" value="uni" checked> 單向隔離（目標不能跟選定學生同班，選定學生互相可以同班）
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="ruleType" value="group"> 群組隔離（所有學生包含目標全部都要分到不同班）
-            </label>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>備註原因</label>
-          <textarea id="ruleReason" placeholder="例：過去有嚴重衝突、家長要求分開…" style="min-height:80px;resize:vertical;font-family:inherit;font-size:.875rem;"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="saveRule()">💾 新增規則</button>
-        <button class="btn btn-ghost" style="margin-left:8px;" onclick="ruleClearForm()">清除</button>
-      </div>
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">年級</label>
+      <select id="rlGrade" onchange="renderRules()">
+        <option value="">全部</option>
+        <option value="2">2年級</option>
+        <option value="4">4年級</option>
+      </select>
     </div>
-
-    <div>
-      <div class="card">
-        <div class="card-title">📋 不能同班規則列表 <span id="ruleCount"></span></div>
-        <div class="form-row" style="margin-bottom:12px;">
-          <div class="form-group">
-            <label>顯示年級</label>
-            <select id="ruleViewGrade" onchange="renderRuleList()">
-              <option value="">全部</option>
-              <option value="2">2年級</option>
-              <option value="4">4年級</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>顯示班級（供老師檢視）</label>
-            <select id="ruleViewClass" onchange="renderRuleList()">
-              <option value="">全部</option>
-            </select>
-          </div>
-        </div>
-        <div id="ruleList"><div class="empty">尚無規則</div></div>
-      </div>
+    <div class="form-group">
+      <label class="fl">班級</label>
+      <select id="rlClass" onchange="renderRules()">
+        <option value="">全部班級</option>
+      </select>
     </div>
+  </div>
+  <div id="rulesSummary" style="margin-bottom:16px;"></div>
+  <div class="ov-grid" id="rulesContent">
+    <div class="card"><div class="empty">載入中…</div></div>
   </div>
 </div>
 
-<!-- ==================== TAB 3: 新生名單 ==================== -->
-<div id="tab-newstu" class="tab-pane">
-  <div class="two-col">
-    <div>
-      <div class="card">
-        <div class="card-title">📤 上傳新生名單</div>
-        <div class="alert alert-info">新生名單格式：座號 姓名（同樣 01~19 男生，21+ 女生），或直接手動新增</div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>貼上名單</label>
-          <textarea id="newStuText" placeholder="01 王小明&#10;21 李小美"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="parseNewStudents()">📋 解析預覽</button>
-          <button class="btn btn-ghost" id="saveNewStuBtn" style="display:none;" onclick="saveNewStudents()">💾 儲存新生</button>
-        </div>
-        <div id="newStuPreview" style="margin-top:14px;"></div>
-      </div>
 
-      <div class="card">
-        <div class="card-title">➕ 手動新增新生</div>
-        <div class="form-row">
-          <div class="form-group grow">
-            <label>姓名</label>
-            <input type="text" id="manualName" placeholder="新生姓名">
-          </div>
-          <div class="form-group">
-            <label>性別</label>
-            <select id="manualGender">
-              <option value="M">男</option>
-              <option value="F">女</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" style="align-self:flex-end;" onclick="addManualNewStudent()">新增</button>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <div class="card-title">👶 新生列表</div>
-        <div id="newStuList"><div class="empty">尚無新生資料</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">👫 雙胞胎記錄</div>
-        <div class="form-row" style="align-items:flex-end;">
-          <div class="form-group grow">
-            <label>學生甲</label>
-            <select id="twin1"></select>
-          </div>
-          <div class="form-group grow">
-            <label>學生乙</label>
-            <select id="twin2"></select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>家長意願</label>
-          <div style="display:flex;gap:16px;margin-top:4px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="separate" checked> 分開不同班
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="same"> 同班在一起
-            </label>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveTwin()">💾 記錄雙胞胎</button>
-        <hr class="sep-line">
-        <div id="twinList"><div class="empty">尚無雙胞胎記錄</div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== TAB 4: 導師名單 ==================== -->
-<div id="tab-teachers" class="tab-pane">
-  <div class="two-col">
-    <div>
-      <div class="card">
-        <div class="card-title">➕ 新增導師</div>
-        <div class="alert alert-info">5月確認前可先用「導師甲、導師乙…」或英文 A B C 佔位，之後再改</div>
-        <div class="form-row">
-          <div class="form-group grow">
-            <label>導師姓名</label>
-            <input type="text" id="teacherName" placeholder="例：王老師、導師A">
-          </div>
-          <div class="form-group">
-            <label>負責年級（新）</label>
-            <select id="teacherGrade">
-              <option value="3">3年級</option>
-              <option value="5">5年級</option>
-              <option value="1">1年級（新生）</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" style="align-self:flex-end;" onclick="saveTeacher()">新增</button>
-        </div>
-        <hr class="sep-line">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick="addPlaceholders(3,'A,B,C,D,E,F')">快速加入 3年級 導師A~F</button>
-          <button class="btn btn-ghost btn-sm" onclick="addPlaceholders(5,'A,B,C,D,E,F,G,H')">快速加入 5年級 導師A~H</button>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <div class="card-title">👩‍🏫 導師列表</div>
-        <div class="form-row" style="margin-bottom:12px;">
-          <div class="form-group">
-            <label>篩選年級</label>
-            <select id="teacherViewGrade" onchange="renderTeachers()">
-              <option value="">全部</option>
-              <option value="3">3年級</option>
-              <option value="5">5年級</option>
-              <option value="1">1年級</option>
-            </select>
-          </div>
-        </div>
-        <div id="teacherList"><div class="empty">尚無導師資料</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 鑑輔生綁定 -->
-  <div class="card">
-    <div class="card-title">🔗 鑑輔生 / 特殊生 綁定導師</div>
-    <div class="notice">鑑輔生會在模擬分班時自動分配到其綁定導師的班級包。若尚未綁定則平均分散各班。</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>年級</label>
-        <select id="bindGrade" onchange="updateBindStudentList()">
-          <option value="2">2年級（升3年級）</option>
-          <option value="4">4年級（升5年級）</option>
-        </select>
-      </div>
-      <div class="form-group grow">
-        <label>鑑輔生 / 特殊生</label>
-        <select id="bindStudent"></select>
-      </div>
-      <div class="form-group grow">
-        <label>綁定導師</label>
-        <select id="bindTeacher"></select>
-      </div>
-      <button class="btn btn-primary" style="align-self:flex-end;" onclick="saveBinding()">綁定</button>
-    </div>
-    <div id="bindingList" style="margin-top:12px;"><div class="empty">尚無綁定記錄</div></div>
-  </div>
-</div>
-
-<!-- ==================== TAB 5: 模擬分班 ==================== -->
-<div id="tab-simulate" class="tab-pane">
-  <div class="card">
-    <div class="card-title">⚙️ 模擬設定</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>模擬年級</label>
-        <select id="simGrade">
-          <option value="2">2年級 → 3年級</option>
-          <option value="4">4年級 → 5年級</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>目標班數</label>
-        <input type="number" id="simClassCount" min="1" max="20" value="6" style="width:80px;">
-      </div>
-      <div class="form-group">
-        <label>資優生分配</label>
-        <select id="simGiftedMode">
-          <option value="together">全部同班（預設）</option>
-          <option value="spread">平均分散</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" style="align-self:flex-end;" onclick="runSimulation()">🎲 開始模擬</button>
-      <button class="btn btn-ghost" style="align-self:flex-end;" onclick="exportSimResult()">📥 匯出結果</button>
-    </div>
-  </div>
-
-  <div id="simStats" style="display:none;">
-    <div class="card">
-      <div class="card-title">📊 全年級統計</div>
-      <div class="stats-row" id="simStatsContent"></div>
-      <div id="simViolations"></div>
-    </div>
-    <div class="sim-results" id="simResults"></div>
-  </div>
-
-  <div id="simEmpty" class="card" style="text-align:center;padding:40px;">
-    <div style="font-size:3rem;margin-bottom:12px;">🎲</div>
-    <div style="color:var(--text3);">設定好年級與班數後，按「開始模擬」</div>
-  </div>
-</div>
-
-<!-- ==================== TAB: 特殊生導入 ==================== -->
-<div id="tab-special-entry" class="tab-pane">
-  <div class="notice" style="margin-bottom:16px;">
-    輸入座號（如 <b>40102</b>）或姓名搜尋，找到學生後點擊加入對應類別。已在名單中的學生會標示「已標記」。
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-
-    <!-- 大頭 -->
-    <div class="card">
-      <div class="card-title">⚠ 大頭名單</div>
-      <div class="form-group" style="margin-bottom:8px;">
-        <label>搜尋學生</label>
-        <input type="text" id="entryBHSearch" placeholder="座號或姓名…" oninput="entrySearch('bighead','entryBHSearch','entryBHDropdown','entryBHList')" autocomplete="off">
-        <div id="entryBHDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
-      </div>
-      <div style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:5px;">待加入清單</div>
-      <div id="entryBHList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
-        <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="entryCommit('bighead','entryBHList')">⚠ 加入大頭名單</button>
-    </div>
-
-    <!-- 鑑輔生 -->
-    <div class="card">
-      <div class="card-title">🔵 鑑輔生名單</div>
-      <div class="form-group" style="margin-bottom:8px;">
-        <label>搜尋學生</label>
-        <input type="text" id="entrySPSearch" placeholder="座號或姓名…" oninput="entrySearch('special','entrySPSearch','entrySPDropdown','entrySPList')" autocomplete="off">
-        <div id="entrySPDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
-      </div>
-      <div style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:5px;">待加入清單</div>
-      <div id="entrySPList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
-        <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="entryCommit('special','entrySPList')" style="background:var(--purple);">🔵 加入鑑輔生名單</button>
-    </div>
-
-    <!-- 資優生 -->
-    <div class="card">
-      <div class="card-title">⭐ 資優生名單</div>
-      <div class="form-group" style="margin-bottom:8px;">
-        <label>搜尋學生</label>
-        <input type="text" id="entryGFSearch" placeholder="座號或姓名…" oninput="entrySearch('gifted','entryGFSearch','entryGFDropdown','entryGFList')" autocomplete="off">
-        <div id="entryGFDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
-      </div>
-      <div style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:5px;">待加入清單</div>
-      <div id="entryGFList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
-        <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
-      </div>
-      <button class="btn btn-warning btn-sm" onclick="entryCommit('gifted','entryGFList')">⭐ 加入資優生名單</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- ==================== TAB: 雙胞胎管理 ==================== -->
+<!-- TAB 4: 雙胞胎名單 -->
 <div id="tab-twins" class="tab-pane">
-  <div class="two-col">
-    <div>
-      <!-- 升級生多胞胎 -->
-      <div class="card">
-        <div class="card-title">➕ 新增多胞胎（升級生：2年級 / 4年級）</div>
-        <div class="notice">輸入座號（如 <b>40102</b>）或姓名搜尋，加入後可繼續新增（支援三胞胎、四胞胎）。至少需 2 位學生才可儲存。</div>
-        <div class="form-row" style="align-items:flex-end;">
-          <div class="form-group">
-            <label>年級</label>
-            <select id="twGrade" onchange="twClearMembers()">
-              <option value="2">2年級</option>
-              <option value="4">4年級</option>
-            </select>
-          </div>
-          <div class="form-group grow">
-            <label>搜尋學生（輸入座號如 40102，或姓名）</label>
-            <div style="display:flex;gap:6px;">
-              <input type="text" id="twSearch" placeholder="輸入座號或姓名…" oninput="twSearchStudents()" style="flex:1;">
-              <div style="position:relative;">
-                <div id="twDropdown" style="display:none;position:absolute;top:100%;left:0;min-width:220px;background:#fff;border:1.5px solid var(--border);border-radius:8px;box-shadow:var(--shadow);z-index:50;max-height:220px;overflow-y:auto;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;">已加入的學生（<span id="twMemberCount">0</span> 位）</label>
-          <div id="twMemberList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;min-height:32px;padding:6px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);">
-            <span style="font-size:.8rem;color:var(--text3);" id="twMemberEmpty">尚未加入任何學生</span>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>家長意願</label>
-          <div style="display:flex;gap:16px;margin-top:5px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twPref" value="separate" checked> ❌ 分開不同班
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twPref" value="same"> ✅ 同班在一起
-            </label>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>備註（選填）</label>
-          <input type="text" id="twNote" placeholder="例：家長來電要求分班">
-        </div>
-        <button class="btn btn-primary" onclick="saveGradeTwin()">💾 儲存多胞胎記錄</button>
-      </div>
-
-      <!-- 新生雙胞胎 -->
-      <div class="card">
-        <div class="card-title">➕ 新增雙胞胎（新生）</div>
-        <div class="form-row">
-          <div class="form-group grow">
-            <label>學生甲</label>
-            <select id="twin1"><option value="">─ 選擇新生 ─</option></select>
-          </div>
-          <div class="form-group grow">
-            <label>學生乙</label>
-            <select id="twin2"><option value="">─ 選擇新生 ─</option></select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>家長意願</label>
-          <div style="display:flex;gap:16px;margin-top:5px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="separate" checked> ❌ 分開不同班
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="same"> ✅ 同班在一起
-            </label>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveTwin()">💾 儲存新生雙胞胎</button>
-      </div>
+  <div class="filter-bar">
+    <div class="form-group">
+      <label class="fl">類別</label>
+      <select id="twFilter" onchange="renderTwinsTab()">
+        <option value="">全部</option>
+        <option value="grade">升級生（2/4年級）</option>
+        <option value="new">新生</option>
+      </select>
     </div>
-
-    <div>
-      <!-- 升級生雙胞胎清單 -->
-      <div class="card">
-        <div class="card-title">📋 升級生多胞胎清單</div>
-        <div class="form-row" style="margin-bottom:12px;">
-          <div class="form-group">
-            <label>篩選年級</label>
-            <select id="twViewGrade" onchange="renderGradeTwinList()">
-              <option value="">全部</option>
-              <option value="2">2年級</option>
-              <option value="4">4年級</option>
-            </select>
-          </div>
-        </div>
-        <div id="gradeTwinList"><div class="empty">尚無升級生雙胞胎記錄</div></div>
-      </div>
-
-      <!-- 新生雙胞胎清單 -->
-      <div class="card">
-        <div class="card-title">📋 新生雙胞胎清單</div>
-        <div id="twinList"><div class="empty">尚無新生雙胞胎記錄</div></div>
-      </div>
+    <div class="form-group">
+      <label class="fl">意願篩選</label>
+      <select id="twPrefFilter" onchange="renderTwinsTab()">
+        <option value="">全部</option>
+        <option value="separate">❌ 分班</option>
+        <option value="same">✅ 同班</option>
+      </select>
     </div>
+    <span class="updated-lbl" id="twinCountLbl"></span>
   </div>
-
-  <!-- 模擬分班後雙胞胎狀態 -->
-  <div class="card" id="twinSimCard" style="display:none;">
-    <div class="card-title">🎲 模擬分班結果 ─ 雙胞胎檢查</div>
-    <div class="notice">顯示最近一次模擬分班中，所有雙胞胎的分配結果。請確認是否符合家長意願。</div>
-    <div id="twinSimContent"></div>
+  <div id="twinsTabContent">
+    <div class="card"><div class="empty">載入中…</div></div>
   </div>
 </div>
 
-<!-- ==================== TAB: 大頭 ==================== -->
-<div id="tab-ov-bighead" class="tab-pane">
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">⚠ 大頭名單 <span>需多費心管教的學生，依班級顯示</span></div>
-      <div class="form-row" style="margin-bottom:0;">
-        <div class="form-group">
-          <label>顯示年級</label>
-          <select id="ovBHGrade" onchange="renderOverviewTag('bighead','ovBHGrade','ovBHContent')">
-            <option value="">全部</option>
-            <option value="2">2年級</option>
-            <option value="4">4年級</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">➕ 快速新增大頭</div>
-      <div class="notice" style="margin-bottom:10px;">輸入座號（如 <b>20101</b>）或姓名搜尋，找到後點擊直接標記為大頭。</div>
-      <div class="form-group" style="margin-bottom:6px;">
-        <label>搜尋學生</label>
-        <input type="text" id="bhQuickSearch" placeholder="座號或姓名…" oninput="bhQuickSearchFn()" autocomplete="off">
-        <div id="bhQuickDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:280px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;"></div>
-      </div>
-    </div>
-  </div>
-  <div id="ovBHContent"></div>
-</div>
+</div><!-- end mainApp -->
 
-<!-- ==================== TAB: 鑑輔生 ==================== -->
-<div id="tab-ov-special" class="tab-pane">
-  <div class="card">
-    <div class="card-title">🔵 鑑輔生名單 <span>特殊需求學生，依班級顯示</span></div>
-    <div class="form-row" style="margin-bottom:0;">
-      <div class="form-group">
-        <label>顯示年級</label>
-        <select id="ovSPGrade" onchange="renderOverviewTag('special','ovSPGrade','ovSPContent')">
-          <option value="">全部</option>
-          <option value="2">2年級</option>
-          <option value="4">4年級</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  <div id="ovSPContent"></div>
-</div>
-
-<!-- ==================== TAB: 資優生 ==================== -->
-<div id="tab-ov-gifted" class="tab-pane">
-  <div class="card">
-    <div class="card-title">⭐ 資優生名單 <span>資優班學生，依班級顯示</span></div>
-    <div class="form-row" style="margin-bottom:0;">
-      <div class="form-group">
-        <label>顯示年級</label>
-        <select id="ovGFGrade" onchange="renderOverviewTag('gifted','ovGFGrade','ovGFContent')">
-          <option value="">全部</option>
-          <option value="2">2年級</option>
-          <option value="4">4年級</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  <div id="ovGFContent"></div>
-</div>
-
-<!-- ==================== TAB 7: 不能同班總表 ==================== -->
-<div id="tab-overview-rules" class="tab-pane">
-  <div class="card">
-    <div class="card-title">📌 不能同班總表 <span>供老師快速瀏覽 ─ 依班級顯示所有隔離規則</span></div>
-    <div class="form-row" style="margin-bottom:0;">
-      <div class="form-group">
-        <label>顯示年級</label>
-        <select id="ovRuleGrade" onchange="renderOverviewRules()">
-          <option value="">全部</option>
-          <option value="2">2年級</option>
-          <option value="4">4年級</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  <div id="ovRuleContent"></div>
-</div>
-
-<!-- ==================== TAB: 說明查詢 ==================== -->
-<div id="tab-notes-query" class="tab-pane">
-  <div class="card">
-    <div class="card-title">📝 學生說明查詢 <span id="nqCount"></span></div>
-    <div class="form-row" style="margin-bottom:0;">
-      <div class="form-group grow">
-        <label>搜尋學生（姓名或座號）</label>
-        <input type="text" id="nqSearch" placeholder="輸入姓名或座號…" oninput="renderNotesQuery()" style="width:100%;">
-      </div>
-      <div class="form-group">
-        <label>篩選標記</label>
-        <select id="nqTag" onchange="renderNotesQuery()">
-          <option value="">全部</option>
-          <option value="bighead">⚠ 大頭</option>
-          <option value="special">🔵 鑑輔生</option>
-          <option value="gifted">⭐ 資優生</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  <div id="nqContent"><div class="card"><div class="empty">請切換至此頁以載入說明</div></div></div>
-</div>
-
-<!-- ==================== MODAL: 說明輸入 ==================== -->
-<div class="modal-bg" id="noteModal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-title" id="noteModalTitle">💬 新增說明</div>
-    <textarea id="noteModalText" style="width:100%;min-height:120px;resize:vertical;font-family:inherit;font-size:.9rem;border:1.5px solid var(--border);border-radius:8px;padding:10px;outline:none;margin-bottom:10px;" placeholder="輸入說明內容…"></textarea>
-    <input type="hidden" id="noteModalStudentId">
-    <input type="hidden" id="noteModalNoteId">
-    <input type="hidden" id="noteModalContainerId">
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('noteModal')">取消</button>
-      <button class="btn btn-primary" onclick="saveNoteModal()">💾 儲存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== MODAL: 編輯規則 ==================== -->
-<div class="modal-bg" id="editRuleModal">
-  <div class="modal" style="max-width:600px;">
-    <div class="modal-title">✏️ 編輯規則</div>
-    <input type="hidden" id="editRuleId">
-
-    <!-- 目標學生（唯讀顯示） -->
-    <div style="margin-bottom:12px;">
-      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">目標學生</label>
-      <div id="editRuleTargetDisplay" style="padding:6px 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
-    </div>
-
-    <!-- 不能同班學生：可新增/移除 -->
-    <div style="margin-bottom:12px;">
-      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">不能同班的學生（可新增或移除）</label>
-      <div id="editRuleSepChips" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:6px;"></div>
-      <div style="position:relative;">
-        <input type="text" id="editRuleSepSearch" placeholder="輸入座號或姓名新增…" oninput="editRuleSearchSep()" autocomplete="off" style="width:100%;">
-        <div id="editRuleSepDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);z-index:60;"></div>
-      </div>
-    </div>
-
-    <!-- 規則類型 -->
-    <div class="form-group" style="margin-bottom:10px;">
-      <label>規則類型</label>
-      <div style="display:flex;gap:14px;margin-top:5px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;cursor:pointer;">
-          <input type="radio" name="editRuleType" value="uni"> 單向隔離（目標不能跟選定學生同班，選定學生互相可以同班）
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:400;cursor:pointer;">
-          <input type="radio" name="editRuleType" value="group"> 群組隔離（所有學生包含目標全部都要分到不同班）
-        </label>
-      </div>
-    </div>
-
-    <!-- 備註 -->
-    <div class="form-group" style="margin-bottom:12px;">
-      <label>備註原因</label>
-      <textarea id="editRuleReason" style="width:100%;min-height:90px;resize:vertical;font-family:inherit;font-size:.875rem;border:1.5px solid var(--border);border-radius:8px;padding:8px;outline:none;" placeholder="備註原因…"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('editRuleModal')">取消</button>
-      <button class="btn btn-primary" onclick="saveEditRule()">💾 儲存修改</button>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== MODAL: 導師綁定 ==================== -->
-<div class="modal-bg" id="bindModal">
-  <div class="modal">
-    <div class="modal-title">🔗 鑑輔生綁定導師</div>
-    <div id="bindModalContent"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('bindModal')">關閉</button>
-    </div>
-  </div>
-</div>
-
-<!-- Firebase Auth Guard -->
-<div id="authScreen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0f2044,#1a3060);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:rgba(255,255,255,.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:48px 40px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4);">
-    <div style="font-size:3rem;margin-bottom:16px;">🔐</div>
-    <div style="color:#fff;font-size:1.3rem;font-weight:800;margin-bottom:6px;">編班系統後台</div>
-    <div style="color:rgba(255,255,255,.6);font-size:.85rem;margin-bottom:32px;">僅限管理員登入</div>
-    <button id="googleSignInBtn" onclick="signInWithGoogle()" style="width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;background:#fff;color:#1f2937;font-size:.95rem;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      使用 Google 帳號登入
-    </button>
-    <div id="authError" style="color:#fca5a5;font-size:.82rem;margin-top:12px;min-height:18px;"></div>
-  </div>
-</div>
-
-<!-- Firebase SDK (compat v10，相容新專案) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-
 <script>
-// =============================================
-// FIREBASE INIT ── 新專案 sjps-classchange
-// =============================================
+const PASSWORDS = ['073411373'];
+
+// ── LOCK ──
+function checkPw() {
+  const val = document.getElementById('pwInput').value.trim();
+  if(PASSWORDS.includes(val)) {
+    sessionStorage.setItem('cl_auth','1');
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = '';
+    initApp();
+  } else {
+    const err = document.getElementById('lockError');
+    err.textContent = '密碼錯誤，請再試一次';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(()=>err.textContent='', 2500);
+  }
+}
+function lockOut() {
+  sessionStorage.removeItem('cl_auth');
+  location.reload();
+}
+// Auto-unlock if already authenticated
+if(sessionStorage.getItem('cl_auth')==='1') {
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='';
+}
+
+// ── FIREBASE ──
 const firebaseConfig = {
   apiKey: "AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
   authDomain: "sjps-classchange.firebaseapp.com",
@@ -975,2250 +355,444 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const auth = firebase.auth();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-const ALLOWED_EMAILS = ['issac@sjps.kh.edu.tw'];
+// ── STATE ──
+const state = { students:{}, rules:{}, bindings:{}, gradeTwins:{}, twins:{}, newStudents:{}, studentNotes:{} };
 
-async function signInWithGoogle() {
-  const btn = document.getElementById('googleSignInBtn');
-  const err = document.getElementById('authError');
-  btn.disabled = true;
-  btn.textContent = '登入中…';
-  try {
-    const result = await auth.signInWithPopup(googleProvider);
-    const email = result.user.email;
-    // Check if admin in Firestore
-    const adminDoc = await db.collection('admins').doc(email).get();
-    if(adminDoc.exists || ALLOWED_EMAILS.includes(email)) {
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('userEmailBadge').textContent = email;
-      document.getElementById('adminBar').style.display = 'flex';
-    } else {
-      err.textContent = `${email} 無管理員權限，請聯絡 issac@sjps.kh.edu.tw`;
-      await auth.signOut();
-      btn.disabled = false;
-      btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> 使用 Google 帳號登入';
-    }
-  } catch(e) {
-    err.textContent = '登入失敗：' + e.message;
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> 使用 Google 帳號登入';
-  }
+// ── HELPERS ──
+function classLabel(g,c){ return `${g}年${c}班`; }
+function genderLabel(g){ return g==='M'?'男':'女'; }
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
 }
 
-async function signOut() {
-  await auth.signOut();
-  location.reload();
-}
-
-// Check auth state on load
-auth.onAuthStateChanged(async (user) => {
-  if(user) {
-    const adminDoc = await db.collection('admins').doc(user.email).get();
-    if(adminDoc.exists || ALLOWED_EMAILS.includes(user.email)) {
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('userEmailBadge').textContent = user.email;
-      document.getElementById('adminBar').style.display = 'flex';
-    } else {
-      await auth.signOut();
-    }
-  }
-});
-
-// =============================================
-// STATE
-// =============================================
-const state = {
-  students: {},   // id -> {id,grade,class,number,name,gender,tags:[]}
-  rules: {},      // id -> rule object
-  teachers: {},   // id -> {id,name,grade,boundStudents:[]}
-  newStudents: {},// id -> {id,name,gender,tags:[]}
-  twins: {},      // id -> new students twin {id,...}
-  gradeTwins: {}, // id -> grade students twin {id,grade,s1Id,s2Id,preference,...}
-  bindings: {},   // id -> {studentId,teacherId,grade}
-  simResult: null,
-  previewStudents: [],
-  studentNotes: {}  // studentId -> [{id,text,teacher,createdAt}]
-};
-
-// =============================================
-// INIT
-// =============================================
-async function init() {
+// ── INIT ──
+async function initApp() {
+  if(!firebase.apps.length) return;
   try {
-    await loadAll();
-    document.getElementById('dbDot').className = 'db-dot ok';
-    document.getElementById('dbStatus').textContent = '已連線';
+    const [stuSnap, ruleSnap, bindSnap, gradeTwinSnap, twinSnap, newStuSnap, notesSnap] = await Promise.all([
+      db.collection('students').get(),
+      db.collection('separationRules').get(),
+      db.collection('bindings').get(),
+      db.collection('gradeTwins').get(),
+      db.collection('twins').get(),
+      db.collection('newStudents').get(),
+      db.collection('studentNotes').get()
+    ]);
+    stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
+    ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
+    bindSnap.forEach(d=>{ state.bindings[d.id]={id:d.id,...d.data()}; });
+    gradeTwinSnap.forEach(d=>{ state.gradeTwins[d.id]={id:d.id,...d.data()}; });
+    twinSnap.forEach(d=>{ state.twins[d.id]={id:d.id,...d.data()}; });
+    newStuSnap.forEach(d=>{ state.newStudents[d.id]={id:d.id,...d.data()}; });
+    state.studentNotes={};
+    notesSnap.forEach(d=>{
+      const note={id:d.id,...d.data()};
+      if(!state.studentNotes[note.studentId]) state.studentNotes[note.studentId]=[];
+      state.studentNotes[note.studentId].push(note);
+    });
+    document.getElementById('dbDot').className='db-dot ok';
+    document.getElementById('dbStatus').textContent='資料已載入';
+    document.getElementById('updatedLbl').textContent='最後更新：'+new Date().toLocaleTimeString('zh-TW');
+    populateClassFilters();
+    renderClassList();
+    renderSpecialTab('bighead','bhGrade','bhSummary','bhContent');
+    renderSpecialTab('special','spGrade2','spSummary2','spContent2');
+    renderSpecialTab('gifted','gfGrade','gfSummary','gfContent');
+    renderRules();
+    renderTwinsTab();
   } catch(e) {
-    document.getElementById('dbDot').className = 'db-dot err';
-    document.getElementById('dbStatus').textContent = '連線失敗';
+    document.getElementById('dbDot').className='db-dot err';
+    document.getElementById('dbStatus').textContent='載入失敗';
     console.error(e);
   }
-  updateClassOptions('upGrade','upClass');
-  setRuleGrade(2);
-  renderAll();
 }
 
-async function loadAll() {
-  const [stuSnap, ruleSnap, teachSnap, newStuSnap, twinSnap, gradeTwinSnap, bindSnap, notesSnap] = await Promise.all([
-    db.collection('students').get(),
-    db.collection('separationRules').get(),
-    db.collection('teachers').get(),
-    db.collection('newStudents').get(),
-    db.collection('twins').get(),
-    db.collection('gradeTwins').get(),
-    db.collection('bindings').get(),
-    db.collection('studentNotes').get()
-  ]);
-  state.studentNotes = {};
-  state.students = {};
-  stuSnap.forEach(d => { state.students[d.id] = {id:d.id, ...d.data()}; });
-  state.rules = {};
-  ruleSnap.forEach(d => { state.rules[d.id] = {id:d.id, ...d.data()}; });
-  state.teachers = {};
-  teachSnap.forEach(d => { state.teachers[d.id] = {id:d.id, ...d.data()}; });
-  state.newStudents = {};
-  newStuSnap.forEach(d => { state.newStudents[d.id] = {id:d.id, ...d.data()}; });
-  state.twins = {};
-  twinSnap.forEach(d => { state.twins[d.id] = {id:d.id, ...d.data()}; });
-  state.gradeTwins = {};
-  gradeTwinSnap.forEach(d => { state.gradeTwins[d.id] = {id:d.id, ...d.data()}; });
-  state.bindings = {};
-  bindSnap.forEach(d => { state.bindings[d.id] = {id:d.id, ...d.data()}; });
-  state.studentNotes = {};
-  notesSnap.forEach(d => {
-    const note = {id:d.id, ...d.data()};
-    if(!state.studentNotes[note.studentId]) state.studentNotes[note.studentId] = [];
-    state.studentNotes[note.studentId].push(note);
+// Auto init if already unlocked
+if(sessionStorage.getItem('cl_auth')==='1') initApp();
+
+// ── FILTER OPTIONS ──
+function populateClassFilters() {
+  const grades = {};
+  Object.values(state.students).forEach(s=>{
+    const key=`${s.grade}-${s.class}`;
+    if(!grades[key]) grades[key]={grade:s.grade,class:s.class};
+  });
+  const sortedKeys = Object.keys(grades).sort();
+
+  // class list filter
+  const sel1 = document.getElementById('clClass');
+  sel1.innerHTML = '<option value="">全部班級</option>';
+  sortedKeys.forEach(k=>{
+    const {grade,class:cls}=grades[k];
+    const o=document.createElement('option'); o.value=k; o.textContent=classLabel(grade,cls); sel1.appendChild(o);
+  });
+
+  // rules filter
+  const sel2 = document.getElementById('rlClass');
+  sel2.innerHTML = '<option value="">全部班級</option>';
+  sortedKeys.forEach(k=>{
+    const {grade,class:cls}=grades[k];
+    const o=document.createElement('option'); o.value=k; o.textContent=classLabel(grade,cls); sel2.appendChild(o);
   });
 }
 
-function renderAll() {
-  renderUploadedClasses();
-  renderGradeStats();
-  renderRuleList();
-  updateRuleViewClassOptions();
-  renderNewStudentList();
-  renderTwinList();
-  renderTeachers();
-  updateBindStudentList();
-  updateBindTeacherList();
-  renderBindingList();
-  renderOverviewTag('bighead','ovBHGrade','ovBHContent');
-  renderOverviewTag('special','ovSPGrade','ovSPContent');
-  renderOverviewTag('gifted','ovGFGrade','ovGFContent');
-  renderOverviewRules();
-  renderGradeTwinList();
-  renderTwinList();
-  twClearMembers();
-}
+// ── TAB 1: CLASS LIST ──
+function renderClassList() {
+  const filterGrade = document.getElementById('clGrade').value;
+  const filterClass = document.getElementById('clClass').value;
+  const search = document.getElementById('clSearch').value.trim();
+  const cont = document.getElementById('classListContent');
+  const summary = document.getElementById('classListSummary');
 
-// =============================================
-// TAB NAVIGATION
-// =============================================
-function switchTab(name) {
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  event.currentTarget.classList.add('active');
-}
-
-// =============================================
-// HELPERS
-// =============================================
-function gradeClassCount(grade) { return grade == 2 ? 6 : grade == 4 ? 9 : 6; }
-function classLabel(grade, cls) { return `${grade}年${cls}班`; }
-function genderLabel(g) { return g === 'M' ? '男' : '女'; }
-function tagLabel(t) { return {bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[t] || t; }
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-
-function updateClassOptions(gradeId, classId) {
-  const grade = parseInt(document.getElementById(gradeId).value);
-  const sel = document.getElementById(classId);
-  const old = sel.value;
-  sel.innerHTML = '';
-  const max = gradeClassCount(grade);
-  for(let i=1;i<=max;i++) {
-    const o = document.createElement('option');
-    o.value = i; o.textContent = `${i}班`;
-    sel.appendChild(o);
-  }
-  if(old && parseInt(old) <= max) sel.value = old;
-}
-
-function makeTagToggle(tag, active, onclick) {
-  const labels = {bighead:'⚠ 大頭', special:'🔵 鑑輔生', gifted:'⭐ 資優生'};
-  const btn = document.createElement('button');
-  btn.className = `tag-toggle ${tag}${active?' on':''}`;
-  btn.textContent = labels[tag];
-  btn.onclick = onclick;
-  return btn;
-}
-
-function makeTag(type, text) {
-  const span = document.createElement('span');
-  span.className = 'tag tag-'+type;
-  span.textContent = text;
-  return span;
-}
-
-function showAlert(msg, type='info', duration=3000) {
-  const a = document.createElement('div');
-  a.className = `alert alert-${type}`;
-  a.textContent = msg;
-  a.style.cssText = 'position:fixed;top:80px;right:20px;z-index:999;max-width:320px;box-shadow:0 4px 12px rgba(0,0,0,.15);';
-  document.body.appendChild(a);
-  setTimeout(()=>a.remove(), duration);
-}
-
-function openModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-// =============================================
-// TAB 1: STUDENT LIST
-// =============================================
-function parseAndPreview() {
-  const grade = parseInt(document.getElementById('upGrade').value);
-  const cls = parseInt(document.getElementById('upClass').value);
-  const text = document.getElementById('upText').value.trim();
-  if(!text) { showAlert('請貼上名單','warn'); return; }
-  
-  const lines = text.split('\n');
-  const students = [];
-  for(const line of lines) {
-    const m = line.trim().match(/^(\d+)\s+(.+)$/);
-    if(m) {
-      const num = parseInt(m[1]);
-      const name = m[2].trim();
-      const gender = num >= 21 ? 'F' : 'M';
-      const id = `g${grade}c${cls}n${String(num).padStart(2,'0')}`;
-      // Preserve existing tags if student already in state
-      const existing = state.students[id];
-      students.push({ id, grade, class:cls, number:num, name, gender, tags: existing ? [...existing.tags] : [] });
-    }
-  }
-  if(!students.length) { showAlert('無法解析名單，請確認格式','warn'); return; }
-  
-  state.previewStudents = students;
-  document.getElementById('previewInfo').textContent = `${classLabel(grade,cls)} ─ 男${students.filter(s=>s.gender==='M').length}人 女${students.filter(s=>s.gender==='F').length}人`;
-  renderPreviewGrid();
-  document.getElementById('previewCard').style.display = '';
-}
-
-function renderPreviewGrid() {
-  const grid = document.getElementById('previewGrid');
-  grid.innerHTML = '';
-  for(const s of state.previewStudents) {
-    const card = document.createElement('div');
-    card.className = `s-card ${s.gender==='M'?'male':'female'}`;
-    const nameRow = document.createElement('div');
-    nameRow.className = 's-name-row';
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 's-name'; nameSpan.textContent = s.name;
-    const numSpan = document.createElement('span');
-    numSpan.className = 's-num';
-    numSpan.style.color = s.gender==='M' ? 'var(--blue)' : 'var(--pink)';
-    numSpan.style.fontWeight = '600';
-    numSpan.textContent = `${String(s.number).padStart(2,'0')} ${genderLabel(s.gender)}`;
-    nameRow.appendChild(nameSpan); nameRow.appendChild(numSpan);
-    const tagsDiv = document.createElement('div');
-    tagsDiv.className = 's-tags';
-    ['bighead','special','gifted'].forEach(t => {
-      const btn = makeTagToggle(t, s.tags.includes(t), () => {
-        const idx = s.tags.indexOf(t);
-        if(idx>=0) s.tags.splice(idx,1); else s.tags.push(t);
-        btn.classList.toggle('on');
-      });
-      tagsDiv.appendChild(btn);
-    });
-    card.appendChild(nameRow); card.appendChild(tagsDiv);
-    grid.appendChild(card);
-  }
-}
-
-async function saveClassToDb() {
-  if(!state.previewStudents.length) return;
-  try {
-    const batch = db.batch();
-    for(const s of state.previewStudents) {
-      batch.set(db.collection('students').doc(s.id), {
-        grade: s.grade, class: s.class, number: s.number,
-        name: s.name, gender: s.gender, tags: s.tags
-      });
-    }
-    await batch.commit();
-    state.previewStudents.forEach(s => { state.students[s.id] = {...s}; });
-    showAlert(`${classLabel(state.previewStudents[0].grade, state.previewStudents[0].class)} 已儲存 ${state.previewStudents.length} 位學生`, 'info');
-    renderUploadedClasses(); renderGradeStats();
-    document.getElementById('previewCard').style.display = 'none';
-    document.getElementById('upText').value = '';
-    state.previewStudents = [];
-  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
-}
-
-function clearUpload() {
-  document.getElementById('upText').value = '';
-  document.getElementById('previewCard').style.display = 'none';
-  state.previewStudents = [];
-}
-
-function renderUploadedClasses() {
-  const filterGrade = document.getElementById('viewGrade').value;
-  const cont = document.getElementById('uploadedClassList');
-  
-  // Group students by grade+class
+  // Group
   const map = {};
-  Object.values(state.students).forEach(s => {
-    if(filterGrade && s.grade != filterGrade) return;
-    const key = `${s.grade}-${s.class}`;
-    if(!map[key]) map[key] = {grade:s.grade, class:s.class, students:[]};
-    map[key].students.push(s);
-  });
-  
-  const keys = Object.keys(map).sort();
-  if(!keys.length) { cont.innerHTML = '<div class="empty">尚無資料</div>'; return; }
-  
-  cont.innerHTML = '';
-  for(const key of keys) {
-    const {grade, class:cls, students} = map[key];
-    const males = students.filter(s=>s.gender==='M');
-    const females = students.filter(s=>s.gender==='F');
-    const bigheads = students.filter(s=>s.tags.includes('bighead'));
-    const specials = students.filter(s=>s.tags.includes('special'));
-    const gifteds = students.filter(s=>s.tags.includes('gifted'));
-    
-    const div = document.createElement('div');
-    div.style.cssText = 'border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;';
-    div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-weight:700;">${classLabel(grade,cls)}</span>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-ghost btn-sm" onclick="editClass(${grade},${cls})">編輯</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteClass(${grade},${cls})">刪除</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--text2);">
-        <span>共 <b>${students.length}</b> 人</span>
-        <span class="tag tag-male">男 ${males.length}</span>
-        <span class="tag tag-female">女 ${females.length}</span>
-        ${bigheads.length?`<span class="tag tag-bighead">大頭 ${bigheads.length}</span>`:''}
-        ${specials.length?`<span class="tag tag-special">鑑輔生 ${specials.length}</span>`:''}
-        ${gifteds.length?`<span class="tag tag-gifted">資優生 ${gifteds.length}</span>`:''}
-      </div>
-    `;
-    cont.appendChild(div);
-  }
-}
-
-function renderGradeStats() {
-  const cont = document.getElementById('gradeStats');
-  const grades = [2,4];
-  let html = '';
-  for(const g of grades) {
-    const stus = Object.values(state.students).filter(s=>s.grade===g);
-    if(!stus.length) continue;
-    const M = stus.filter(s=>s.gender==='M').length;
-    const F = stus.filter(s=>s.gender==='F').length;
-    const bh = stus.filter(s=>s.tags.includes('bighead')).length;
-    const sp = stus.filter(s=>s.tags.includes('special')).length;
-    const gf = stus.filter(s=>s.tags.includes('gifted')).length;
-    html += `<div style="margin-bottom:12px;">
-      <div style="font-weight:700;color:var(--navy);margin-bottom:6px;">${g}年級 總覽</div>
-      <div class="stats-row">
-        <div class="stat-box"><div class="stat-num">${stus.length}</div><div class="stat-lbl">總人數</div></div>
-        <div class="stat-box"><div class="stat-num" style="color:var(--blue);">${M}</div><div class="stat-lbl">男生</div></div>
-        <div class="stat-box"><div class="stat-num" style="color:var(--pink);">${F}</div><div class="stat-lbl">女生</div></div>
-        <div class="stat-box"><div class="stat-num" style="color:var(--red);">${bh}</div><div class="stat-lbl">大頭</div></div>
-        <div class="stat-box"><div class="stat-num" style="color:var(--purple);">${sp}</div><div class="stat-lbl">鑑輔生</div></div>
-        <div class="stat-box"><div class="stat-num" style="color:var(--gold);">${gf}</div><div class="stat-lbl">資優生</div></div>
-      </div>
-    </div>`;
-  }
-  cont.innerHTML = html || '<div class="empty">尚無學生資料</div>';
-}
-
-function editClass(grade, cls) {
-  const stus = Object.values(state.students).filter(s=>s.grade===grade && s.class===cls).sort((a,b)=>a.number-b.number);
-  const text = stus.map(s=>`${String(s.number).padStart(2,'0')} ${s.name}`).join('\n');
-  document.getElementById('upGrade').value = grade;
-  updateClassOptions('upGrade','upClass');
-  document.getElementById('upClass').value = cls;
-  document.getElementById('upText').value = text;
-  // Restore tags
-  state.previewStudents = stus.map(s=>({...s, tags:[...s.tags]}));
-  document.getElementById('previewInfo').textContent = `${classLabel(grade,cls)} ─ 男${stus.filter(s=>s.gender==='M').length}人 女${stus.filter(s=>s.gender==='F').length}人`;
-  renderPreviewGrid();
-  document.getElementById('previewCard').style.display = '';
-  switchTab('students');
-  document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>{ if(i!==0) b.classList.remove('active'); });
-  window.scrollTo(0,0);
-}
-
-async function deleteClass(grade, cls) {
-  if(!confirm(`確定刪除 ${classLabel(grade,cls)} 的所有學生資料？`)) return;
-  const batch = db.batch();
-  Object.values(state.students).filter(s=>s.grade===grade&&s.class===cls).forEach(s=>{
-    batch.delete(db.collection('students').doc(s.id));
-    delete state.students[s.id];
-  });
-  await batch.commit();
-  renderAll();
-  showAlert(`${classLabel(grade,cls)} 已刪除`,'info');
-}
-
-// =============================================
-// TAB 2: SEPARATION RULES
-// =============================================
-// 記錄目前選的目標學生和隔離學生
-let ruleTargetStu  = null;  // {id, name, class, grade}
-let ruleSepStudents = [];   // [{id, name, class, grade}]
-
-function onRuleGradeChange() {
-  const grade = parseInt(document.getElementById('ruleGrade').value);
-  renderBigheadWarning(grade, 0);
-  renderRuleList();
-  updateRuleViewClassOptions();
-}
-
-function onRuleClassChange() {
-  onRuleGradeChange();
-}
-
-function renderBigheadWarning(grade, cls) {
-  // cls=0 means show all bigheads for the grade
-  const bigheads = Object.values(state.students).filter(s=>
-    s.grade===grade && s.tags.includes('bighead') && (cls===0 || s.class===cls)
-  );
-  const card = document.getElementById('bigheadWarnCard');
-  const list = document.getElementById('bigheadWarnList');
-  if(!bigheads.length) { card.style.display='none'; return; }
-  card.style.display='';
-  list.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;">${bigheads.map(s=>`<span class="tag tag-bighead">⚠ ${s.name} <span style="font-size:.7rem;opacity:.7;">(${classLabel(s.grade,s.class)})</span></span>`).join('')}</div>
-    <div style="font-size:.8rem;color:var(--text2);margin-top:8px;">此年級共 ${bigheads.length} 位大頭，請確認是否有遺漏要隔離的組合</div>`;
-}
-
-// ── 搜尋共用函數 ──
-function ruleSearchStudents(q, grade) {
-  if(!q) return [];
-  return Object.values(state.students).filter(s => {
-    if(s.grade !== grade) return false;
-    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
-    return code.includes(q) || s.name.includes(q);
-  }).slice(0, 12);
-}
-
-function ruleStudentItemHtml(s) {
-  const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
-  const bh = s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>' : '';
-  const sp = s.tags.includes('special') ? '<span class="tag tag-special" style="font-size:.63rem;">鑑輔生</span>' : '';
-  return `<span style="color:${gc};">${s.gender==='M'?'♂':'♀'}</span>
-    <span style="font-size:.76rem;color:var(--text3);">${s.grade}0${s.class}${String(s.number).padStart(2,'0')}</span>
-    <span style="font-weight:600;">${s.name}</span>
-    <span style="font-size:.73rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
-    ${bh}${sp}`;
-}
-
-// ── 目標學生搜尋 ──
-function ruleSearchTarget() {
-  const grade = parseInt(document.getElementById('ruleGrade').value);
-  const q     = document.getElementById('ruleTargetSearch').value.trim();
-  const dd    = document.getElementById('ruleTargetDropdown');
-  const stus  = ruleSearchStudents(q, grade);
-  if(!q || !stus.length) { dd.style.display='none'; return; }
-  dd.innerHTML='';
-  stus.forEach(s => {
-    const row = document.createElement('div');
-    row.style.cssText='padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);';
-    row.innerHTML = ruleStudentItemHtml(s);
-    row.onmouseenter = () => row.style.background='var(--blue-light)';
-    row.onmouseleave = () => row.style.background='';
-    row.onclick = () => {
-      ruleTargetStu = {id:s.id, name:s.name, class:s.class, grade:s.grade};
-      document.getElementById('ruleTargetId').value = s.id;
-      document.getElementById('ruleTargetSearch').value = '';
-      dd.style.display='none';
-      renderRuleTargetChip();
-    };
-    dd.appendChild(row);
-  });
-  dd.style.display='';
-}
-
-function renderRuleTargetChip() {
-  const chip = document.getElementById('ruleTargetChip');
-  if(!ruleTargetStu) {
-    chip.innerHTML='<span style="color:var(--text3);font-size:.8rem;">尚未選擇</span>'; return;
-  }
-  const s = state.students[ruleTargetStu.id];
-  const bh = s&&s.tags.includes('bighead')?' <span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':'';
-  chip.innerHTML=`<div style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--blue);border-radius:99px;padding:3px 10px 3px 8px;font-size:.82rem;">
-    <span style="font-weight:600;">${ruleTargetStu.name}</span>
-    <span style="font-size:.72rem;color:var(--text3);">${classLabel(ruleTargetStu.grade,ruleTargetStu.class)}</span>
-    ${bh}
-    <button onclick="ruleTargetStu=null;document.getElementById('ruleTargetId').value='';renderRuleTargetChip();" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:0;margin-left:2px;">✕</button>
-  </div>`;
-}
-
-// ── 隔離學生搜尋 ──
-function ruleSearchSep() {
-  const grade = parseInt(document.getElementById('ruleGrade').value);
-  const q     = document.getElementById('ruleSepSearch').value.trim();
-  const dd    = document.getElementById('ruleSepDropdown');
-  const stus  = ruleSearchStudents(q, grade);
-  if(!q || !stus.length) { dd.style.display='none'; return; }
-  dd.innerHTML='';
-  stus.forEach(s => {
-    const already = ruleSepStudents.some(m=>m.id===s.id);
-    const row = document.createElement('div');
-    row.style.cssText=`padding:7px 12px;cursor:${already?'default':'pointer'};display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);color:${already?'var(--text3)':'var(--text)'};background:${already?'var(--bg)':'#fff'};`;
-    row.innerHTML = ruleStudentItemHtml(s) + (already?'<span style="margin-left:auto;font-size:.72rem;color:var(--text3);">已加入</span>':'');
-    if(!already) {
-      row.onmouseenter = () => row.style.background='var(--blue-light)';
-      row.onmouseleave = () => row.style.background='#fff';
-      row.onclick = () => {
-        ruleSepStudents.push({id:s.id, name:s.name, class:s.class, grade:s.grade});
-        document.getElementById('ruleSepSearch').value='';
-        dd.style.display='none';
-        renderRuleSepChips();
-      };
-    }
-    dd.appendChild(row);
-  });
-  dd.style.display='';
-}
-
-function renderRuleSepChips() {
-  const cont  = document.getElementById('ruleSepChips');
-  const empty = document.getElementById('ruleSepEmpty');
-  cont.querySelectorAll('.rule-chip').forEach(el=>el.remove());
-  if(!ruleSepStudents.length) { empty.style.display=''; return; }
-  empty.style.display='none';
-  ruleSepStudents.forEach((m, idx) => {
-    const s = state.students[m.id];
-    const bh = s&&s.tags.includes('bighead')?' <span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
-    const chip = document.createElement('div');
-    chip.className='rule-chip';
-    chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 7px;font-size:.8rem;';
-    chip.innerHTML=`<span style="font-weight:600;">${m.name}</span><span style="font-size:.7rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>${bh}
-      <button onclick="ruleSepStudents.splice(${idx},1);renderRuleSepChips();" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.82rem;padding:0;margin-left:1px;">✕</button>`;
-    cont.appendChild(chip);
-  });
-}
-
-// 點外部關閉 dropdown
-document.addEventListener('click', e => {
-  if(!e.target.closest('#ruleTargetSearch')&&!e.target.closest('#ruleTargetDropdown'))
-    document.getElementById('ruleTargetDropdown').style.display='none';
-  if(!e.target.closest('#ruleSepSearch')&&!e.target.closest('#ruleSepDropdown'))
-    document.getElementById('ruleSepDropdown').style.display='none';
-});
-
-function ruleClearForm() {
-  ruleTargetStu=null; ruleSepStudents=[];
-  document.getElementById('ruleTargetId').value='';
-  document.getElementById('ruleTargetSearch').value='';
-  document.getElementById('ruleSepSearch').value='';
-  document.getElementById('ruleReason').value='';
-  renderRuleTargetChip(); renderRuleSepChips();
-}
-
-async function saveRule() {
-  const grade     = parseInt(document.getElementById('ruleGrade').value);
-  const fromClass = ruleTargetStu ? ruleTargetStu.class : 0;
-  const ruleType  = document.querySelector('input[name="ruleType"]:checked').value;
-  const reason    = document.getElementById('ruleReason').value.trim();
-
-  if(!ruleTargetStu)        { showAlert('請選擇目標學生','warn'); return; }
-  if(!ruleSepStudents.length) { showAlert('請至少加入一位要隔離的學生','warn'); return; }
-  if(ruleSepStudents.some(m=>m.id===ruleTargetStu.id)) { showAlert('目標學生不能同時在隔離名單中','warn'); return; }
-
-  const targetStu  = state.students[ruleTargetStu.id];
-  const sepStudents = ruleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
-
-  const rule = {
-    grade, fromClass,
-    targetStudentId: ruleTargetStu.id,
-    targetStudentName: targetStu.name,
-    targetStudentClass: ruleTargetStu.class,
-    separateFrom: sepStudents,
-    type: ruleType, reason,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  try {
-    const ref = await db.collection('separationRules').add(rule);
-    state.rules[ref.id] = { id:ref.id, ...rule, createdAt: new Date() };
-    showAlert('規則已新增');
-    ruleClearForm();
-    renderRuleList();
-  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
-}
-
-function updateRuleViewClassOptions() {
-  const grade = document.getElementById('ruleViewGrade').value;
-  const sel = document.getElementById('ruleViewClass');
-  const old = sel.value;
-  // Collect existing classes
-  const classes = new Set();
-  Object.values(state.students).forEach(s => {
-    if(!grade || s.grade == grade) classes.add(`${s.grade}-${s.class}`);
-  });
-  sel.innerHTML = '<option value="">全部</option>';
-  [...classes].sort().forEach(key => {
-    const [g,c] = key.split('-');
-    const o = document.createElement('option');
-    o.value = key; o.textContent = classLabel(g,c);
-    sel.appendChild(o);
-  });
-  if(old) sel.value = old;
-}
-
-function renderRuleList() {
-  const grade = document.getElementById('ruleViewGrade').value;
-  const clsFilter = document.getElementById('ruleViewClass').value;
-  const cont = document.getElementById('ruleList');
-  
-  let rules = Object.values(state.rules);
-  if(grade) rules = rules.filter(r=>r.grade==grade);
-  if(clsFilter) {
-    const [fg, fc] = clsFilter.split('-').map(Number);
-    rules = rules.filter(r => {
-      // Show rules where target is from this class, OR any sep student is from this class
-      if(r.targetStudentClass === fc && r.grade === fg) return true;
-      if(r.separateFrom && r.separateFrom.some(s=>s.class===fc)) return true;
-      return false;
-    });
-  }
-  
-  document.getElementById('ruleCount').textContent = `共 ${rules.length} 條`;
-  
-  if(!rules.length) { cont.innerHTML = '<div class="empty">此篩選條件下無規則</div>'; return; }
-  
-  cont.innerHTML = '';
-  rules.sort((a,b)=>a.grade-b.grade||a.targetStudentClass-b.targetStudentClass).forEach(r=>{
-    const targetStu = state.students[r.targetStudentId];
-    const isBighead = targetStu && targetStu.tags.includes('bighead');
-    const sepBigheads = (r.separateFrom||[]).filter(s=>{
-      const stu = state.students[s.id];
-      return stu && stu.tags.includes('bighead');
-    });
-    
-    const div = document.createElement('div');
-    div.className = 'rule-card';
-    // 目標學生 座號+性別
-    const tCode = targetStu ? `${targetStu.grade}0${targetStu.class}${String(targetStu.number).padStart(2,'0')}` : '';
-    const tGc   = targetStu ? (targetStu.gender==='M'?'var(--blue)':'var(--pink)') : '';
-    const tGlyph= targetStu ? (targetStu.gender==='M'?'♂':'♀') : '';
-    div.innerHTML = `
-      <div class="rule-card-header">
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
-            <span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${tCode}</span>
-            <span style="color:${tGc};font-size:.82rem;">${tGlyph}</span>
-            <span class="rule-target-name">${r.targetStudentName}</span>
-            <span class="rule-from-class">（${classLabel(r.grade,r.targetStudentClass)}）</span>
-            ${isBighead?'<span class="tag tag-bighead">大頭</span>':''}
-            <span class="rule-type-badge ${r.type==='group'?'rule-type-group':'rule-type-uni'}">${r.type==='group'?'群組隔離':'單向隔離'}</span>
-          </div>
-          <div style="padding-left:6px;border-left:2px solid var(--border);margin-bottom:4px;">
-            <div style="font-size:.72rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
-            ${(r.separateFrom||[]).map(s=>{
-              const stu = state.students[s.id];
-              const bh  = stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
-              const gc  = stu?(stu.gender==='M'?'var(--blue)':'var(--pink)'):'var(--text3)';
-              const code= stu?`${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}`:'';
-              const glyph=stu?(stu.gender==='M'?'♂':'♀'):'';
-              return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;font-size:.855rem;">
-                <span style="font-size:.72rem;font-family:monospace;color:var(--text3);min-width:38px;">${code}</span>
-                <span style="color:${gc};font-size:.78rem;">${glyph}</span>
-                <span style="font-weight:600;">${s.name}</span>${bh}
-              </div>`;
-            }).join('')}
-          </div>
-          ${r.reason?`<div class="rule-reason" style="background:var(--bg);padding:4px 8px;border-radius:4px;font-size:.8rem;">📝 ${r.reason}</div>`:''}
-          ${sepBigheads.length?`<div class="rule-bighead-warn">⚠ 隔離對象中有大頭學生：${sepBigheads.map(s=>s.name).join('、')}</div>`:''}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px;">
-          <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditRule('${r.id}')">✏️</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRule('${r.id}')">🗑</button>
-        </div>
-      </div>
-    `;
-    cont.appendChild(div);
-  });
-}
-
-async function deleteRule(id) {
-  if(!confirm('確定刪除此規則？')) return;
-  await db.collection('separationRules').doc(id).delete();
-  delete state.rules[id];
-  renderRuleList();
-  showAlert('規則已刪除');
-}
-
-// =============================================
-// TAB 3: NEW STUDENTS
-// =============================================
-let newStuPreviewList = [];
-
-function parseNewStudents() {
-  const text = document.getElementById('newStuText').value.trim();
-  if(!text) return;
-  newStuPreviewList = [];
-  const lines = text.split('\n');
-  for(const line of lines) {
-    const m = line.trim().match(/^(\d+)\s+(.+)$/);
-    if(m) {
-      const num = parseInt(m[1]);
-      const name = m[2].trim();
-      const gender = num >= 21 ? 'F' : 'M';
-      newStuPreviewList.push({ id: 'new_'+genId(), name, gender, tags:[], twinId:null });
-    }
-  }
-  renderNewStuPreview();
-  document.getElementById('saveNewStuBtn').style.display = '';
-}
-
-function renderNewStuPreview() {
-  const cont = document.getElementById('newStuPreview');
-  if(!newStuPreviewList.length) { cont.innerHTML=''; return; }
-  const grid = document.createElement('div');
-  grid.className = 'student-grid';
-  newStuPreviewList.forEach(s=>{
-    const card = document.createElement('div');
-    card.className = `s-card ${s.gender==='M'?'male':'female'}`;
-    const row = document.createElement('div'); row.className='s-name-row';
-    const name = document.createElement('span'); name.className='s-name'; name.textContent=s.name;
-    const gen = document.createElement('span'); gen.className='s-num'; gen.textContent=genderLabel(s.gender);
-    row.appendChild(name); row.appendChild(gen);
-    const tags = document.createElement('div'); tags.className='s-tags';
-    ['bighead','special','gifted'].forEach(t=>{
-      const btn = makeTagToggle(t, s.tags.includes(t), ()=>{
-        const i=s.tags.indexOf(t); if(i>=0)s.tags.splice(i,1); else s.tags.push(t);
-        btn.classList.toggle('on');
-      });
-      tags.appendChild(btn);
-    });
-    card.appendChild(row); card.appendChild(tags);
-    grid.appendChild(card);
-  });
-  cont.innerHTML=''; cont.appendChild(grid);
-}
-
-async function saveNewStudents() {
-  if(!newStuPreviewList.length) return;
-  const batch = db.batch();
-  for(const s of newStuPreviewList) {
-    const ref = db.collection('newStudents').doc(s.id);
-    batch.set(ref, { name:s.name, gender:s.gender, tags:s.tags, twinId:null });
-    state.newStudents[s.id] = {...s};
-  }
-  await batch.commit();
-  showAlert(`已儲存 ${newStuPreviewList.length} 位新生`);
-  newStuPreviewList = [];
-  document.getElementById('newStuText').value = '';
-  document.getElementById('newStuPreview').innerHTML = '';
-  document.getElementById('saveNewStuBtn').style.display = 'none';
-  renderNewStudentList();
-  updateTwinSelects();
-}
-
-async function addManualNewStudent() {
-  const name = document.getElementById('manualName').value.trim();
-  const gender = document.getElementById('manualGender').value;
-  if(!name) { showAlert('請輸入姓名','warn'); return; }
-  const id = 'new_' + genId();
-  const stu = { name, gender, tags:[], twinId:null };
-  await db.collection('newStudents').doc(id).set(stu);
-  state.newStudents[id] = { id, ...stu };
-  document.getElementById('manualName').value = '';
-  renderNewStudentList();
-  updateTwinSelects();
-  showAlert(`已新增：${name}`);
-}
-
-function renderNewStudentList() {
-  const cont = document.getElementById('newStuList');
-  const stus = Object.values(state.newStudents).sort((a,b)=>a.name.localeCompare(b.name));
-  if(!stus.length) { cont.innerHTML='<div class="empty">尚無新生資料</div>'; return; }
-  const M = stus.filter(s=>s.gender==='M').length;
-  const F = stus.filter(s=>s.gender==='F').length;
-  const bh = stus.filter(s=>s.tags.includes('bighead')).length;
-  cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-    <span class="tag tag-male">男 ${M}</span><span class="tag tag-female">女 ${F}</span>
-    ${bh?`<span class="tag tag-bighead">大頭 ${bh}</span>`:''}
-    <span style="font-size:.8rem;color:var(--text3);">共 ${stus.length} 人</span>
-  </div>`;
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;';
-  stus.forEach(s=>{
-    const div = document.createElement('div');
-    div.style.cssText = `border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;border-left:3px solid ${s.gender==='M'?'var(--blue)':'var(--pink)'};`;
-    div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-weight:600;font-size:.875rem;">${s.name}</span>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteNewStudent('${s.id}')">🗑</button>
-    </div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">
-      ${s.tags.includes('bighead')?'<span class="tag tag-bighead">大頭</span>':''}
-      ${s.tags.includes('special')?'<span class="tag tag-special">鑑輔生</span>':''}
-      ${s.tags.includes('gifted')?'<span class="tag tag-gifted">資優生</span>':''}
-      ${s.twinId?'<span class="tag tag-twin">👫雙胞胎</span>':''}
-    </div>`;
-    grid.appendChild(div);
-  });
-  cont.appendChild(grid);
-  updateTwinSelects();
-}
-
-async function deleteNewStudent(id) {
-  if(!confirm(`確定刪除？`)) return;
-  await db.collection('newStudents').doc(id).delete();
-  delete state.newStudents[id];
-  renderNewStudentList();
-}
-
-// TWINS
-function updateTwinSelects() {
-  const stus = Object.values(state.newStudents).sort((a,b)=>a.name.localeCompare(b.name));
-  ['twin1','twin2'].forEach(id=>{
-    const sel = document.getElementById(id);
-    const old = sel.value;
-    sel.innerHTML = '<option value="">─ 選擇學生 ─</option>';
-    stus.forEach(s=>{
-      const o=document.createElement('option'); o.value=s.id; o.textContent=`${s.name} (${genderLabel(s.gender)})`;
-      sel.appendChild(o);
-    });
-    if(old) sel.value=old;
-  });
-}
-
-async function saveTwin() {
-  const s1 = document.getElementById('twin1').value;
-  const s2 = document.getElementById('twin2').value;
-  const pref = document.querySelector('input[name="twinPref"]:checked').value;
-  if(!s1||!s2) { showAlert('請選擇兩位學生','warn'); return; }
-  if(s1===s2) { showAlert('不能選擇同一位學生','warn'); return; }
-  const stu1 = state.newStudents[s1];
-  const stu2 = state.newStudents[s2];
-  const twin = { s1Id:s1, s1Name:stu1.name, s1Gender:stu1.gender, s2Id:s2, s2Name:stu2.name, s2Gender:stu2.gender, preference:pref };
-  const ref = await db.collection('twins').add(twin);
-  state.twins[ref.id] = { id:ref.id, ...twin };
-  // Update twinId on students
-  await db.collection('newStudents').doc(s1).update({twinId:ref.id});
-  await db.collection('newStudents').doc(s2).update({twinId:ref.id});
-  state.newStudents[s1].twinId = ref.id;
-  state.newStudents[s2].twinId = ref.id;
-  renderTwinList(); renderNewStudentList();
-  showAlert('雙胞胎已記錄');
-}
-
-function renderTwinList() {
-  const cont = document.getElementById('twinList');
-  const twins = Object.values(state.twins);
-  if(!twins.length) { cont.innerHTML='<div class="empty">尚無雙胞胎記錄</div>'; return; }
-  cont.innerHTML = '';
-  twins.forEach(t=>{
-    const div=document.createElement('div');
-    div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
-    const prefLabel = t.preference==='same'?'<span class="tag tag-twin">✅ 同班</span>':'<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
-    div.innerHTML=`<div>
-      <span style="font-weight:700;">${t.s1Name}</span>
-      <span style="color:var(--text3);margin:0 6px;">👫</span>
-      <span style="font-weight:700;">${t.s2Name}</span>
-      ${prefLabel}
-    </div>
-    <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTwin('${t.id}')">🗑</button>`;
-    cont.appendChild(div);
-  });
-}
-
-async function deleteTwin(id) {
-  if(!confirm('確定刪除此雙胞胎記錄？')) return;
-  const t = state.twins[id];
-  await db.collection('twins').doc(id).delete();
-  // Clear twinId on students
-  if(t.s1Id && state.newStudents[t.s1Id]) {
-    await db.collection('newStudents').doc(t.s1Id).update({twinId:null});
-    state.newStudents[t.s1Id].twinId = null;
-  }
-  if(t.s2Id && state.newStudents[t.s2Id]) {
-    await db.collection('newStudents').doc(t.s2Id).update({twinId:null});
-    state.newStudents[t.s2Id].twinId = null;
-  }
-  delete state.twins[id];
-  renderTwinList(); renderNewStudentList();
-  showAlert('雙胞胎記錄已刪除');
-}
-
-// =============================================
-// TAB 4: TEACHERS
-// =============================================
-async function saveTeacher() {
-  const name = document.getElementById('teacherName').value.trim();
-  const grade = parseInt(document.getElementById('teacherGrade').value);
-  if(!name) { showAlert('請輸入導師姓名','warn'); return; }
-  const teacher = { name, grade, boundStudents:[] };
-  const ref = await db.collection('teachers').add(teacher);
-  state.teachers[ref.id] = { id:ref.id, ...teacher };
-  document.getElementById('teacherName').value = '';
-  renderTeachers();
-  updateBindTeacherList();
-  showAlert(`導師 ${name} 已新增`);
-}
-
-async function addPlaceholders(grade, letters) {
-  const names = letters.split(',').map(l=>l.trim());
-  const batch = db.batch();
-  const gradeLabel = {1:'1年級',3:'3年級',5:'5年級'}[grade];
-  for(const l of names) {
-    const name = `導師${l}`;
-    const ref = db.collection('teachers').doc();
-    batch.set(ref, { name, grade, boundStudents:[] });
-    state.teachers[ref.id] = { id:ref.id, name, grade, boundStudents:[] };
-  }
-  await batch.commit();
-  renderTeachers(); updateBindTeacherList();
-  showAlert(`已新增 ${names.length} 位${gradeLabel}佔位導師`);
-}
-
-function renderTeachers() {
-  const filterGrade = document.getElementById('teacherViewGrade').value;
-  const cont = document.getElementById('teacherList');
-  let teachers = Object.values(state.teachers);
-  if(filterGrade) teachers = teachers.filter(t=>t.grade==filterGrade);
-  teachers.sort((a,b)=>a.grade-b.grade||a.name.localeCompare(b.name));
-  
-  if(!teachers.length) { cont.innerHTML='<div class="empty">尚無導師資料</div>'; return; }
-  
-  const table = document.createElement('table');
-  table.innerHTML = `<thead><tr><th>導師姓名</th><th>負責年級</th><th>綁定學生</th><th></th></tr></thead>`;
-  const tbody = document.createElement('tbody');
-  
-  teachers.forEach(t=>{
-    const boundNames = (t.boundStudents||[]).map(bid=>{
-      const stu = state.students[bid] || state.newStudents[bid];
-      return stu ? stu.name : bid;
-    }).join('、');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" value="${t.name}" id="tname_${t.id}" style="width:100%;border:none;background:transparent;font-weight:600;padding:0;" onblur="updateTeacherName('${t.id}',this.value)"></td>
-      <td><span style="font-size:.8rem;">${{1:'1年級',3:'3年級',5:'5年級'}[t.grade]}</span></td>
-      <td style="font-size:.8rem;">${boundNames||'<span style="color:var(--text3);">無</span>'}</td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteTeacher('${t.id}')">🗑</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  cont.innerHTML=''; cont.appendChild(table);
-}
-
-async function updateTeacherName(id, name) {
-  if(!name.trim()) return;
-  await db.collection('teachers').doc(id).update({ name });
-  state.teachers[id].name = name;
-  renderTeachers(); updateBindTeacherList();
-}
-
-async function deleteTeacher(id) {
-  if(!confirm('確定刪除此導師？')) return;
-  await db.collection('teachers').doc(id).delete();
-  delete state.teachers[id];
-  // Also remove bindings
-  const toDelete = Object.values(state.bindings).filter(b=>b.teacherId===id);
-  const batch = db.batch();
-  toDelete.forEach(b=>{ batch.delete(db.collection('bindings').doc(b.id)); delete state.bindings[b.id]; });
-  if(toDelete.length) await batch.commit();
-  renderTeachers(); renderBindingList(); updateBindTeacherList();
-  showAlert('導師已刪除');
-}
-
-// BINDINGS
-function updateBindStudentList() {
-  const grade = parseInt(document.getElementById('bindGrade').value);
-  const sel = document.getElementById('bindStudent');
-  const stus = Object.values(state.students).filter(s=>s.grade===grade&&(s.tags.includes('special')||s.tags.includes('gifted')))
-    .sort((a,b)=>a.class-b.class||a.number-b.number);
-  sel.innerHTML = '<option value="">─ 選擇學生 ─</option>';
-  stus.forEach(s=>{
-    const o=document.createElement('option'); o.value=s.id;
-    o.textContent=`${classLabel(s.grade,s.class)} ${s.name}${s.tags.includes('special')?' (鑑輔生)':''}`;
-    sel.appendChild(o);
-  });
-  updateBindTeacherList();
-}
-
-function updateBindTeacherList() {
-  const grade = parseInt(document.getElementById('bindGrade').value);
-  const targetGrade = grade === 2 ? 3 : 5;
-  const sel = document.getElementById('bindTeacher');
-  const teachers = Object.values(state.teachers).filter(t=>t.grade===targetGrade);
-  sel.innerHTML = '<option value="">─ 選擇導師 ─</option>';
-  teachers.forEach(t=>{
-    const o=document.createElement('option'); o.value=t.id; o.textContent=t.name; sel.appendChild(o);
-  });
-}
-
-async function saveBinding() {
-  const grade = parseInt(document.getElementById('bindGrade').value);
-  const stuId = document.getElementById('bindStudent').value;
-  const teacherId = document.getElementById('bindTeacher').value;
-  if(!stuId||!teacherId) { showAlert('請選擇學生與導師','warn'); return; }
-  const stu = state.students[stuId];
-  const teacher = state.teachers[teacherId];
-  // Check duplicate
-  if(Object.values(state.bindings).some(b=>b.studentId===stuId)) {
-    showAlert('此學生已有綁定記錄，請先刪除舊記錄','warn'); return;
-  }
-  const binding = { studentId:stuId, studentName:stu.name, teacherId, teacherName:teacher.name, grade };
-  const ref = await db.collection('bindings').add(binding);
-  state.bindings[ref.id] = { id:ref.id, ...binding };
-  renderBindingList();
-  showAlert(`${stu.name} 已綁定至 ${teacher.name}`);
-}
-
-function renderBindingList() {
-  const cont = document.getElementById('bindingList');
-  const bindings = Object.values(state.bindings).sort((a,b)=>a.grade-b.grade||a.teacherName.localeCompare(b.teacherName));
-  if(!bindings.length) { cont.innerHTML='<div class="empty">尚無綁定記錄</div>'; return; }
-  const table = document.createElement('table');
-  table.innerHTML='<thead><tr><th>學生</th><th>綁定導師</th><th>年級</th><th></th></tr></thead>';
-  const tbody = document.createElement('tbody');
-  bindings.forEach(b=>{
-    const stu = state.students[b.studentId];
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><b>${b.studentName}</b>${stu?` <span style="font-size:.75rem;color:var(--text3);">(${classLabel(stu.grade,stu.class)})</span>`:''}</td>
-      <td>${b.teacherName}</td>
-      <td style="font-size:.8rem;">${{2:'2→3年級',4:'4→5年級'}[b.grade]||''}</td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteBinding('${b.id}')">🗑</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  cont.innerHTML=''; cont.appendChild(table);
-}
-
-async function deleteBinding(id) {
-  await db.collection('bindings').doc(id).delete();
-  delete state.bindings[id];
-  renderBindingList();
-  showAlert('綁定已解除');
-}
-
-// =============================================
-// TAB 5: SIMULATION
-// =============================================
-function runSimulation() {
-  const grade = parseInt(document.getElementById('simGrade').value);
-  const targetCount = parseInt(document.getElementById('simClassCount').value);
-  const giftedMode = document.getElementById('simGiftedMode').value;
-  
-  if(isNaN(targetCount)||targetCount<1) { showAlert('請輸入有效的班數','warn'); return; }
-  
-  const allStudents = Object.values(state.students).filter(s=>s.grade===grade);
-  if(!allStudents.length) { showAlert('此年級尚無學生資料','warn'); return; }
-  
-  // Get bindings for this grade
-  const gradeBindings = Object.values(state.bindings).filter(b=>b.grade===grade);
-  const boundStudentIds = new Set(gradeBindings.map(b=>b.studentId));
-  
-  // Get rules
-  const gradeRules = Object.values(state.rules).filter(r=>r.grade===grade);
-  
-  // Initialize classes
-  const classes = Array.from({length:targetCount}, (_,i)=>({
-    num: i+1,
-    students: [],
-    males: 0, females: 0,
-    bigheads: 0, specials: 0,
-    gifteds: 0
-  }));
-  
-  const violations = [];
-  
-  // Separate student groups
-  const gifteds = allStudents.filter(s=>s.tags.includes('gifted'));
-  const boundStudents = allStudents.filter(s=>boundStudentIds.has(s.id));
-  const remaining = allStudents.filter(s=>!s.tags.includes('gifted')&&!boundStudentIds.has(s.id));
-  
-  // 1. Assign gifted students
-  if(giftedMode==='together') {
-    gifteds.forEach(s=>assignStudent(s, classes[0], classes, gradeRules, violations));
-  } else {
-    // Spread gifted
-    gifteds.forEach(s=>{
-      const target = classes.reduce((a,b)=>a.gifteds<=b.gifteds?a:b);
-      assignStudent(s, target, classes, gradeRules, violations);
-    });
-  }
-  
-  // 2. Assign teacher-bound students (one per teacher's slot)
-  // Group bindings by teacher
-  const teacherMap = {};
-  gradeBindings.forEach(b=>{
-    if(!teacherMap[b.teacherId]) teacherMap[b.teacherId] = {teacherName:b.teacherName, students:[]};
-    const stu = state.students[b.studentId];
-    if(stu) teacherMap[b.teacherId].students.push(stu);
-  });
-  // Assign teacher groups to classes sequentially
-  const teacherGroups = Object.values(teacherMap);
-  teacherGroups.forEach((tg, i)=>{
-    const cls = classes[i % targetCount];
-    tg.students.forEach(s=>assignStudent(s, cls, classes, gradeRules, violations));
-  });
-  
-  // 3. Distribute remaining students (balance gender + bighead + special)
-  // Sort: bigheads first, then by gender alternating
-  const bigheadsR = remaining.filter(s=>s.tags.includes('bighead'));
-  const specialsR = remaining.filter(s=>s.tags.includes('special')&&!s.tags.includes('bighead'));
-  const normalR = remaining.filter(s=>!s.tags.includes('bighead')&&!s.tags.includes('special'));
-  
-  // Distribute bigheads first
-  bigheadsR.sort(()=>Math.random()-.5);
-  bigheadsR.forEach(s=>{
-    const target = findBestClass(s, classes, gradeRules);
-    assignStudent(s, target, classes, gradeRules, violations);
-  });
-  
-  // Then specials
-  specialsR.sort(()=>Math.random()-.5);
-  specialsR.forEach(s=>{
-    const target = findBestClass(s, classes, gradeRules);
-    assignStudent(s, target, classes, gradeRules, violations);
-  });
-  
-  // Then normal students - alternate male/female
-  const malesN = normalR.filter(s=>s.gender==='M').sort(()=>Math.random()-.5);
-  const femalesN = normalR.filter(s=>s.gender==='F').sort(()=>Math.random()-.5);
-  const mixed = [];
-  const maxLen = Math.max(malesN.length, femalesN.length);
-  for(let i=0;i<maxLen;i++) {
-    if(i<malesN.length) mixed.push(malesN[i]);
-    if(i<femalesN.length) mixed.push(femalesN[i]);
-  }
-  mixed.forEach(s=>{
-    const target = findBestClass(s, classes, gradeRules);
-    assignStudent(s, target, classes, gradeRules, violations);
-  });
-  
-  state.simResult = { grade, classes, violations, targetCount };
-
-  // Apply twin constraints (post-processing check & swap)
-  const gradeTwinsForSim = Object.values(state.gradeTwins).filter(t=>t.grade===grade);
-  for(const twin of gradeTwinsForSim) {
-    const cls1 = classes.find(c=>c.students.some(s=>s.id===twin.s1Id));
-    const cls2 = classes.find(c=>c.students.some(s=>s.id===twin.s2Id));
-    if(!cls1||!cls2) continue;
-    const same = cls1===cls2;
-    const want = twin.preference==='same';
-    if(want && !same) {
-      // Move s2 to cls1 (same-class twin)
-      const stu2 = cls2.students.find(s=>s.id===twin.s2Id);
-      if(stu2) {
-        cls2.students = cls2.students.filter(s=>s.id!==twin.s2Id);
-        if(stu2.gender==='M') cls2.males--; else cls2.females--;
-        if(stu2.tags.includes('bighead')) cls2.bigheads--;
-        if(stu2.tags.includes('special')) cls2.specials--;
-        if(stu2.tags.includes('gifted')) cls2.gifteds--;
-        cls1.students.push(stu2);
-        if(stu2.gender==='M') cls1.males++; else cls1.females++;
-        if(stu2.tags.includes('bighead')) cls1.bigheads++;
-        if(stu2.tags.includes('special')) cls1.specials++;
-        if(stu2.tags.includes('gifted')) cls1.gifteds++;
-      }
-    } else if(!want && same) {
-      // Move s2 to the least-loaded other class
-      const stu2 = cls2.students.find(s=>s.id===twin.s2Id);
-      if(stu2) {
-        const target = classes.filter(c=>c!==cls1).reduce((a,b)=>a.students.length<=b.students.length?a:b);
-        cls1.students = cls1.students.filter(s=>s.id!==twin.s2Id);
-        if(stu2.gender==='M') cls1.males--; else cls1.females--;
-        if(stu2.tags.includes('bighead')) cls1.bigheads--;
-        if(stu2.tags.includes('special')) cls1.specials--;
-        if(stu2.tags.includes('gifted')) cls1.gifteds--;
-        target.students.push(stu2);
-        if(stu2.gender==='M') target.males++; else target.females++;
-        if(stu2.tags.includes('bighead')) target.bigheads++;
-        if(stu2.tags.includes('special')) target.specials++;
-        if(stu2.tags.includes('gifted')) target.gifteds++;
-      }
-    }
-  }
-
-  renderSimResult();
-  renderTwinSimStatus();
-}
-
-function findBestClass(student, classes, rules) {
-  // Score each class - lower is better for this student
-  let bestClass = null, bestScore = Infinity;
-  for(const cls of classes) {
-    if(!canAssign(student, cls, rules)) continue;
-    const genderCount = student.gender==='M' ? cls.males : cls.females;
-    const score = cls.students.length * 10 + genderCount * 5 + cls.bigheads * 3 + cls.specials * 2;
-    if(score < bestScore) { bestScore=score; bestClass=cls; }
-  }
-  return bestClass || classes.reduce((a,b)=>a.students.length<=b.students.length?a:b);
-}
-
-function canAssign(student, cls, rules) {
-  for(const rule of rules) {
-    // If student is the target
-    if(rule.targetStudentId === student.id) {
-      for(const sep of (rule.separateFrom||[])) {
-        if(cls.students.some(s=>s.id===sep.id)) return false;
-      }
-    }
-    // If student is in the separateFrom list
-    if((rule.separateFrom||[]).some(s=>s.id===student.id)) {
-      if(cls.students.some(s=>s.id===rule.targetStudentId)) return false;
-    }
-    // Group rule: none of the group members can be together
-    if(rule.type==='group') {
-      const groupIds = [rule.targetStudentId, ...(rule.separateFrom||[]).map(s=>s.id)];
-      if(groupIds.includes(student.id)) {
-        if(cls.students.some(s=>groupIds.includes(s.id)&&s.id!==student.id)) return false;
-      }
-    }
-  }
-  return true;
-}
-
-function assignStudent(student, cls, allClasses, rules, violations) {
-  if(!canAssign(student, cls, rules)) {
-    // Check if any class works
-    const altClass = findBestClass(student, allClasses, rules);
-    if(altClass && altClass !== cls) {
-      cls = altClass;
-    } else {
-      violations.push(`⚠ ${student.name} 無法完全滿足隔離規則，已強制分配`);
-    }
-  }
-  cls.students.push(student);
-  if(student.gender==='M') cls.males++; else cls.females++;
-  if(student.tags.includes('bighead')) cls.bigheads++;
-  if(student.tags.includes('special')) cls.specials++;
-  if(student.tags.includes('gifted')) cls.gifteds++;
-}
-
-function renderSimResult() {
-  const { grade, classes, violations } = state.simResult;
-  document.getElementById('simEmpty').style.display='none';
-  document.getElementById('simStats').style.display='';
-  
-  const total = classes.reduce((a,c)=>a+c.students.length,0);
-  const totalM = classes.reduce((a,c)=>a+c.males,0);
-  const totalF = classes.reduce((a,c)=>a+c.females,0);
-  const totalBH = classes.reduce((a,c)=>a+c.bigheads,0);
-  const totalSP = classes.reduce((a,c)=>a+c.specials,0);
-  const totalGF = classes.reduce((a,c)=>a+c.gifteds,0);
-  
-  document.getElementById('simStatsContent').innerHTML = `
-    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-lbl">總人數</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--blue);">${totalM}</div><div class="stat-lbl">男生</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--pink);">${totalF}</div><div class="stat-lbl">女生</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--red);">${totalBH}</div><div class="stat-lbl">大頭</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--purple);">${totalSP}</div><div class="stat-lbl">鑑輔生</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--gold);">${totalGF}</div><div class="stat-lbl">資優生</div></div>
-    <div class="stat-box"><div class="stat-num">${classes.length}</div><div class="stat-lbl">班數</div></div>
-  `;
-  
-  const vDiv = document.getElementById('simViolations');
-  if(violations.length) {
-    vDiv.innerHTML = violations.map(v=>`<div class="sim-warn">${v}</div>`).join('');
-  } else {
-    vDiv.innerHTML = '<div style="color:var(--green);font-size:.85rem;font-weight:600;">✅ 所有隔離規則皆已滿足</div>';
-  }
-  
-  const results = document.getElementById('simResults');
-  results.innerHTML='';
-  
-  classes.forEach((cls, i)=>{
-    const colorClass = `sh-${i+1}`;
-    const card = document.createElement('div');
-    card.className = 'sim-class-card';
-    
-    const bindings = Object.values(state.bindings).filter(b=>b.grade===grade);
-    const teacherForClass = null; // Will be assigned after actual class distribution
-    
-    card.innerHTML=`
-      <div class="sim-class-head ${colorClass}">
-        <span class="sim-class-title">第 ${cls.num} 包</span>
-        <div class="sim-class-counts">
-          <span>共 ${cls.students.length} 人</span>
-        </div>
-      </div>
-      <div class="sim-class-stats">
-        <span class="sim-stat-item"><span style="color:var(--blue);">♂</span> 男 ${cls.males}</span>
-        <span class="sim-stat-item"><span style="color:var(--pink);">♀</span> 女 ${cls.females}</span>
-        ${cls.bigheads?`<span class="sim-stat-item"><span class="tag tag-bighead" style="font-size:.7rem;">大頭 ${cls.bigheads}</span></span>`:''}
-        ${cls.specials?`<span class="sim-stat-item"><span class="tag tag-special" style="font-size:.7rem;">鑑輔生 ${cls.specials}</span></span>`:''}
-        ${cls.gifteds?`<span class="sim-stat-item"><span class="tag tag-gifted" style="font-size:.7rem;">資優生 ${cls.gifteds}</span></span>`:''}
-      </div>
-    `;
-    
-    const rows = document.createElement('div');
-    const sorted = [...cls.students].sort((a,b)=>a.gender===b.gender?a.class-b.class:a.gender==='M'?-1:1);
-    sorted.forEach(s=>{
-      const row = document.createElement('div');
-      row.className = `sim-student-row ${s.gender==='M'?'male':'female'}`;
-      
-      const tagHtml = [
-        s.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.68rem;">大頭</span>':'',
-        s.tags.includes('special')?'<span class="tag tag-special" style="font-size:.68rem;">鑑輔生</span>':'',
-        s.tags.includes('gifted')?'<span class="tag tag-gifted" style="font-size:.68rem;">資優生</span>':''
-      ].filter(Boolean).join('');
-      
-      // Check binding
-      const binding = Object.values(state.bindings).find(b=>b.studentId===s.id);
-      const bindHtml = binding ? `<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.68rem;">綁 ${binding.teacherName}</span>` : '';
-      // Check twin
-      const twinRecord = Object.values(state.gradeTwins).find(t=>t.grade===grade&&(t.s1Id===s.id||t.s2Id===s.id));
-      const twinPartnerName = twinRecord ? (twinRecord.s1Id===s.id?twinRecord.s2Name:twinRecord.s1Name) : null;
-      const twinHtml = twinPartnerName ? `<span class="tag tag-twin" style="font-size:.65rem;">👫${twinPartnerName}</span>` : '';
-      
-      row.innerHTML = `
-        <span style="color:${s.gender==='M'?'var(--blue)':'var(--pink)'};">${s.gender==='M'?'♂':'♀'}</span>
-        <span class="sim-student-name">${s.name}</span>
-        <span class="prev-cls">${classLabel(s.grade,s.class)}</span>
-        ${tagHtml}
-        ${twinHtml}
-        ${bindHtml}
-      `;
-      rows.appendChild(row);
-    });
-    card.appendChild(rows);
-    results.appendChild(card);
-  });
-}
-
-function exportSimResult() {
-  if(!state.simResult) { showAlert('請先執行模擬分班','warn'); return; }
-  const { grade, classes } = state.simResult;
-  let text = `編班模擬結果 ─ ${grade}年級\n${'='.repeat(40)}\n\n`;
-  classes.forEach(cls=>{
-    text += `【第 ${cls.num} 包】共 ${cls.students.length} 人 (男${cls.males} 女${cls.females}`;
-    if(cls.bigheads) text+=` 大頭${cls.bigheads}`;
-    if(cls.specials) text+=` 鑑輔生${cls.specials}`;
-    if(cls.gifteds) text+=` 資優生${cls.gifteds}`;
-    text+=')\n';
-    const sorted=[...cls.students].sort((a,b)=>a.gender===b.gender?a.class-b.class:a.gender==='M'?-1:1);
-    sorted.forEach(s=>{
-      const tags=s.tags.map(t=>tagLabel(t)).join(',');
-      text+=`  ${s.gender==='M'?'♂':'♀'} ${s.name}\t原${classLabel(s.grade,s.class)}${tags?`\t[${tags}]`:''}\n`;
-    });
-    text+='\n';
-  });
-  const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=`編班模擬_${grade}年級.txt`; a.click();
-  URL.revokeObjectURL(url);
-}
-
-// =============================================
-// TABS: 大頭 / 鑑輔生 / 資優生
-// =============================================
-function renderOverviewTag(tag, gradeSelId, contId) {
-  const filterGrade = document.getElementById(gradeSelId).value;
-  const filterTag   = tag;
-  const cont = document.getElementById(contId);
-
-  // Group students by grade → class, only those with relevant tags
-  const map = {}; // "grade-class" -> {grade, class, students[]}
-  Object.values(state.students).forEach(s => {
-    if(filterGrade && s.grade != filterGrade) return;
-    const hasTag = s.tags.includes(filterTag);
-    if(!hasTag) return;
-    const key = `${s.grade}-${s.class}`;
-    if(!map[key]) map[key] = { grade:s.grade, class:s.class, students:[] };
+  Object.values(state.students).forEach(s=>{
+    if(filterGrade && s.grade!=filterGrade) return;
+    if(filterClass) { const [fg,fc]=filterClass.split('-').map(Number); if(s.grade!==fg||s.class!==fc) return; }
+    if(search && !s.name.includes(search)) return;
+    const key=`${s.grade}-${s.class}`;
+    if(!map[key]) map[key]={grade:s.grade,class:s.class,students:[]};
     map[key].students.push(s);
   });
 
   const keys = Object.keys(map).sort();
-  if(!keys.length) { cont.innerHTML='<div class="card"><div class="empty">目前無符合條件的特殊標記學生</div></div>'; return; }
+  if(!keys.length) { cont.innerHTML='<div class="card"><div class="empty">無符合條件的學生</div></div>'; summary.innerHTML=''; return; }
 
-  // Count totals
-  let totalBH=0, totalSP=0, totalGF=0;
-  Object.values(map).forEach(({students})=>{
-    students.forEach(s=>{
-      if(s.tags.includes('bighead')) totalBH++;
-      if(s.tags.includes('special')) totalSP++;
-      if(s.tags.includes('gifted'))  totalGF++;
-    });
-  });
-
-  const tagColor = {'bighead':'var(--red)','special':'var(--purple)','gifted':'var(--gold)'}[filterTag]||'var(--navy)';
-  const tagLabelMap = {'bighead':'大頭','special':'鑑輔生','gifted':'資優生'};
-  const totalTagged = Object.values(map).reduce((a,{students})=>a+students.filter(s=>s.tags.includes(filterTag)).length, 0);
-  let html = `<div class="card" style="margin-bottom:16px;">
-    <div class="stats-row">
-      <div class="stat-box"><div class="stat-num" style="color:${tagColor};">${totalTagged}</div><div class="stat-lbl">${tagLabelMap[filterTag]||filterTag}</div></div>
-      <div class="stat-box"><div class="stat-num">${Object.keys(map).length}</div><div class="stat-lbl">涉及班級數</div></div>
-    </div>
+  // Summary stats
+  const allStus = keys.flatMap(k=>map[k].students);
+  summary.innerHTML=`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${allStus.length}</div><div class="stat-lbl">顯示人數</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--blue);">${allStus.filter(s=>s.gender==='M').length}</div><div class="stat-lbl">男生</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--pink);">${allStus.filter(s=>s.gender==='F').length}</div><div class="stat-lbl">女生</div></div>
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">班級數</div></div>
   </div>`;
 
-  // Grid of class cards
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">';
-
+  cont.innerHTML='';
   for(const key of keys) {
-    const { grade, class:cls, students } = map[key];
-    const bh = students.filter(s=>s.tags.includes('bighead'));
-    const sp = students.filter(s=>s.tags.includes('special'));
-    const gf = students.filter(s=>s.tags.includes('gifted'));
+    const {grade,class:cls,students}=map[key];
+    const M=students.filter(s=>s.gender==='M').length;
+    const F=students.filter(s=>s.gender==='F').length;
+    const bh=students.filter(s=>s.tags.includes('bighead')).length;
+    const sp=students.filter(s=>s.tags.includes('special')).length;
+    const gf=students.filter(s=>s.tags.includes('gifted')).length;
 
-    const badgesHtml = [
-      bh.length ? `<span class="tag tag-bighead">大頭 ${bh.length}</span>` : '',
-      sp.length ? `<span class="tag tag-special">鑑輔生 ${sp.length}</span>` : '',
-      gf.length ? `<span class="tag tag-gifted">資優生 ${gf.length}</span>` : ''
+    const div=document.createElement('div'); div.className='class-card';
+    const tagBadges=[
+      bh?`<span class="tag tag-bighead" style="font-size:.65rem;">大頭 ${bh}</span>`:'',
+      sp?`<span class="tag tag-special" style="font-size:.65rem;">鑑輔 ${sp}</span>`:'',
+      gf?`<span class="tag tag-gifted" style="font-size:.65rem;">資優 ${gf}</span>`:''
     ].filter(Boolean).join('');
 
-    // Build student rows sorted by tag priority then number
-    const tagOrder = t => t.tags.includes('special')?0:t.tags.includes('bighead')?1:t.tags.includes('gifted')?2:3;
-    const sorted = [...students].sort((a,b)=>tagOrder(a)-tagOrder(b)||a.number-b.number);
-
-    const rowsHtml = sorted.map(s => {
-      const tgs = [
-        s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.68rem;">大頭</span>' : '',
-        s.tags.includes('special') ? '<span class="tag tag-special" style="font-size:.68rem;">鑑輔生</span>' : '',
-        s.tags.includes('gifted')  ? '<span class="tag tag-gifted" style="font-size:.68rem;">資優生</span>'  : ''
+    const sorted=[...students].sort((a,b)=>a.number-b.number);
+    const rowsHtml=sorted.map(s=>{
+      const tgs=[
+        s.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':'',
+        s.tags.includes('special')?'<span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>':'',
+        s.tags.includes('gifted')?'<span class="tag tag-gifted" style="font-size:.65rem;">資優生</span>':''
       ].filter(Boolean).join('');
-      const binding = Object.values(state.bindings).find(b=>b.studentId===s.id);
-      const bindHtml = binding ? `<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.65rem;">綁 ${binding.teacherName}</span>` : '';
-      const genColor = s.gender==='M' ? 'var(--blue)' : 'var(--pink)';
-      const noteCount = (state.studentNotes[s.id]||[]).length;
-      const noteContId = 'notes_'+s.id+'_'+filterTag;
-      return `<div>
-        <div style="display:flex;align-items:center;gap:7px;padding:6px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;">
-          <span style="color:${genColor};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
-          <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
-          <span style="font-weight:600;flex:1;">${s.name}</span>
-          ${tgs} ${bindHtml}
-          <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.78rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 6px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">
-            💬 ${noteCount>0?`說明 (${noteCount})`:'新增說明'}
-          </button>
-        </div>
-        <div id="${noteContId}" style="display:none;padding:8px 14px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;"></div>
+      const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
+      return `<div class="stu-row ${s.gender==='M'?'male':'female'}">
+        <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+        <span class="stu-num">${String(s.number).padStart(2,'0')}</span>
+        <span class="stu-name">${s.name}</span>
+        ${tgs}
       </div>`;
     }).join('');
 
-    html += `<div style="border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
-      <div style="padding:9px 14px;background:var(--navy);display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-weight:800;color:#fff;">${classLabel(grade,cls)}</span>
-        <div style="display:flex;gap:5px;">${badgesHtml}</div>
+    div.innerHTML=`
+      <div class="class-head">
+        <span class="class-head-title">${classLabel(grade,cls)}</span>
+        <div class="class-head-counts">
+          <span class="tag tag-male" style="font-size:.65rem;">男${M}</span>
+          <span class="tag tag-female" style="font-size:.65rem;">女${F}</span>
+        </div>
       </div>
+      ${tagBadges?`<div class="class-stats">${tagBadges}</div>`:''}
       ${rowsHtml}
-    </div>`;
+    `;
+    cont.appendChild(div);
   }
-
-  html += '</div>';
-  cont.innerHTML = html;
-
-
 }
 
-// =============================================
-// TAB 7: OVERVIEW - SEPARATION RULES
-// =============================================
-function renderOverviewRules() {
-  const filterGrade = document.getElementById('ovRuleGrade').value;
-  const cont = document.getElementById('ovRuleContent');
+// ── TABS: 大頭 / 鑑輔生 / 資優生 ──
+function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
+  const filterGrade = document.getElementById(gradeSelId).value;
+  const cont    = document.getElementById(contId);
+  const summary = document.getElementById(summaryId);
+  const tagColor  = {bighead:'var(--red)',special:'var(--purple)',gifted:'var(--gold)'}[tag];
+  const tagLabel  = {bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[tag];
+  const tagClass  = {bighead:'tag-bighead',special:'tag-special',gifted:'tag-gifted'}[tag];
 
-  let rules = Object.values(state.rules);
-  if(filterGrade) rules = rules.filter(r=>r.grade==filterGrade);
+  const map={};
+  Object.values(state.students).forEach(s=>{
+    if(filterGrade && s.grade!=filterGrade) return;
+    if(!s.tags.includes(tag)) return;
+    const key=`${s.grade}-${s.class}`;
+    if(!map[key]) map[key]={grade:s.grade,class:s.class,students:[]};
+    map[key].students.push(s);
+  });
 
-  if(!rules.length) { cont.innerHTML='<div class="card"><div class="empty">目前無隔離規則</div></div>'; return; }
+  const keys=Object.keys(map).sort();
+  if(!keys.length){
+    cont.innerHTML=`<div class="card"><div class="empty">目前無${tagLabel}學生</div></div>`;
+    summary.innerHTML=''; return;
+  }
 
-  // Group rules by grade → class (target class)
-  const map = {}; // "grade-class" -> {grade, class, rules[]}
-  rules.forEach(r => {
-    const key = `${r.grade}-${r.targetStudentClass}`;
-    if(!map[key]) map[key] = { grade:r.grade, class:r.targetStudentClass, rules:[] };
+  const total = Object.values(map).reduce((a,{students})=>a+students.length,0);
+  summary.innerHTML=`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num" style="color:${tagColor};">${total}</div><div class="stat-lbl">${tagLabel}人數</div></div>
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">涉及班級</div></div>
+  </div>`;
+
+  cont.innerHTML='';
+  for(const key of keys){
+    const {grade,class:cls,students}=map[key];
+    const sorted=[...students].sort((a,b)=>a.number-b.number);
+    const rowsHtml=sorted.map(s=>{
+      const binding=Object.values(state.bindings).find(b=>b.studentId===s.id);
+      const bindHtml=binding?`<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.63rem;">綁 ${binding.teacherName}</span>`:'';
+      const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
+      const notes=state.studentNotes[s.id]||[];
+      const noteContId='notes_idx_'+s.id+'_'+tag;
+      const notesHtml = notes.length
+        ? notes.map(n=>{
+            const dt=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+            return `<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);">
+              <div style="flex:1;font-size:.83rem;color:var(--text);">${n.text}</div>
+              <div style="font-size:.73rem;color:var(--text3);white-space:nowrap;">${dt}</div>
+            </div>`;
+          }).join('')
+        : '';
+      return `<div>
+        <div class="ov-row" style="cursor:${notes.length?'pointer':'default'};" onclick="${notes.length?`toggleIndexNotes('${noteContId}')`:''}" title="${notes.length?'點擊展開說明':''}">
+          <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+          <span class="stu-num" style="font-size:.75rem;color:var(--text3);">${String(s.number).padStart(2,'0')}</span>
+          <span style="font-weight:600;flex:1;">${s.name}</span>
+          ${bindHtml}
+          ${notes.length?`<span style="font-size:.72rem;color:var(--blue);border:1px solid var(--blue-light);border-radius:4px;padding:1px 6px;">💬 ${notes.length} 則說明</span>`:''}
+        </div>
+        ${notes.length?`<div id="${noteContId}" style="display:none;padding:6px 14px 8px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;font-size:.83rem;">${notesHtml}</div>`:''}
+      </div>`;
+    }).join('');
+    const div=document.createElement('div'); div.className='ov-card';
+    div.innerHTML=`
+      <div class="ov-head ov-head-blue">
+        <span class="ov-head-title">${classLabel(grade,cls)}</span>
+        <span class="ov-head-sub">${students.length} 位${tagLabel}</span>
+      </div>
+      ${rowsHtml}
+    `;
+    cont.appendChild(div);
+  }
+}
+
+function toggleIndexNotes(contId) {
+  const el = document.getElementById(contId);
+  if(el) el.style.display = el.style.display==='none' ? '' : 'none';
+}
+
+// ── TAB 3: RULES ──
+function renderRules() {
+  const filterGrade=document.getElementById('rlGrade').value;
+  const filterClass=document.getElementById('rlClass').value;
+  const cont=document.getElementById('rulesContent');
+  const summary=document.getElementById('rulesSummary');
+
+  let rules=Object.values(state.rules);
+  if(filterGrade) rules=rules.filter(r=>r.grade==filterGrade);
+
+  // Group by class
+  const map={};
+  rules.forEach(r=>{
+    const key=`${r.grade}-${r.targetStudentClass}`;
+    if(!map[key]) map[key]={grade:r.grade,class:r.targetStudentClass,rules:[]};
     map[key].rules.push(r);
-    // Also index under the sep-from classes so those teachers can see the rule
-    (r.separateFrom||[]).forEach(s => {
-      const k2 = `${r.grade}-${s.class}`;
-      if(s.class !== r.targetStudentClass) {
-        if(!map[k2]) map[k2] = { grade:r.grade, class:s.class, rules:[] };
-        // Avoid duplicate
+    // Also show in sep-from classes
+    (r.separateFrom||[]).forEach(s=>{
+      if(s.class!==r.targetStudentClass){
+        const k2=`${r.grade}-${s.class}`;
+        if(!map[k2]) map[k2]={grade:r.grade,class:s.class,rules:[]};
         if(!map[k2].rules.find(x=>x.id===r.id)) map[k2].rules.push(r);
       }
     });
   });
 
-  const keys = Object.keys(map).sort();
+  let keys=Object.keys(map).sort();
+  if(filterClass){ const [fg,fc]=filterClass.split('-'); keys=keys.filter(k=>k===`${fg}-${fc}`); }
 
-  let html = `<div class="card" style="margin-bottom:16px;">
-    <div class="stats-row">
-      <div class="stat-box"><div class="stat-num">${rules.length}</div><div class="stat-lbl">規則總數</div></div>
-      <div class="stat-box"><div class="stat-num">${rules.filter(r=>r.type==='group').length}</div><div class="stat-lbl">群組隔離</div></div>
-      <div class="stat-box"><div class="stat-num">${rules.filter(r=>r.type!=='group').length}</div><div class="stat-lbl">單向隔離</div></div>
-      <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">涉及班級數</div></div>
-    </div>
+  if(!keys.length){ cont.innerHTML='<div class="card"><div class="empty">無符合條件的隔離規則</div></div>'; summary.innerHTML=''; return; }
+
+  summary.innerHTML=`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${rules.length}</div><div class="stat-lbl">規則總數</div></div>
+    <div class="stat-box"><div class="stat-num">${rules.filter(r=>r.type==='group').length}</div><div class="stat-lbl">群組隔離</div></div>
+    <div class="stat-box"><div class="stat-num">${rules.filter(r=>r.type!=='group').length}</div><div class="stat-lbl">單向隔離</div></div>
+    <div class="stat-box"><div class="stat-num">${keys.length}</div><div class="stat-lbl">涉及班級</div></div>
   </div>`;
 
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">';
-
-  for(const key of keys) {
-    const { grade, class:cls, rules:clsRules } = map[key];
-    const rowsHtml = clsRules.map(r => {
-      const targetStu = state.students[r.targetStudentId];
-      const isBH = targetStu && targetStu.tags.includes('bighead');
-      const typeBadge = r.type==='group'
-        ? '<span class="rule-type-badge rule-type-group">群組</span>'
-        : '<span class="rule-type-badge rule-type-uni">單向</span>';
-
-      // 目標學生：座號+姓名格式
-      const targetCode = targetStu
-        ? `${targetStu.grade}0${targetStu.class}${String(targetStu.number).padStart(2,'0')}`
+  cont.innerHTML='';
+  for(const key of keys){
+    const {grade,class:cls,rules:clsRules}=map[key];
+    const rowsHtml=clsRules.map(r=>{
+      const targetStu=state.students[r.targetStudentId];
+      const isBH=targetStu&&targetStu.tags.includes('bighead');
+      const typeBadge=r.type==='group'
+        ?'<span class="rule-type-badge rule-type-group">群組</span>'
+        :'<span class="rule-type-badge rule-type-uni">單向</span>';
+      const targetStuObj = state.students[r.targetStudentId];
+      const targetCode = targetStuObj
+        ? `${targetStuObj.grade}0${targetStuObj.class}${String(targetStuObj.number).padStart(2,'0')}`
         : '';
-
-      // 隔離學生清單，每人一行
-      const sepRows = (r.separateFrom||[]).map(s=>{
-        const stu = state.students[s.id];
-        const bh  = stu&&stu.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>' : '';
-        const sp  = stu&&stu.tags.includes('special')  ? '<span class="tag tag-special" style="font-size:.6rem;">鑑輔生</span>' : '';
-        const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
-        const gc  = stu ? (stu.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
-        return `<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">
-          <span style="font-size:.75rem;font-family:monospace;color:var(--text3);min-width:40px;">${code}</span>
-          <span style="color:${gc};font-size:.78rem;">${stu?(stu.gender==='M'?'♂':'♀'):''}</span>
-          <span style="font-weight:600;font-size:.875rem;">${s.name}</span>
-          ${bh}${sp}
+      const sepRows=(r.separateFrom||[]).map(s=>{
+        const stu=state.students[s.id];
+        const bh=stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
+        const code=stu?`${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}`:'';
+        const gc=stu?(stu.gender==='M'?'var(--blue)':'var(--pink)'):'var(--text3)';
+        return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;">
+          <span style="font-size:.73rem;font-family:monospace;color:var(--text3);min-width:38px;">${code}</span>
+          <span style="color:${gc};font-size:.76rem;">${stu?(stu.gender==='M'?'♂':'♀'):''}</span>
+          <span style="font-weight:600;font-size:.86rem;">${s.name}</span>
+          ${bh}
         </div>`;
       }).join('');
-
-      return `<div style="padding:10px 14px;border-bottom:1px solid #f0f2f8;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-          <span style="font-size:.75rem;font-family:monospace;color:var(--text3);">${targetCode}</span>
-          <span style="font-weight:700;font-size:.95rem;">${r.targetStudentName}</span>
+      return `<div class="rule-ov-row">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
+          <span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${targetCode}</span>
+          <span class="rule-target">${r.targetStudentName}</span>
           ${isBH?'<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':''}
           ${typeBadge}
         </div>
-        <div style="padding-left:6px;border-left:2px solid var(--border);">
-          <div style="font-size:.72rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
+        <div style="padding-left:6px;border-left:2px solid var(--color-border-tertiary,#dde3f0);">
+          <div style="font-size:.7rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
           ${sepRows}
         </div>
-        ${r.reason?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;margin-top:6px;padding:4px 8px;background:var(--bg);border-radius:4px;">📝 ${r.reason}</div>`:''}
+        ${r.reason?`<div class="rule-reason-txt" style="margin-top:5px;">📝 ${r.reason}</div>`:''}
       </div>`;
     }).join('');
-
-    html += `<div style="border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
-      <div style="padding:9px 14px;background:var(--navy2);display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-weight:800;color:#fff;">${classLabel(grade,cls)}</span>
-        <span style="font-size:.78rem;color:rgba(255,255,255,.7);">${clsRules.length} 條規則</span>
+    const div=document.createElement('div'); div.className='ov-card';
+    div.innerHTML=`
+      <div class="ov-head ov-head-blue">
+        <span class="ov-head-title">${classLabel(grade,cls)}</span>
+        <span class="ov-head-sub">${clsRules.length} 條規則</span>
       </div>
       ${rowsHtml}
-    </div>`;
+    `;
+    cont.appendChild(div);
+  }
+}
+
+// ── TAB 4: TWINS ──
+function renderTwinsTab() {
+  const filter    = document.getElementById('twFilter').value;
+  const prefFilter = document.getElementById('twPrefFilter').value;
+  const cont = document.getElementById('twinsTabContent');
+
+  const gradeTwins = Object.values(state.gradeTwins)
+    .filter(t => !prefFilter || t.preference === prefFilter)
+    .sort((a,b) => a.grade - b.grade || a.s1Name.localeCompare(b.s1Name));
+
+  const newTwins = Object.values(state.twins)
+    .filter(t => !prefFilter || t.preference === prefFilter)
+    .sort((a,b) => a.s1Name.localeCompare(b.s1Name));
+
+  const showGrade = filter !== 'new';
+  const showNew   = filter !== 'grade';
+
+  const total = (showGrade ? gradeTwins.length : 0) + (showNew ? newTwins.length : 0);
+  document.getElementById('twinCountLbl').textContent = `共 ${total} 組雙胞胎`;
+
+  if(!total) {
+    cont.innerHTML = '<div class="card"><div class="empty">目前無雙胞胎記錄</div></div>';
+    return;
   }
 
-  html += '</div>';
+  // Stats
+  const allShown = [
+    ...(showGrade ? gradeTwins : []),
+    ...(showNew   ? newTwins   : [])
+  ];
+  const sameCnt     = allShown.filter(t=>t.preference==='same').length;
+  const separateCnt = allShown.filter(t=>t.preference==='separate').length;
+
+  let html = `<div class="stats-row" style="margin-bottom:16px;">
+    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-lbl">雙胞胎組數</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--teal);">${sameCnt}</div><div class="stat-lbl">✅ 同班</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--red);">${separateCnt}</div><div class="stat-lbl">❌ 分班</div></div>
+  </div>`;
+
+  // ── Upgrade students section ──
+  if(showGrade && gradeTwins.length) {
+    html += `<div style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:10px;padding:6px 0;border-bottom:2px solid var(--border);">
+      🎓 升級生雙胞胎（2年級 / 4年級）─ ${gradeTwins.length} 組
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:20px;">`;
+
+    gradeTwins.forEach(t => {
+      const same = t.preference === 'same';
+      const prefBadge = same
+        ? '<span class="tag tag-twin" style="font-size:.72rem;">✅ 同班</span>'
+        : '<span class="tag" style="background:var(--red-light);color:var(--red);font-size:.72rem;">❌ 分班</span>';
+      const borderColor = same ? 'var(--teal)' : 'var(--red)';
+      html += `<div style="border:1.5px solid var(--border);border-left:3px solid ${borderColor};border-radius:8px;padding:11px 14px;background:#fff;box-shadow:var(--shadow);">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px;">
+          <span style="font-weight:700;">${t.s1Name}</span>
+          <span style="font-size:.72rem;color:var(--text3);">(${classLabel(t.grade,t.s1Class)})</span>
+          <span style="color:var(--text3);">👫</span>
+          <span style="font-weight:700;">${t.s2Name}</span>
+          <span style="font-size:.72rem;color:var(--text3);">(${classLabel(t.grade,t.s2Class)})</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          ${prefBadge}
+          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2);">${t.grade}年級</span>
+          ${t.note ? `<span style="font-size:.72rem;color:var(--text3);font-style:italic;">📝 ${t.note}</span>` : ''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // ── New students section ──
+  if(showNew && newTwins.length) {
+    html += `<div style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:10px;padding:6px 0;border-bottom:2px solid var(--border);">
+      👶 新生雙胞胎 ─ ${newTwins.length} 組
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;">`;
+
+    newTwins.forEach(t => {
+      const same = t.preference === 'same';
+      const prefBadge = same
+        ? '<span class="tag tag-twin" style="font-size:.72rem;">✅ 同班</span>'
+        : '<span class="tag" style="background:var(--red-light);color:var(--red);font-size:.72rem;">❌ 分班</span>';
+      const borderColor = same ? 'var(--teal)' : 'var(--red)';
+      // Look up gender from newStudents
+      const s1 = Object.values(state.newStudents).find(s=>s.id===t.s1Id||s.name===t.s1Name);
+      const s2 = Object.values(state.newStudents).find(s=>s.id===t.s2Id||s.name===t.s2Name);
+      const g1 = s1 ? (s1.gender==='M'?'♂':'♀') : '';
+      const g2 = s2 ? (s2.gender==='M'?'♂':'♀') : '';
+      html += `<div style="border:1.5px solid var(--border);border-left:3px solid ${borderColor};border-radius:8px;padding:11px 14px;background:#fff;box-shadow:var(--shadow);">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px;">
+          <span style="font-size:.8rem;color:var(--blue);">${g1}</span>
+          <span style="font-weight:700;">${t.s1Name}</span>
+          <span style="color:var(--text3);">👫</span>
+          <span style="font-size:.8rem;color:var(--blue);">${g2}</span>
+          <span style="font-weight:700;">${t.s2Name}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${prefBadge}
+          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2);">新生</span>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
   cont.innerHTML = html;
 }
 
-// =============================================
-// TAB: 多胞胎 (GRADE STUDENTS)
-// =============================================
-let twMembers = []; // 目前正在新增的多胞胎成員清單 [{id, name, class, number}]
-
-function twClearMembers() {
-  twMembers = [];
-  twRenderMembers();
-  document.getElementById('twSearch').value = '';
-  document.getElementById('twDropdown').style.display = 'none';
-}
-
-function twSearchStudents() {
-  const q = document.getElementById('twSearch').value.trim();
-  const grade = parseInt(document.getElementById('twGrade').value);
-  const dropdown = document.getElementById('twDropdown');
-  if(!q) { dropdown.style.display='none'; return; }
-
-  const stus = Object.values(state.students).filter(s => {
-    if(s.grade !== grade) return false;
-    // 座號搜尋：輸入 40102 → grade=4, class=01, number=02
-    const numCode = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
-    const altCode = `${s.grade}${s.class}${String(s.number).padStart(2,'0')}`;
-    return numCode.includes(q) || altCode.includes(q) || s.name.includes(q);
-  }).slice(0, 10);
-
-  if(!stus.length) { dropdown.innerHTML='<div style="padding:10px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dropdown.style.display=''; return; }
-
-  dropdown.innerHTML = '';
-  stus.forEach(s => {
-    const alreadyIn = twMembers.some(m => m.id === s.id);
-    const btn = document.createElement('div');
-    btn.style.cssText = `padding:8px 12px;font-size:.875rem;cursor:${alreadyIn?'default':'pointer'};display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);color:${alreadyIn?'var(--text3)':'var(--text)'};background:${alreadyIn?'var(--bg)':'#fff'};`;
-    const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
-    btn.innerHTML = `<span style="color:${gc};">${s.gender==='M'?'♂':'♀'}</span>
-      <span style="font-size:.78rem;color:var(--text3);">${s.grade}0${s.class}${String(s.number).padStart(2,'0')}</span>
-      <span style="font-weight:600;">${s.name}</span>
-      <span style="font-size:.75rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
-      ${alreadyIn?'<span style="margin-left:auto;font-size:.72rem;color:var(--text3);">已加入</span>':''}`;
-    if(!alreadyIn) {
-      btn.onmouseenter = () => btn.style.background = 'var(--blue-light)';
-      btn.onmouseleave = () => btn.style.background = '#fff';
-      btn.onclick = () => {
-        twMembers.push({id:s.id, name:s.name, class:s.class, number:s.number, grade:s.grade});
-        twRenderMembers();
-        document.getElementById('twSearch').value = '';
-        dropdown.style.display = 'none';
-      };
-    }
-    dropdown.appendChild(btn);
-  });
-  dropdown.style.display = '';
-}
-
-// 點擊外部關閉 dropdown
-document.addEventListener('click', e => {
-  const dd = document.getElementById('twDropdown');
-  if(dd && !e.target.closest('#twSearch') && !e.target.closest('#twDropdown')) dd.style.display='none';
-});
-
-function twRenderMembers() {
-  const list = document.getElementById('twMemberList');
-  const empty = document.getElementById('twMemberEmpty');
-  const count = document.getElementById('twMemberCount');
-  count.textContent = twMembers.length;
-  if(!twMembers.length) {
-    empty.style.display='';
-    list.querySelectorAll('.tw-chip').forEach(el=>el.remove());
-    return;
-  }
-  empty.style.display='none';
-  // Remove old chips
-  list.querySelectorAll('.tw-chip').forEach(el=>el.remove());
-  twMembers.forEach((m, idx) => {
-    const chip = document.createElement('div');
-    chip.className = 'tw-chip';
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:3px 10px 3px 8px;font-size:.82rem;';
-    chip.innerHTML = `<span style="font-weight:600;">${m.name}</span><span style="font-size:.72rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>
-      <button onclick="twRemoveMember(${idx})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.85rem;padding:0;margin-left:2px;line-height:1;">✕</button>`;
-    list.appendChild(chip);
-  });
-}
-
-function twRemoveMember(idx) {
-  twMembers.splice(idx, 1);
-  twRenderMembers();
-}
-
-async function saveGradeTwin() {
-  const grade = parseInt(document.getElementById('twGrade').value);
-  const pref  = document.querySelector('input[name="twPref"]:checked').value;
-  const note  = document.getElementById('twNote').value.trim();
-
-  if(twMembers.length < 2) { showAlert('請至少加入 2 位學生','warn'); return; }
-
-  // Check unique ids
-  const ids = twMembers.map(m=>m.id);
-  if(new Set(ids).size !== ids.length) { showAlert('有重複的學生','warn'); return; }
-
-  const twin = {
-    grade, preference: pref, note,
-    members: twMembers.map(m=>({id:m.id, name:m.name, class:m.class, number:m.number})),
-    count: twMembers.length,
-    // keep s1/s2 for backward compat with simulation
-    s1Id: twMembers[0].id, s1Name: twMembers[0].name, s1Class: twMembers[0].class,
-    s2Id: twMembers[1].id, s2Name: twMembers[1].name, s2Class: twMembers[1].class,
-  };
-
-  const ref = await db.collection('gradeTwins').add(twin);
-  state.gradeTwins[ref.id] = {id:ref.id, ...twin};
-  twMembers = [];
-  twRenderMembers();
-  document.getElementById('twNote').value = '';
-  document.getElementById('twSearch').value = '';
-  renderGradeTwinList();
-  showAlert(`已記錄：${twin.members.map(m=>m.name).join(' 👫 ')}`);
-}
-
-function renderGradeTwinList() {
-  const filterGrade = document.getElementById('twViewGrade').value;
-  const cont = document.getElementById('gradeTwinList');
-  let twins = Object.values(state.gradeTwins);
-  if(filterGrade) twins = twins.filter(t=>t.grade==filterGrade);
-  if(!twins.length) { cont.innerHTML='<div class="empty">尚無升級生多胞胎記錄</div>'; return; }
-  cont.innerHTML='';
-  twins.sort((a,b)=>a.grade-b.grade||(a.members?a.members[0].name:a.s1Name).localeCompare(b.members?b.members[0].name:b.s1Name)).forEach(t=>{
-    const members = t.members || [
-      {id:t.s1Id,name:t.s1Name,class:t.s1Class},
-      {id:t.s2Id,name:t.s2Name,class:t.s2Class}
-    ];
-    const prefLabel = t.preference==='same'
-      ? '<span class="tag tag-twin">✅ 同班</span>'
-      : '<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
-    const countLabel = members.length === 2 ? '雙胞胎' : members.length === 3 ? '三胞胎' : `${members.length}胞胎`;
-    const nameHtml = members.map(m=>`<span style="font-weight:700;">${m.name}</span><span style="font-size:.73rem;color:var(--text3);"> (${classLabel(t.grade,m.class)})</span>`).join('<span style="color:var(--text3);margin:0 4px;">👫</span>');
-    const div = document.createElement('div');
-    div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;';
-    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-      <div style="flex:1;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
-          ${nameHtml}
-          ${prefLabel}
-          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;">${t.grade}年級・${countLabel}</span>
-        </div>
-        ${t.note?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;">📝 ${t.note}</div>`:''}
-      </div>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGradeTwin('${t.id}')">🗑</button>
-    </div>`;
-    cont.appendChild(div);
-  });
-}
-
-async function deleteGradeTwin(id) {
-  if(!confirm('確定刪除此多胞胎記錄？')) return;
-  await db.collection('gradeTwins').doc(id).delete();
-  delete state.gradeTwins[id];
-  renderGradeTwinList();
-  showAlert('已刪除');
-}
-
-function renderTwinSimStatus() {
-  if(!state.simResult) return;
-  const {grade, classes} = state.simResult;
-  const gradeTwins = Object.values(state.gradeTwins).filter(t=>t.grade===grade);
-  if(!gradeTwins.length) {
-    document.getElementById('twinSimCard').style.display='none';
-    return;
-  }
-  document.getElementById('twinSimCard').style.display='';
-  const cont = document.getElementById('twinSimContent');
-
-  // Build studentId -> classNum map
-  const stuClassMap = {};
-  classes.forEach(cls=>{
-    cls.students.forEach(s=>{ stuClassMap[s.id]=cls.num; });
-  });
-
-  let allOk = true;
-  const rows = gradeTwins.map(t=>{
-    const cls1 = stuClassMap[t.s1Id];
-    const cls2 = stuClassMap[t.s2Id];
-    if(cls1===undefined||cls2===undefined) {
-      return `<div style="padding:8px 12px;border-bottom:1px solid #f0f2f8;font-size:.855rem;color:var(--text3);">
-        ${t.s1Name} 👫 ${t.s2Name} ─ 其中一人未出現在模擬結果中
-      </div>`;
-    }
-    const same = cls1===cls2;
-    const want = t.preference==='same';
-    const ok = (want&&same)||(!want&&!same);
-    if(!ok) allOk=false;
-    const statusIcon = ok?'✅':'⚠️';
-    const statusColor = ok?'var(--green)':'var(--red)';
-    const wantLabel = want?'希望同班':'希望分班';
-    const resultLabel = same?`同在第 ${cls1} 包`:`分別在第 ${cls1} 包 / 第 ${cls2} 包`;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;flex-wrap:wrap;">
-      <span style="font-size:1.1rem;">${statusIcon}</span>
-      <span style="font-weight:700;">${t.s1Name}</span>
-      <span style="color:var(--text3);">👫</span>
-      <span style="font-weight:700;">${t.s2Name}</span>
-      <span style="font-size:.75rem;color:var(--text3);">${classLabel(t.grade,t.s1Class)} × ${classLabel(t.grade,t.s2Class)}</span>
-      <span class="tag" style="background:var(--bg);color:var(--text2);font-size:.68rem;">${wantLabel}</span>
-      <span style="font-weight:700;color:${statusColor};font-size:.82rem;margin-left:auto;">${resultLabel}</span>
-    </div>`;
-  }).join('');
-
-  cont.innerHTML=`
-    <div style="margin-bottom:10px;font-size:.85rem;font-weight:600;color:${allOk?'var(--green)':'var(--red)'};">
-      ${allOk?'✅ 所有雙胞胎分配符合家長意願':'⚠️ 有雙胞胎分配不符合家長意願，請手動調整'}
-    </div>
-    <div style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;">${rows}</div>
-  `;
-}
-
-
-// =============================================
-// TAB: 特殊生導入
-// =============================================
-const entryPending = { bighead:[], special:[], gifted:[] };
-
-function entrySearch(tag, searchId, dropdownId, listId) {
-  const q  = document.getElementById(searchId).value.trim();
-  const dd = document.getElementById(dropdownId);
-  if(!q) { dd.style.display='none'; return; }
-
-  const stus = Object.values(state.students).filter(s => {
-    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
-    return code.includes(q) || s.name.includes(q);
-  }).slice(0, 12);
-
-  if(!stus.length) { dd.innerHTML='<div style="padding:9px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dd.style.display=''; return; }
-
-  dd.innerHTML='';
-  stus.forEach(s => {
-    const alreadyTagged = s.tags.includes(tag);
-    const alreadyPending = entryPending[tag].some(m=>m.id===s.id);
-    const row = document.createElement('div');
-    const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
-    const tagColors = {bighead:'var(--red)',special:'var(--purple)',gifted:'var(--gold)'};
-    const tagNames  = {bighead:'已標記大頭',special:'已標記鑑輔生',gifted:'已標記資優生'};
-    const disabled = alreadyTagged || alreadyPending;
-    row.style.cssText=`padding:8px 12px;cursor:${disabled?'default':'pointer'};display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);background:${disabled?'var(--bg)':'#fff'};`;
-    row.innerHTML=`<span style="color:${gc};">${s.gender==='M'?'♂':'♀'}</span>
-      <span style="font-size:.76rem;color:var(--text3);">${s.grade}0${s.class}${String(s.number).padStart(2,'0')}</span>
-      <span style="font-weight:600;">${s.name}</span>
-      <span style="font-size:.73rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
-      ${alreadyTagged?`<span style="margin-left:auto;font-size:.7rem;font-weight:700;color:${tagColors[tag]};">${tagNames[tag]}</span>`:''}
-      ${alreadyPending&&!alreadyTagged?'<span style="margin-left:auto;font-size:.7rem;color:var(--text3);">待加入</span>':''}`;
-    if(!disabled) {
-      row.onmouseenter = () => row.style.background='var(--blue-light)';
-      row.onmouseleave = () => row.style.background='#fff';
-      row.onclick = () => {
-        entryPending[tag].push({id:s.id, name:s.name, class:s.class, grade:s.grade});
-        document.getElementById(searchId).value='';
-        dd.style.display='none';
-        entryRenderList(tag, listId);
-      };
-    }
-    dd.appendChild(row);
-  });
-  dd.style.display='';
-}
-
-function entryRenderList(tag, listId) {
-  const cont  = document.getElementById(listId);
-  const empty = cont.querySelector('.entry-empty');
-  cont.querySelectorAll('.entry-chip').forEach(el=>el.remove());
-  const list  = entryPending[tag];
-  if(!list.length) { if(empty) empty.style.display=''; return; }
-  if(empty) empty.style.display='none';
-  list.forEach((m, idx) => {
-    const chip = document.createElement('div');
-    chip.className='entry-chip';
-    chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 7px;font-size:.8rem;';
-    chip.innerHTML=`<span style="font-weight:600;">${m.name}</span><span style="font-size:.7rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>
-      <button onclick="entryPending['${tag}'].splice(${idx},1);entryRenderList('${tag}','${listId}');" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.82rem;padding:0;margin-left:1px;">✕</button>`;
-    cont.appendChild(chip);
-  });
-}
-
-async function entryCommit(tag, listId) {
-  const list = entryPending[tag];
-  if(!list.length) { showAlert('請先搜尋並加入學生','warn'); return; }
-  try {
-    const batch = db.batch();
-    list.forEach(m => {
-      const stu = state.students[m.id];
-      if(!stu.tags.includes(tag)) {
-        stu.tags.push(tag);
-        batch.update(db.collection('students').doc(m.id), { tags: stu.tags });
-      }
-    });
-    await batch.commit();
-    const names = list.map(m=>m.name).join('、');
-    entryPending[tag] = [];
-    entryRenderList(tag, listId);
-    renderOverviewTag(tag, {bighead:'ovBHGrade',special:'ovSPGrade',gifted:'ovGFGrade'}[tag], {bighead:'ovBHContent',special:'ovSPContent',gifted:'ovGFContent'}[tag]);
-    renderGradeStats();
-    renderUploadedClasses();
-    showAlert(`已將 ${names} 加入${{bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[tag]}名單`);
-  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
-}
-
-// 點外部關閉 entry dropdowns
-document.addEventListener('click', e => {
-  ['entryBHDropdown','entrySPDropdown','entryGFDropdown'].forEach(id => {
-    const dd = document.getElementById(id);
-    const searchId = id.replace('Dropdown','Search');
-    if(dd && !e.target.closest('#'+id) && !e.target.closest('#'+searchId)) dd.style.display='none';
-  });
-});
-
-// =============================================
-// 學生說明
-// =============================================
-function toggleNotes(studentId, containerId) {
-  const cont = document.getElementById(containerId);
-  if(!cont) return;
-  if(cont.style.display === 'none') {
-    cont.style.display = '';
-    renderStudentNotes(studentId, containerId);
-  } else {
-    cont.style.display = 'none';
-  }
-}
-
-// 初始化：有說明的學生預設展開
-function initNotesForTag(tag, gradeSelId, contId) {
-  // After renderOverviewTag renders, find all open note containers and populate
-  setTimeout(() => {
-    document.querySelectorAll(`[id^="notes_"][id$="_${tag}"]`).forEach(el => {
-      if(el.style.display !== 'none') {
-        const stuId = el.id.replace('notes_','').replace(`_${tag}`,'');
-        renderStudentNotes(stuId, el.id);
-      }
-    });
-  }, 50);
-}
-
-async function addStudentNote(studentId, text) {
-  if(!text.trim()) return;
-  const note = {
-    studentId, text: text.trim(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  const ref = await db.collection('studentNotes').add(note);
-  if(!state.studentNotes[studentId]) state.studentNotes[studentId] = [];
-  state.studentNotes[studentId].push({id:ref.id, ...note, createdAt: new Date()});
-  // 同步更新說明查詢頁
-  if(document.getElementById('tab-notes-query') &&
-     document.getElementById('tab-notes-query').classList.contains('active')) {
-    renderNotesQuery();
-  }
-  return ref.id;
-}
-
-async function deleteStudentNote(noteId, studentId) {
-  await db.collection('studentNotes').doc(noteId).delete();
-  state.studentNotes[studentId] = (state.studentNotes[studentId]||[]).filter(n=>n.id!==noteId);
-  if(document.getElementById('tab-notes-query') &&
-     document.getElementById('tab-notes-query').classList.contains('active')) {
-    renderNotesQuery();
-  }
-}
-
-function renderStudentNotes(studentId, containerId) {
-  const notes = (state.studentNotes[studentId]||[]).sort((a,b)=>{
-    const ta = a.createdAt instanceof Date ? a.createdAt : new Date(0);
-    const tb = b.createdAt instanceof Date ? b.createdAt : new Date(0);
-    return tb-ta;
-  });
-  const cont = document.getElementById(containerId);
-  if(!cont) return;
-
-  const notesHtml = notes.length
-    ? notes.map(n => {
-        const dt = n.createdAt instanceof Date ? n.createdAt.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
-        return `<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
-          <div style="flex:1;font-size:.84rem;line-height:1.5;">${n.text}</div>
-          <div style="font-size:.72rem;color:var(--text3);white-space:nowrap;margin-top:1px;">${dt}</div>
-          <button onclick="openNoteModal('${studentId}','${containerId}','${n.id}',${JSON.stringify(n.text)})" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:.78rem;padding:0 2px;flex-shrink:0;">✏️</button>
-          <button onclick="deleteStudentNote('${n.id}','${studentId}').then(()=>renderStudentNotes('${studentId}','${containerId}'))" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.8rem;padding:0;flex-shrink:0;">🗑</button>
-        </div>`;
-      }).join('')
-    : '<div style="font-size:.82rem;color:var(--text3);padding:4px 0;">尚無說明</div>';
-
-  cont.innerHTML = `
-    <div style="margin-bottom:8px;">${notesHtml}</div>
-    <button class="btn btn-primary btn-sm" onclick="openNoteModal('${studentId}','${containerId}','','')">＋ 新增說明</button>`;
-}
-
-async function submitNote(studentId, containerId) {
-  const input = document.getElementById('noteText_'+studentId);
-  if(!input||!input.value.trim()) return;
-  const text = input.value;
-  input.value = '';
-  await addStudentNote(studentId, text);
-  renderStudentNotes(studentId, containerId);
-}
-
-// =============================================
-// TAB: 說明查詢
-// =============================================
-function renderNotesQuery() {
-  const q    = (document.getElementById('nqSearch')||{}).value||'';
-  const tag  = (document.getElementById('nqTag')||{}).value||'';
-  const cont = document.getElementById('nqContent');
-  if(!cont) return;
-
-  // 收集所有有說明的學生
-  let entries = [];
-  Object.entries(state.studentNotes).forEach(([stuId, notes]) => {
-    if(!notes.length) return;
-    const stu = state.students[stuId];
-    if(!stu) return;
-    if(tag && !stu.tags.includes(tag)) return;
-    if(q && !stu.name.includes(q) && !`${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}`.includes(q)) return;
-    entries.push({stu, notes: [...notes].sort((a,b)=>{
-      const ta=a.createdAt instanceof Date?a.createdAt:new Date(0);
-      const tb=b.createdAt instanceof Date?b.createdAt:new Date(0);
-      return tb-ta;
-    })});
-  });
-
-  entries.sort((a,b)=>a.stu.grade-b.stu.grade||a.stu.class-b.stu.class||a.stu.number-b.stu.number);
-
-  document.getElementById('nqCount').textContent = `共 ${entries.length} 位學生`;
-
-  if(!entries.length) {
-    cont.innerHTML='<div class="card"><div class="empty">目前無符合條件的說明記錄</div></div>'; return;
-  }
-
-  const tagBadge = t => ({
-    bighead:'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>',
-    special:'<span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>',
-    gifted: '<span class="tag tag-gifted" style="font-size:.65rem;">資優生</span>'
-  }[t]||'');
-
-  cont.innerHTML = '';
-  entries.forEach(({stu, notes}) => {
-    const gc = stu.gender==='M'?'var(--blue)':'var(--pink)';
-    const tagBadges = stu.tags.map(tagBadge).filter(Boolean).join('');
-    const contId = 'nq_notes_'+stu.id;
-    const noteRows = notes.map(n=>{
-      const dt = n.createdAt instanceof Date ? n.createdAt.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
-      return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 16px;border-bottom:1px solid #f0f2f8;">
-        <div style="flex:1;font-size:.875rem;line-height:1.55;">${n.text}</div>
-        <div style="font-size:.73rem;color:var(--text3);white-space:nowrap;margin-top:2px;">${dt}</div>
-        <button onclick="openNoteModal('${stu.id}','','${n.id}',${JSON.stringify(n.text)})" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:.78rem;padding:0 2px;flex-shrink:0;">✏️</button>
-        <button onclick="deleteStudentNote('${n.id}','${stu.id}').then(()=>renderNotesQuery())" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.8rem;padding:0;flex-shrink:0;">🗑</button>
-      </div>`;
-    }).join('');
-
-    const div = document.createElement('div');
-    div.style.cssText='border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:10px;';
-    div.innerHTML=`
-      <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f8f9fd;border-bottom:1px solid var(--border);">
-        <span style="color:${gc};font-size:.85rem;">${stu.gender==='M'?'♂':'♀'}</span>
-        <span style="font-weight:700;">${stu.name}</span>
-        <span style="font-size:.75rem;color:var(--text3);">${classLabel(stu.grade,stu.class)}</span>
-        ${tagBadges}
-        <span style="margin-left:auto;font-size:.75rem;color:var(--text3);">${notes.length} 則說明</span>
-      </div>
-      ${noteRows}
-      <div style="padding:8px 14px;background:#fafbff;">
-        <button class="btn btn-primary btn-sm" onclick="openNoteModal('${stu.id}','','','')">＋ 新增說明</button>
-      </div>`;
-    cont.appendChild(div);
-  });
-}
-
-async function nqSubmitNote(studentId) {
-  const input = document.getElementById('nqText_'+studentId);
-  if(!input||!input.value.trim()) return;
-  const text = input.value;
-  input.value='';
-  await addStudentNote(studentId, text);
-  renderNotesQuery();
-}
-
-
-// ── 年級按鈕 ──
-function setRuleGrade(grade) {
-  document.getElementById('ruleGrade').value = grade;
-  document.getElementById('ruleGradeBtn2').className = grade===2?'btn btn-primary':'btn btn-ghost';
-  document.getElementById('ruleGradeBtn4').className = grade===4?'btn btn-primary':'btn btn-ghost';
-  onRuleGradeChange();
-}
-
-// ── 編輯規則 Modal ──
-// 編輯規則時，暫存乙生清單
-let editRuleSepStudents = [];
-
-function openEditRule(id) {
-  const r = state.rules[id];
-  if(!r) return;
-  document.getElementById('editRuleId').value = id;
-  document.querySelector(`input[name="editRuleType"][value="${r.type||'uni'}"]`).checked = true;
-  document.getElementById('editRuleReason').value = r.reason||'';
-  document.getElementById('editRuleSepSearch').value = '';
-  document.getElementById('editRuleSepDropdown').style.display = 'none';
-
-  // 顯示目標學生
-  const targetStu = state.students[r.targetStudentId];
-  const tCode = targetStu ? `${targetStu.grade}0${targetStu.class}${String(targetStu.number).padStart(2,'0')}` : '';
-  const tGc   = targetStu ? (targetStu.gender==='M'?'var(--blue)':'var(--pink)') : '';
-  const tBH   = targetStu&&targetStu.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>' : '';
-  document.getElementById('editRuleTargetDisplay').innerHTML =
-    `<span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${tCode}</span>
-     <span style="color:${tGc};margin:0 4px;">${targetStu?(targetStu.gender==='M'?'♂':'♀'):''}</span>
-     <span style="font-weight:700;">${r.targetStudentName}</span>
-     <span style="font-size:.75rem;color:var(--text3);"> (${classLabel(r.grade, r.targetStudentClass)})</span>
-     ${tBH}`;
-
-  // 載入目前的乙生清單
-  editRuleSepStudents = (r.separateFrom||[]).map(s => {
-    const stu = state.students[s.id];
-    return { id:s.id, name:s.name, class:s.class, grade: stu?stu.grade:r.grade };
-  });
-  renderEditRuleSepChips();
-  openModal('editRuleModal');
-}
-
-function editRuleSearchSep() {
-  const id    = document.getElementById('editRuleId').value;
-  const r     = state.rules[id];
-  const grade = r ? r.grade : 2;
-  const q     = document.getElementById('editRuleSepSearch').value.trim();
-  const dd    = document.getElementById('editRuleSepDropdown');
-  if(!q) { dd.style.display='none'; return; }
-
-  const stus = ruleSearchStudents(q, grade);
-  if(!stus.length) { dd.innerHTML='<div style="padding:9px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dd.style.display=''; return; }
-
-  dd.innerHTML='';
-  stus.forEach(s => {
-    const already = editRuleSepStudents.some(m=>m.id===s.id) || s.id === r.targetStudentId;
-    const row = document.createElement('div');
-    row.style.cssText=`padding:7px 12px;cursor:${already?'default':'pointer'};display:flex;align-items:center;gap:7px;font-size:.855rem;border-bottom:1px solid var(--border);background:${already?'var(--bg)':'#fff'};`;
-    row.innerHTML = ruleStudentItemHtml(s) + (already?'<span style="margin-left:auto;font-size:.72rem;color:var(--text3);">已在名單</span>':'');
-    if(!already) {
-      row.onmouseenter = () => row.style.background='var(--blue-light)';
-      row.onmouseleave = () => row.style.background='#fff';
-      row.onclick = () => {
-        editRuleSepStudents.push({id:s.id, name:s.name, class:s.class, grade:s.grade});
-        document.getElementById('editRuleSepSearch').value='';
-        dd.style.display='none';
-        renderEditRuleSepChips();
-      };
-    }
-    dd.appendChild(row);
-  });
-  dd.style.display='';
-}
-
-function renderEditRuleSepChips() {
-  const cont = document.getElementById('editRuleSepChips');
-  cont.innerHTML='';
-  if(!editRuleSepStudents.length) {
-    cont.innerHTML='<span style="font-size:.8rem;color:var(--text3);">尚無隔離學生</span>'; return;
-  }
-  editRuleSepStudents.forEach((m, idx) => {
-    const s   = state.students[m.id];
-    const bh  = s&&s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>' : '';
-    const gc  = s ? (s.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
-    const code = s ? `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}` : '';
-    const chip = document.createElement('div');
-    chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:2px 8px 2px 7px;font-size:.8rem;';
-    chip.innerHTML=`<span style="font-size:.72rem;font-family:monospace;color:var(--text3);">${code}</span>
-      <span style="color:${gc};font-size:.78rem;">${s?(s.gender==='M'?'♂':'♀'):''}</span>
-      <span style="font-weight:600;">${m.name}</span>
-      <span style="font-size:.7rem;color:var(--text3);">${classLabel(m.grade,m.class)}</span>${bh}
-      <button onclick="editRuleSepStudents.splice(${idx},1);renderEditRuleSepChips();"
-        style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.82rem;padding:0;margin-left:1px;">✕</button>`;
-    cont.appendChild(chip);
-  });
-}
-
-// 點外部關閉 editRule dropdown
-document.addEventListener('click', e => {
-  if(!e.target.closest('#editRuleSepSearch')&&!e.target.closest('#editRuleSepDropdown')) {
-    const dd = document.getElementById('editRuleSepDropdown');
-    if(dd) dd.style.display='none';
-  }
-});
-
-async function saveEditRule() {
-  const id     = document.getElementById('editRuleId').value;
-  const type   = document.querySelector('input[name="editRuleType"]:checked').value;
-  const reason = document.getElementById('editRuleReason').value.trim();
-
-  if(!editRuleSepStudents.length) { showAlert('請至少保留一位隔離學生','warn'); return; }
-
-  const separateFrom = editRuleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
-
-  try {
-    await db.collection('separationRules').doc(id).update({ type, reason, separateFrom });
-    state.rules[id].type         = type;
-    state.rules[id].reason       = reason;
-    state.rules[id].separateFrom = separateFrom;
-    closeModal('editRuleModal');
-    renderRuleList();
-    renderOverviewRules();
-    showAlert('規則已更新');
-  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
-}
-
-// ── 說明 Modal ──
-function openNoteModal(studentId, containerId, noteId, existingText) {
-  document.getElementById('noteModalStudentId').value = studentId;
-  document.getElementById('noteModalContainerId').value = containerId;
-  document.getElementById('noteModalNoteId').value = noteId||'';
-  document.getElementById('noteModalText').value = existingText||'';
-  document.getElementById('noteModalTitle').textContent = noteId ? '✏️ 編輯說明' : '💬 新增說明';
-  openModal('noteModal');
-  setTimeout(()=>document.getElementById('noteModalText').focus(), 100);
-}
-
-async function saveNoteModal() {
-  const stuId  = document.getElementById('noteModalStudentId').value;
-  const noteId = document.getElementById('noteModalNoteId').value;
-  const contId = document.getElementById('noteModalContainerId').value;
-  const text   = document.getElementById('noteModalText').value.trim();
-  if(!text) { showAlert('請輸入說明內容','warn'); return; }
-  try {
-    if(noteId) {
-      // 編輯既有說明
-      await db.collection('studentNotes').doc(noteId).update({ text });
-      const notes = state.studentNotes[stuId]||[];
-      const n = notes.find(n=>n.id===noteId);
-      if(n) n.text = text;
-    } else {
-      // 新增說明
-      await addStudentNote(stuId, text);
-    }
-    closeModal('noteModal');
-    if(contId) renderStudentNotes(stuId, contId);
-    renderNotesQuery();
-    showAlert(noteId?'說明已更新':'說明已新增');
-  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
-}
-
-
-// ── 大頭快速新增 ──
-function bhQuickSearchFn() {
-  const q  = document.getElementById('bhQuickSearch').value.trim();
-  const dd = document.getElementById('bhQuickDropdown');
-  if(!q){ dd.style.display='none'; return; }
-
-  const stus = Object.values(state.students).filter(s => {
-    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
-    return code.includes(q) || s.name.includes(q);
-  }).slice(0,15);
-
-  if(!stus.length){ dd.innerHTML='<div style="padding:9px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dd.style.display=''; return; }
-
-  dd.innerHTML='';
-  stus.forEach(s => {
-    const already = s.tags.includes('bighead');
-    const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
-    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
-    const row = document.createElement('div');
-    row.style.cssText = `padding:8px 12px;display:flex;align-items:center;gap:7px;font-size:.875rem;border-bottom:1px solid var(--border);cursor:${already?'default':'pointer'};background:${already?'var(--bg)':'#fff'};`;
-    row.innerHTML = `
-      <span style="font-size:.74rem;font-family:monospace;color:${s.gender==='M'?'var(--blue)':'var(--pink)'};font-weight:600;min-width:42px;">${code}</span>
-      <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
-      <span style="font-weight:600;flex:1;">${s.name}</span>
-      <span style="font-size:.75rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
-      ${already ? '<span class="tag tag-bighead" style="font-size:.65rem;">已是大頭</span>' : '<span style="font-size:.72rem;color:var(--blue);">點擊新增</span>'}`;
-    if(!already){
-      row.onmouseenter = () => row.style.background='var(--blue-light)';
-      row.onmouseleave = () => row.style.background='#fff';
-      row.onclick = async () => {
-        if(!s.tags.includes('bighead')) s.tags.push('bighead');
-        try {
-          await db.collection('students').doc(s.id).update({ tags: s.tags });
-          state.students[s.id].tags = [...s.tags];
-          showAlert(`${s.name} 已標記為大頭`);
-          document.getElementById('bhQuickSearch').value='';
-          dd.style.display='none';
-          renderOverviewTag('bighead','ovBHGrade','ovBHContent');
-          renderGradeStats();
-          renderUploadedClasses();
-        } catch(e){ showAlert('儲存失敗：'+e.message,'warn'); }
-      };
-    }
-    dd.appendChild(row);
-  });
-  dd.style.display='';
-}
-
-// 點外部關閉
-document.addEventListener('click', e => {
-  if(!e.target.closest('#bhQuickSearch')&&!e.target.closest('#bhQuickDropdown')){
-    const dd=document.getElementById('bhQuickDropdown');
-    if(dd) dd.style.display='none';
-  }
-});
-
-// =============================================
-// START
-// =============================================
-init();
 </script>
 </body>
 </html>
