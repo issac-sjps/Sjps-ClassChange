@@ -868,6 +868,20 @@ tr:hover td { background: #f8f9fd; }
   <div id="nqContent"><div class="card"><div class="empty">請切換至此頁以載入說明</div></div></div>
 </div>
 
+<!-- ==================== MODAL: 新增規則說明 ==================== -->
+<div class="modal-bg" id="ruleRemarkModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">📝 新增說明</div>
+    <input type="hidden" id="rrModalRuleId">
+    <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px;">可多次新增，不同老師的說明分開條列</div>
+    <textarea id="rrModalText" style="width:100%;min-height:100px;resize:vertical;font-family:inherit;font-size:.9rem;border:1.5px solid var(--border);border-radius:8px;padding:10px;outline:none;" placeholder="輸入說明…"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ruleRemarkModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveRuleRemark()">💾 新增</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== MODAL: 說明輸入 ==================== -->
 <div class="modal-bg" id="noteModal">
   <div class="modal" style="max-width:480px;">
@@ -889,10 +903,16 @@ tr:hover td { background: #f8f9fd; }
     <div class="modal-title">✏️ 編輯規則</div>
     <input type="hidden" id="editRuleId">
 
-    <!-- 目標學生（唯讀顯示） -->
-    <div style="margin-bottom:12px;">
-      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">目標學生</label>
-      <div id="editRuleTargetDisplay" style="padding:6px 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
+    <!-- 目標學生（唯讀顯示） + 群組代號 -->
+    <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;">
+      <div style="flex:1;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">目標學生</label>
+        <div id="editRuleTargetDisplay" style="padding:6px 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
+      </div>
+      <div style="min-width:110px;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">群組代號</label>
+        <input type="text" id="editRuleGroupCode" placeholder="A1-" style="width:100%;font-family:monospace;font-size:1rem;font-weight:700;text-align:center;">
+      </div>
     </div>
 
     <!-- 不能同班學生：可新增/移除 -->
@@ -1537,20 +1557,35 @@ async function saveRule() {
   const targetStu  = state.students[ruleTargetStu.id];
   const sepStudents = ruleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
 
+  // 自動產生群組代號：同年級依已有規則數量遞增，格式 A1- / A2- / B1- ...
+  const gradeRules = Object.values(state.rules).filter(r=>r.grade===grade);
+  const usedCodes  = new Set(gradeRules.map(r=>r.groupCode).filter(Boolean));
+  const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let groupCode = '';
+  outer: for(const a of alpha){
+    for(let n=1; n<=20; n++){
+      const code = `${a}${n}-`;
+      if(!usedCodes.has(code)){ groupCode=code; break outer; }
+    }
+  }
+
   const rule = {
     grade, fromClass,
     targetStudentId: ruleTargetStu.id,
     targetStudentName: targetStu.name,
     targetStudentClass: ruleTargetStu.class,
     separateFrom: sepStudents,
-    type: ruleType, reason,
+    type: ruleType,
+    reason,          // 保留主備註
+    remarks: reason ? [{ text: reason, createdAt: new Date().toISOString() }] : [],
+    groupCode,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   try {
     const ref = await db.collection('separationRules').add(rule);
     state.rules[ref.id] = { id:ref.id, ...rule, createdAt: new Date() };
-    showAlert('規則已新增');
+    showAlert(`規則已新增，群組代號：${groupCode}`);
     ruleClearForm();
     renderRuleList();
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
@@ -1637,10 +1672,20 @@ function renderRuleList() {
               </div>`;
             }).join('')}
           </div>
-          ${r.reason?`<div class="rule-reason" style="background:var(--bg);padding:4px 8px;border-radius:4px;font-size:.8rem;">📝 ${r.reason}</div>`:''}
-          ${sepBigheads.length?`<div class="rule-bighead-warn">⚠ 隔離對象中有大頭學生：${sepBigheads.map(s=>s.name).join('、')}</div>`:''}
+          <!-- 多則說明 -->
+          <div style="margin-top:4px;" id="remarks_${r.id}">
+            ${((r.remarks&&r.remarks.length)?r.remarks:(r.reason?[{text:r.reason,createdAt:''}]:[])).map((rm,ri)=>`
+              <div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:var(--bg);border-radius:4px;margin-bottom:3px;font-size:.8rem;">
+                <span style="color:var(--text3);flex-shrink:0;">📝</span>
+                <span style="flex:1;line-height:1.5;">${rm.text}</span>
+                <button onclick="deleteRuleRemark('${r.id}',${ri})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.78rem;padding:0;flex-shrink:0;">🗑</button>
+              </div>`).join('')}
+            <button class="btn btn-ghost btn-sm" style="margin-top:2px;font-size:.78rem;" onclick="openRuleRemarkModal('${r.id}')">＋ 新增說明</button>
+          </div>
+          ${sepBigheads.length?`<div class="rule-bighead-warn" style="margin-top:4px;">⚠ 隔離對象中有大頭學生：${sepBigheads.map(s=>s.name).join('、')}</div>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px;">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px;align-items:center;">
+          <div style="font-size:1rem;font-weight:800;color:var(--navy);font-family:monospace;letter-spacing:.02em;background:var(--blue-light);border:1.5px solid var(--blue);border-radius:6px;padding:3px 8px;white-space:nowrap;">${r.groupCode||'--'}</div>
           <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditRule('${r.id}')">✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRule('${r.id}')">🗑</button>
         </div>
@@ -2997,6 +3042,44 @@ async function nqSubmitNote(studentId) {
 }
 
 
+
+// ── 規則說明（多則）──
+function openRuleRemarkModal(ruleId) {
+  document.getElementById('rrModalRuleId').value = ruleId;
+  document.getElementById('rrModalText').value = '';
+  openModal('ruleRemarkModal');
+  setTimeout(()=>document.getElementById('rrModalText').focus(),100);
+}
+
+async function saveRuleRemark() {
+  const ruleId = document.getElementById('rrModalRuleId').value;
+  const text   = document.getElementById('rrModalText').value.trim();
+  if(!text){ showAlert('請輸入說明內容','warn'); return; }
+  const r = state.rules[ruleId];
+  if(!r) return;
+  if(!r.remarks) r.remarks = r.reason ? [{text:r.reason,createdAt:''}] : [];
+  r.remarks.push({ text, createdAt: new Date().toISOString() });
+  try {
+    await db.collection('separationRules').doc(ruleId).update({ remarks: r.remarks });
+    closeModal('ruleRemarkModal');
+    renderRuleList();
+    renderOverviewRules();
+    showAlert('說明已新增');
+  } catch(e){ showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+async function deleteRuleRemark(ruleId, idx) {
+  const r = state.rules[ruleId];
+  if(!r) return;
+  if(!r.remarks) r.remarks = r.reason ? [{text:r.reason,createdAt:''}] : [];
+  r.remarks.splice(idx,1);
+  try {
+    await db.collection('separationRules').doc(ruleId).update({ remarks: r.remarks });
+    renderRuleList();
+    renderOverviewRules();
+  } catch(e){ showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
 // ── 年級按鈕 ──
 function setRuleGrade(grade) {
   document.getElementById('ruleGrade').value = grade;
@@ -3015,6 +3098,7 @@ function openEditRule(id) {
   document.getElementById('editRuleId').value = id;
   document.querySelector(`input[name="editRuleType"][value="${r.type||'uni'}"]`).checked = true;
   document.getElementById('editRuleReason').value = r.reason||'';
+  document.getElementById('editRuleGroupCode').value = r.groupCode||'';
   document.getElementById('editRuleSepSearch').value = '';
   document.getElementById('editRuleSepDropdown').style.display = 'none';
 
@@ -3110,12 +3194,14 @@ async function saveEditRule() {
   if(!editRuleSepStudents.length) { showAlert('請至少保留一位隔離學生','warn'); return; }
 
   const separateFrom = editRuleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
+  const groupCode = document.getElementById('editRuleGroupCode').value.trim();
 
   try {
-    await db.collection('separationRules').doc(id).update({ type, reason, separateFrom });
+    await db.collection('separationRules').doc(id).update({ type, reason, separateFrom, groupCode });
     state.rules[id].type         = type;
     state.rules[id].reason       = reason;
     state.rules[id].separateFrom = separateFrom;
+    state.rules[id].groupCode    = groupCode;
     closeModal('editRuleModal');
     renderRuleList();
     renderOverviewRules();
