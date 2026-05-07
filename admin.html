@@ -764,16 +764,27 @@ tr:hover td { background: #f8f9fd; }
 
 <!-- ==================== TAB: 大頭 ==================== -->
 <div id="tab-ov-bighead" class="tab-pane">
-  <div class="card">
-    <div class="card-title">⚠ 大頭名單 <span>需多費心管教的學生，依班級顯示</span></div>
-    <div class="form-row" style="margin-bottom:0;">
-      <div class="form-group">
-        <label>顯示年級</label>
-        <select id="ovBHGrade" onchange="renderOverviewTag('bighead','ovBHGrade','ovBHContent')">
-          <option value="">全部</option>
-          <option value="2">2年級</option>
-          <option value="4">4年級</option>
-        </select>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">⚠ 大頭名單 <span>需多費心管教的學生，依班級顯示</span></div>
+      <div class="form-row" style="margin-bottom:0;">
+        <div class="form-group">
+          <label>顯示年級</label>
+          <select id="ovBHGrade" onchange="renderOverviewTag('bighead','ovBHGrade','ovBHContent')">
+            <option value="">全部</option>
+            <option value="2">2年級</option>
+            <option value="4">4年級</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">➕ 快速新增大頭</div>
+      <div class="notice" style="margin-bottom:10px;">輸入座號（如 <b>20101</b>）或姓名搜尋，找到後點擊直接標記為大頭。</div>
+      <div class="form-group" style="margin-bottom:6px;">
+        <label>搜尋學生</label>
+        <input type="text" id="bhQuickSearch" placeholder="座號或姓名…" oninput="bhQuickSearchFn()" autocomplete="off">
+        <div id="bhQuickDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:280px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;"></div>
       </div>
     </div>
   </div>
@@ -1206,7 +1217,10 @@ function renderPreviewGrid() {
     const nameSpan = document.createElement('span');
     nameSpan.className = 's-name'; nameSpan.textContent = s.name;
     const numSpan = document.createElement('span');
-    numSpan.className = 's-num'; numSpan.textContent = `${String(s.number).padStart(2,'0')} ${genderLabel(s.gender)}`;
+    numSpan.className = 's-num';
+    numSpan.style.color = s.gender==='M' ? 'var(--blue)' : 'var(--pink)';
+    numSpan.style.fontWeight = '600';
+    numSpan.textContent = `${String(s.number).padStart(2,'0')} ${genderLabel(s.gender)}`;
     nameRow.appendChild(nameSpan); nameRow.appendChild(numSpan);
     const tagsDiv = document.createElement('div');
     tagsDiv.className = 's-tags';
@@ -3143,6 +3157,63 @@ async function saveNoteModal() {
     showAlert(noteId?'說明已更新':'說明已新增');
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
+
+
+// ── 大頭快速新增 ──
+function bhQuickSearchFn() {
+  const q  = document.getElementById('bhQuickSearch').value.trim();
+  const dd = document.getElementById('bhQuickDropdown');
+  if(!q){ dd.style.display='none'; return; }
+
+  const stus = Object.values(state.students).filter(s => {
+    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
+    return code.includes(q) || s.name.includes(q);
+  }).slice(0,15);
+
+  if(!stus.length){ dd.innerHTML='<div style="padding:9px 12px;font-size:.85rem;color:var(--text3);">無符合學生</div>'; dd.style.display=''; return; }
+
+  dd.innerHTML='';
+  stus.forEach(s => {
+    const already = s.tags.includes('bighead');
+    const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+    const code = `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`;
+    const row = document.createElement('div');
+    row.style.cssText = `padding:8px 12px;display:flex;align-items:center;gap:7px;font-size:.875rem;border-bottom:1px solid var(--border);cursor:${already?'default':'pointer'};background:${already?'var(--bg)':'#fff'};`;
+    row.innerHTML = `
+      <span style="font-size:.74rem;font-family:monospace;color:${s.gender==='M'?'var(--blue)':'var(--pink)'};font-weight:600;min-width:42px;">${code}</span>
+      <span style="color:${gc};font-size:.8rem;">${s.gender==='M'?'♂':'♀'}</span>
+      <span style="font-weight:600;flex:1;">${s.name}</span>
+      <span style="font-size:.75rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+      ${already ? '<span class="tag tag-bighead" style="font-size:.65rem;">已是大頭</span>' : '<span style="font-size:.72rem;color:var(--blue);">點擊新增</span>'}`;
+    if(!already){
+      row.onmouseenter = () => row.style.background='var(--blue-light)';
+      row.onmouseleave = () => row.style.background='#fff';
+      row.onclick = async () => {
+        if(!s.tags.includes('bighead')) s.tags.push('bighead');
+        try {
+          await db.collection('students').doc(s.id).update({ tags: s.tags });
+          state.students[s.id].tags = [...s.tags];
+          showAlert(`${s.name} 已標記為大頭`);
+          document.getElementById('bhQuickSearch').value='';
+          dd.style.display='none';
+          renderOverviewTag('bighead','ovBHGrade','ovBHContent');
+          renderGradeStats();
+          renderUploadedClasses();
+        } catch(e){ showAlert('儲存失敗：'+e.message,'warn'); }
+      };
+    }
+    dd.appendChild(row);
+  });
+  dd.style.display='';
+}
+
+// 點外部關閉
+document.addEventListener('click', e => {
+  if(!e.target.closest('#bhQuickSearch')&&!e.target.closest('#bhQuickDropdown')){
+    const dd=document.getElementById('bhQuickDropdown');
+    if(dd) dd.style.display='none';
+  }
+});
 
 // =============================================
 // START
