@@ -647,12 +647,23 @@ function renderRules() {
       const targetCode = targetStuObj
         ? `${targetStuObj.grade}0${targetStuObj.class}${String(targetStuObj.number).padStart(2,'0')}`
         : '';
-      const sepRows=(r.separateFrom||[]).map(s=>{
+      const sepRows=[...(r.separateFrom||[])].sort((a,b)=>{
+        const sa=state.students[a.id]; const sb=state.students[b.id];
+        if(!sa||!sb) return 0;
+        if(sa.class!==sb.class) return sa.class-sb.class;
+        return sa.number-sb.number;
+      }).map((s,si)=>{
         const stu=state.students[s.id];
         const bh=stu&&stu.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.6rem;">大頭</span>':'';
         const code=stu?`${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}`:'';
         const gc=stu?(stu.gender==='M'?'var(--blue)':'var(--pink)'):'var(--text3)';
+        const isGrp=r.type==='group';
+        const base=r.groupCode?r.groupCode.replace(/[0-9+-]+$/,''):'';
+        const mCode=base?`${base}1${isGrp?'-':'+'}`: '';
+        const mc=isGrp?'var(--red)':'var(--green)';
+        const mb=isGrp?'#fee2e2':'#dcfce7';
         return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;">
+          ${mCode?`<span style="font-size:.7rem;font-weight:700;font-family:monospace;color:${mc};background:${mb};border:1px solid ${mc};border-radius:4px;padding:0 4px;">${mCode}</span>`:''}
           <span style="font-size:.73rem;font-family:monospace;color:var(--text3);min-width:38px;">${code}</span>
           <span style="color:${gc};font-size:.76rem;">${stu?(stu.gender==='M'?'♂':'♀'):''}</span>
           <span style="font-weight:600;font-size:.86rem;">${s.name}</span>
