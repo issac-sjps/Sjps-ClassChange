@@ -387,6 +387,12 @@ tr:hover td { background: #f8f9fd; }
             <button class="btn btn-ghost btn-sm" onclick="assignGroupCodes(4)">↺ 整理4年代號</button>
           </div>
         </div>
+        <div style="background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:9px 14px;font-size:.82rem;color:#1e40af;line-height:1.8;margin-bottom:10px;">
+          <b>代號說明（供老師檢查用）</b><br>
+          <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A1-</span>此學生每個班只能有一人（需完全隔離）<br>
+          <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A1+</span>此學生可與其他「+」同組同學同班，但不能與「A1-」同班<br>
+          每個班：<b>「-」代號最多出現一次</b>，「+」代號可以多人同班。
+        </div>
         <div class="form-row" style="margin-bottom:12px;">
           <div class="form-group">
             <label>顯示年級</label>
@@ -3176,7 +3182,9 @@ function openEditRule(id) {
   if(!r) return;
   document.getElementById('editRuleId').value = id;
   document.querySelector(`input[name="editRuleType"][value="${r.type||'uni'}"]`).checked = true;
-  document.getElementById('editRuleReason').value = r.reason||'';
+  // 顯示第一則 remarks（如果有的話），否則顯示 reason
+  const firstRemark = (r.remarks && r.remarks.length) ? r.remarks[0].text : (r.reason||'');
+  document.getElementById('editRuleReason').value = firstRemark;
   document.getElementById('editRuleGroupCode').value = r.groupCode||'';
   document.getElementById('editRuleSepSearch').value = '';
   document.getElementById('editRuleSepDropdown').style.display = 'none';
@@ -3275,10 +3283,22 @@ async function saveEditRule() {
   const separateFrom = editRuleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
   const groupCode = document.getElementById('editRuleGroupCode').value.trim();
 
+  // 同步更新 remarks：如果備註原因有變，更新或新增 remarks[0]
+  const r = state.rules[id];
+  let remarks = r.remarks ? [...r.remarks] : (r.reason ? [{text:r.reason,createdAt:''}] : []);
+  if(reason) {
+    if(remarks.length > 0) {
+      remarks[0] = { ...remarks[0], text: reason };  // 更新第一則
+    } else {
+      remarks = [{ text: reason, createdAt: new Date().toISOString() }];
+    }
+  }
+
   try {
-    await db.collection('separationRules').doc(id).update({ type, reason, separateFrom, groupCode });
+    await db.collection('separationRules').doc(id).update({ type, reason, remarks, separateFrom, groupCode });
     state.rules[id].type         = type;
     state.rules[id].reason       = reason;
+    state.rules[id].remarks      = remarks;
     state.rules[id].separateFrom = separateFrom;
     state.rules[id].groupCode    = groupCode;
     closeModal('editRuleModal');
