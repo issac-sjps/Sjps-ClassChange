@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>操作記錄 ─ 編班系統</title>
+<style>
+:root {
+  --navy:#0f2044; --navy2:#1a3060; --blue:#2d5be3; --blue-light:#e8eefb;
+  --red:#dc2626; --red-light:#fee2e2; --green:#16a34a; --green-light:#dcfce7;
+  --bg:#f4f6fb; --surface:#fff; --border:#dde3f0;
+  --text:#111827; --text2:#4b5563; --text3:#9ca3af;
+  --radius:10px; --shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+/* AUTH */
+.auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f2044,#1a3060);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-box{background:rgba(255,255,255,.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:48px 40px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4);}
+.auth-title{color:#fff;font-size:1.3rem;font-weight:800;margin-bottom:6px;}
+.auth-sub{color:rgba(255,255,255,.6);font-size:.85rem;margin-bottom:28px;}
+.google-btn{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;background:#fff;color:#1f2937;font-size:.95rem;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;}
+.google-btn:hover{box-shadow:0 4px 16px rgba(0,0,0,.2);}
+.auth-error{color:#fca5a5;font-size:.82rem;margin-top:12px;min-height:18px;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;box-shadow:0 2px 12px rgba(15,32,68,.25);position:sticky;top:0;z-index:100;}
+.header-title{font-size:1.1rem;font-weight:700;}
+.header-sub{font-size:.72rem;opacity:.6;margin-top:1px;}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;}
+
+/* MAIN */
+.main{max-width:900px;margin:0 auto;padding:24px 20px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px;box-shadow:var(--shadow);}
+.card-title{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+
+label.lbl{font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;}
+select,input[type=text]{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.875rem;color:var(--text);background:#fff;outline:none;font-family:inherit;transition:border-color .2s;}
+select:focus,input:focus{border-color:var(--blue);}
+
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+
+/* LOG TABLE */
+.log-table{width:100%;border-collapse:collapse;font-size:.875rem;}
+.log-table th{background:var(--bg);padding:9px 12px;text-align:left;font-size:.78rem;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border);}
+.log-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table tr:hover td{background:#f8f9fd;}
+.action-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700;}
+.badge-add{background:var(--green-light);color:var(--green);}
+.badge-edit{background:var(--blue-light);color:var(--blue);}
+.badge-delete{background:var(--red-light);color:var(--red);}
+.badge-other{background:var(--bg);color:var(--text2);}
+
+.empty{text-align:center;padding:40px;color:var(--text3);}
+.load-more{display:block;width:100%;padding:10px;border:1.5px dashed var(--border);border-radius:8px;background:transparent;cursor:pointer;font-size:.875rem;font-family:inherit;color:var(--text2);margin-top:12px;transition:all .2s;}
+.load-more:hover{border-color:var(--blue);color:var(--blue);}
+
+.db-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border-radius:99px;padding:4px 12px;font-size:.75rem;}
+.db-dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;}
+.db-dot.ok{background:#4ade80;box-shadow:0 0 6px #4ade80;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div style="font-size:2.5rem;margin-bottom:12px;">📋</div>
+    <div class="auth-title">操作記錄</div>
+    <div class="auth-sub">請使用管理員帳號登入</div>
+    <button class="google-btn" id="signInBtn" onclick="doSignIn()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      使用 Google 帳號登入
+    </button>
+    <div class="auth-error" id="authErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+<div class="header">
+  <div>
+    <div class="header-title">📋 操作記錄</div>
+    <div class="header-sub">所有管理員操作的歷史記錄</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="db-badge"><div class="db-dot" id="dbDot"></div><span id="dbStatus">連接中…</span></div>
+    <span style="font-size:.75rem;color:rgba(255,255,255,.7);" id="userBadge"></span>
+    <button onclick="doSignOut()" class="hbtn">登出</button>
+    <a href="admin.html" class="hbtn">← 後台</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-title">🔍 篩選</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="lbl">操作類型</label>
+        <select id="filterAction" onchange="loadLogs(true)">
+          <option value="">全部</option>
+          <option value="新增">新增</option>
+          <option value="編輯">編輯</option>
+          <option value="刪除">刪除</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="lbl">操作者</label>
+        <input type="text" id="filterUser" placeholder="Email…" oninput="loadLogs(true)" style="width:200px;">
+      </div>
+      <div class="form-group">
+        <label class="lbl">搜尋內容</label>
+        <input type="text" id="filterDetail" placeholder="關鍵字…" oninput="loadLogs(true)" style="width:180px;">
+      </div>
+    </div>
+    <div id="logStats" style="font-size:.82rem;color:var(--text3);"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 操作記錄 <span id="logCount" style="font-size:.8rem;font-weight:400;color:var(--text3);"></span></div>
+    <div id="logContent"><div class="empty">載入中…</div></div>
+    <button class="load-more" id="loadMoreBtn" style="display:none;" onclick="loadMore()">載入更多</button>
+  </div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
+  authDomain: "sjps-classchange.firebaseapp.com",
+  projectId: "sjps-classchange",
+  storageBucket: "sjps-classchange.firebasestorage.app",
+  messagingSenderId: "907928897295",
+  appId: "1:907928897295:web:b6bfb2dcb3c8c447ad607a"
+};
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+const OWNER = 'issac@sjps.kh.edu.tw';
+
+let allLogs  = [];
+let lastDoc  = null;
+let hasMore  = false;
+const PAGE   = 50;
+
+// ── AUTH ──
+async function doSignIn() {
+  const btn = document.getElementById('signInBtn');
+  const err = document.getElementById('authErr');
+  btn.disabled = true; btn.textContent = '登入中…';
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result   = await auth.signInWithPopup(provider);
+    const email    = result.user.email;
+    const adminDoc = await db.collection('admins').doc(email).get();
+    if(adminDoc.exists || email === OWNER) {
+      showApp(result.user);
+    } else {
+      err.textContent = email + ' 無管理員權限';
+      await auth.signOut();
+      btn.disabled = false; btn.textContent = '使用 Google 帳號登入';
+    }
+  } catch(e) {
+    err.textContent = '登入失敗：' + e.message;
+    btn.disabled = false; btn.textContent = '使用 Google 帳號登入';
+  }
+}
+
+function doSignOut() { auth.signOut().then(()=>location.reload()); }
+
+auth.onAuthStateChanged(async user => {
+  if(user) {
+    const doc = await db.collection('admins').doc(user.email).get();
+    if(doc.exists || user.email === OWNER) showApp(user);
+    else await auth.signOut();
+  }
+});
+
+function showApp(user) {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  document.getElementById('userBadge').textContent = user.email;
+  document.getElementById('dbDot').className = 'db-dot ok';
+  document.getElementById('dbStatus').textContent = '已連線';
+  loadLogs(true);
+}
+
+// ── LOGS ──
+function badgeClass(action) {
+  if(action.startsWith('新增')) return 'badge-add';
+  if(action.startsWith('編輯')) return 'badge-edit';
+  if(action.startsWith('刪除')) return 'badge-delete';
+  return 'badge-other';
+}
+
+async function loadLogs(reset) {
+  if(reset) { allLogs=[]; lastDoc=null; hasMore=false; }
+  const actionF = document.getElementById('filterAction').value;
+  const userF   = document.getElementById('filterUser').value.trim().toLowerCase();
+  const detailF = document.getElementById('filterDetail').value.trim().toLowerCase();
+
+  let query = db.collection('activityLogs').orderBy('createdAt','desc').limit(PAGE);
+  if(lastDoc) query = query.startAfter(lastDoc);
+
+  try {
+    const snap = await query.get();
+    hasMore = snap.docs.length === PAGE;
+    lastDoc = snap.docs[snap.docs.length-1] || lastDoc;
+
+    snap.forEach(d => allLogs.push({id:d.id,...d.data()}));
+
+    // client-side filter
+    let filtered = allLogs;
+    if(actionF) filtered = filtered.filter(l=>l.action&&l.action.includes(actionF));
+    if(userF)   filtered = filtered.filter(l=>l.userEmail&&l.userEmail.toLowerCase().includes(userF));
+    if(detailF) filtered = filtered.filter(l=>
+      (l.action&&l.action.toLowerCase().includes(detailF)) ||
+      (l.detail&&l.detail.toLowerCase().includes(detailF))
+    );
+
+    renderLogs(filtered);
+    document.getElementById('loadMoreBtn').style.display = hasMore ? '' : 'none';
+  } catch(e) {
+    document.getElementById('logContent').innerHTML = `<div class="empty">載入失敗：${e.message}</div>`;
+  }
+}
+
+function loadMore() { loadLogs(false); }
+
+function renderLogs(logs) {
+  const cont = document.getElementById('logContent');
+  document.getElementById('logCount').textContent = `共 ${logs.length} 筆${hasMore?'（還有更多）':''}`;
+
+  if(!logs.length) { cont.innerHTML='<div class="empty">無符合記錄</div>'; return; }
+
+  const table = document.createElement('table');
+  table.className = 'log-table';
+  table.innerHTML = '<thead><tr><th style="width:160px;">時間</th><th style="width:160px;">操作者</th><th style="width:140px;">操作類型</th><th>詳細內容</th></tr></thead>';
+  const tbody = document.createElement('tbody');
+
+  logs.forEach(l => {
+    const dt = l.createdAt && l.createdAt.toDate
+      ? l.createdAt.toDate().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})
+      : '─';
+    const email = l.userEmail || '─';
+    const shortEmail = email.split('@')[0];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-size:.82rem;color:var(--text3);white-space:nowrap;">${dt}</td>
+      <td style="font-size:.82rem;" title="${email}">${shortEmail}<span style="color:var(--text3);font-size:.7rem;">@${email.split('@')[1]||''}</span></td>
+      <td><span class="action-badge ${badgeClass(l.action||'')}">${l.action||'─'}</span></td>
+      <td style="font-size:.875rem;">${l.detail||'─'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  cont.innerHTML = '';
+  cont.appendChild(table);
+}
+</script>
+</body>
+</html>
