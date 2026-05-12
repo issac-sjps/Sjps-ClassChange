@@ -224,6 +224,7 @@ tr:hover td { background: #f8f9fd; }
       <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">前台 →</a>
       <a href="admin-users.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">👥 權限管理</a>
       <a href="print.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">🖨️ 列印調查表</a>
+      <a href="log.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">📋 操作記錄</a>
     </div>
     <div style="font-size:.72rem;color:rgba(255,255,255,.6);">👤 <span id="userEmailBadge"></span></div>
   </div>
@@ -842,6 +843,12 @@ tr:hover td { background: #f8f9fd; }
 <div id="tab-overview-rules" class="tab-pane">
   <div class="card">
     <div class="card-title">📌 不能同班總表 <span>供老師快速瀏覽 ─ 依班級顯示所有隔離規則</span></div>
+    <div style="background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:9px 14px;font-size:.82rem;color:#1e40af;line-height:1.8;margin-bottom:14px;">
+  <b>代號說明（供老師檢查用）</b><br>
+  <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A1-</span>此學生每個班只能有一人（需完全隔離）<br>
+  <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A1+</span>此學生可與其他「+」同組同學同班，但不能與「A1-」同班<br>
+  每個班：<b>「-」代號最多出現一次</b>，「+」代號可以多人同班。
+</div>
     <div class="form-row" style="margin-bottom:0;">
       <div class="form-group">
         <label>顯示年級</label>
@@ -957,6 +964,37 @@ tr:hover td { background: #f8f9fd; }
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('editRuleModal')">取消</button>
       <button class="btn btn-primary" onclick="saveEditRule()">💾 儲存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: 編輯多胞胎 ==================== -->
+<div class="modal-bg" id="editTwinModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-title">✏️ 編輯多胞胎記錄</div>
+    <input type="hidden" id="editTwinId">
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">成員（唯讀）</label>
+      <div id="editTwinMembers" style="padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>家長意願</label>
+      <div style="display:flex;gap:16px;margin-top:5px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;cursor:pointer;">
+          <input type="radio" name="editTwinPref" value="separate"> ❌ 分開不同班
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;cursor:pointer;">
+          <input type="radio" name="editTwinPref" value="same"> ✅ 同班在一起
+        </label>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>備註（選填）</label>
+      <input type="text" id="editTwinNote" placeholder="例：家長要求分班…">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('editTwinModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveEditTwin()">💾 儲存修改</button>
     </div>
   </div>
 </div>
@@ -1597,6 +1635,7 @@ async function saveRule() {
     const ref = await db.collection('separationRules').add(rule);
     state.rules[ref.id] = { id:ref.id, ...rule, createdAt: new Date() };
     await reassignAfterAdd(grade);
+    addLog('新增不能同班規則', `${ruleTargetStu.name} → ${ruleSepStudents.map(m=>m.name).join('、')}`);
     showAlert('規則已新增，代號已自動整理');
     ruleClearForm();
     renderRuleList();
@@ -2741,7 +2780,12 @@ function renderGradeTwinList() {
       ? '<span class="tag tag-twin">✅ 同班</span>'
       : '<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
     const countLabel = members.length === 2 ? '雙胞胎' : members.length === 3 ? '三胞胎' : `${members.length}胞胎`;
-    const nameHtml = members.map(m=>`<span style="font-weight:700;">${m.name}</span><span style="font-size:.73rem;color:var(--text3);"> (${classLabel(t.grade,m.class)})</span>`).join('<span style="color:var(--text3);margin:0 4px;">👫</span>');
+    const nameHtml = members.map(m=>{
+      const stu = state.students[m.id];
+      const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
+      const gc   = stu ? (stu.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
+      return `<span style="font-size:.74rem;font-family:monospace;font-weight:600;color:${gc};">${code}</span> <span style="font-weight:700;">${m.name}</span>`;
+    }).join('<span style="color:var(--text3);margin:0 6px;">👫</span>');
     const div = document.createElement('div');
     div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;';
     div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -2753,7 +2797,10 @@ function renderGradeTwinList() {
         </div>
         ${t.note?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;">📝 ${t.note}</div>`:''}
       </div>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGradeTwin('${t.id}')">🗑</button>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditTwin('${t.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGradeTwin('${t.id}')">🗑</button>
+      </div>
     </div>`;
     cont.appendChild(div);
   });
@@ -3304,6 +3351,7 @@ async function saveEditRule() {
     closeModal('editRuleModal');
     renderRuleList();
     renderOverviewRules();
+    addLog('編輯不能同班規則', `${state.rules[id]?.targetStudentName||id}`);
     showAlert('規則已更新');
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
@@ -3343,6 +3391,52 @@ async function saveNoteModal() {
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
 
+
+
+
+// ── 操作 Log ──
+async function addLog(action, detail) {
+  try {
+    const user = firebase.auth().currentUser;
+    await db.collection('activityLogs').add({
+      action, detail,
+      userEmail: user ? user.email : 'unknown',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) { console.warn('log failed', e); }
+}
+
+// ── 編輯多胞胎 ──
+function openEditTwin(id) {
+  const t = state.gradeTwins[id];
+  if(!t) return;
+  document.getElementById('editTwinId').value = id;
+  document.querySelector(`input[name="editTwinPref"][value="${t.preference}"]`).checked = true;
+  document.getElementById('editTwinNote').value = t.note||'';
+  const members = t.members || [{id:t.s1Id,name:t.s1Name,class:t.s1Class},{id:t.s2Id,name:t.s2Name,class:t.s2Class}];
+  document.getElementById('editTwinMembers').innerHTML = members.map(m=>{
+    const stu = state.students[m.id];
+    const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
+    const gc   = stu ? (stu.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
+    return `<span style="font-size:.74rem;font-family:monospace;font-weight:600;color:${gc};margin-right:3px;">${code}</span><span style="font-weight:700;">${m.name}</span><span style="font-size:.73rem;color:var(--text3);"> (${classLabel(t.grade,m.class)})</span>`;
+  }).join(' <span style="color:var(--text3);">👫</span> ');
+  openModal('editTwinModal');
+}
+
+async function saveEditTwin() {
+  const id   = document.getElementById('editTwinId').value;
+  const pref = document.querySelector('input[name="editTwinPref"]:checked').value;
+  const note = document.getElementById('editTwinNote').value.trim();
+  try {
+    await db.collection('gradeTwins').doc(id).update({ preference: pref, note });
+    state.gradeTwins[id].preference = pref;
+    state.gradeTwins[id].note = note;
+    addLog('編輯多胞胎意願', `${state.gradeTwins[id]?.members?.map(m=>m.name).join(' 👫 ')||id} → ${pref==='same'?'同班':'分班'}`);
+    closeModal('editTwinModal');
+    renderGradeTwinList();
+    showAlert('已更新');
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
 
 // ── 大頭快速新增 ──
 function bhQuickSearchFn() {
