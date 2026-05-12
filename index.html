@@ -277,6 +277,12 @@ select:focus, input:focus { border-color: var(--blue); }
     </div>
   </div>
   <div id="rulesSummary" style="margin-bottom:16px;"></div>
+  <div style="background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:9px 14px;font-size:.82rem;color:#1e40af;line-height:1.8;margin-bottom:14px;">
+    <b>代號說明</b><br>
+    <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A1-</span>此學生每個班只能有一人（需完全隔離）<br>
+    <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A1+</span>此學生可與其他「+」同組同學同班，但不能與「A1-」同班<br>
+    每個班：<b>「-」代號最多出現一次</b>，「+」代號可以多人同班。
+  </div>
   <div class="ov-grid" id="rulesContent">
     <div class="card"><div class="empty">載入中…</div></div>
   </div>
