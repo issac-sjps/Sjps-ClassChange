@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代號說明 ─ 編班系統</title>
+<style>
+:root {
+  --navy:#0f2044; --navy2:#1a3060; --blue:#2d5be3; --blue-light:#e8eefb;
+  --red:#dc2626; --red-light:#fee2e2; --green:#16a34a; --green-light:#dcfce7;
+  --purple:#7c3aed; --purple-light:#ede9fe;
+  --gold:#b45309; --gold-light:#fef9c3;
+  --teal:#0d9488; --teal-light:#ccfbf1;
+  --pink:#be185d; --pink-light:#fce7f3;
+  --amber:#d97706; --amber-light:#fef3c7;
+  --bg:#f4f6fb; --surface:#fff; --border:#dde3f0;
+  --text:#111827; --text2:#4b5563; --text3:#9ca3af;
+  --radius:12px; --shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+.header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;box-shadow:0 2px 12px rgba(15,32,68,.25);position:sticky;top:0;z-index:100;}
+.header-title{font-size:1.1rem;font-weight:700;}
+.header-sub{font-size:.72rem;opacity:.6;margin-top:1px;}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;display:inline-block;}
+
+.main{max-width:960px;margin:0 auto;padding:28px 20px;}
+
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow);}
+.section-head{padding:14px 20px;display:flex;align-items:center;gap:10px;}
+.section-title{font-size:1rem;font-weight:800;color:#fff;}
+.section-desc{font-size:.82rem;color:rgba(255,255,255,.75);margin-top:2px;}
+.section-body{padding:18px 20px;}
+
+/* head colors */
+.head-red    { background:linear-gradient(135deg,#dc2626,#b91c1c); }
+.head-green  { background:linear-gradient(135deg,#16a34a,#15803d); }
+.head-purple { background:linear-gradient(135deg,#7c3aed,#6d28d9); }
+.head-gold   { background:linear-gradient(135deg,#b45309,#92400e); }
+.head-teal   { background:linear-gradient(135deg,#0d9488,#0f766e); }
+.head-blue   { background:linear-gradient(135deg,#2d5be3,#1d4ed8); }
+.head-navy   { background:linear-gradient(135deg,#0f2044,#1a3060); }
+
+/* CODE TABLE */
+.code-table{width:100%;border-collapse:collapse;font-size:.9rem;}
+.code-table th{background:var(--bg);padding:9px 14px;text-align:left;font-size:.78rem;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border);}
+.code-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.code-table tr:last-child td{border-bottom:none;}
+.code-table tr:hover td{background:#f8f9fd;}
+
+.code-badge{display:inline-block;font-family:monospace;font-weight:800;font-size:1rem;letter-spacing:.02em;padding:3px 10px;border-radius:6px;border:2px solid;white-space:nowrap;}
+.code-red   {background:var(--red-light);color:var(--red);border-color:var(--red);}
+.code-green {background:var(--green-light);color:var(--green);border-color:var(--green);}
+.code-blue  {background:var(--blue-light);color:var(--blue);border-color:var(--blue);}
+.code-purple{background:var(--purple-light);color:var(--purple);border-color:var(--purple);}
+.code-gold  {background:var(--gold-light);color:var(--gold);border-color:var(--gold);}
+.code-teal  {background:var(--teal-light);color:var(--teal);border-color:var(--teal);}
+.code-gray  {background:var(--bg);color:var(--text2);border-color:var(--border);}
+
+.desc-text{font-size:.875rem;color:var(--text);line-height:1.6;}
+.desc-sub {font-size:.8rem;color:var(--text3);margin-top:2px;}
+.example  {display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:.8rem;font-family:monospace;color:var(--text2);margin:1px;}
+
+.notice{background:var(--amber-light);border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:.83rem;color:#92400e;line-height:1.7;margin-bottom:14px;}
+.info{background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:10px 14px;font-size:.83rem;color:#1e40af;line-height:1.7;margin-bottom:14px;}
+.sep{border:none;border-top:1px solid var(--border);margin:14px 0;}
+
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700;}
+.tag-bighead{background:var(--red-light);color:var(--red);}
+.tag-special{background:var(--purple-light);color:var(--purple);}
+.tag-gifted {background:var(--gold-light);color:var(--gold);}
+.tag-twin   {background:var(--teal-light);color:var(--teal);}
+
+.visual-row{display:flex;align-items:center;gap:8px;padding:8px 0;flex-wrap:wrap;}
+.arrow{color:var(--text3);font-size:1.1rem;}
+.updated{font-size:.75rem;color:var(--text3);text-align:right;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">📖 代號說明速查表</div>
+    <div class="header-sub">編班系統各類別代號與標記規則</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="admin.html" class="hbtn">← 後台</a>
+    <a href="index.html" class="hbtn">前台</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- 一、不能同班代號 -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-head head-red">
+      <div>
+        <div class="section-title">🚫 一、不能同班代號（最重要）</div>
+        <div class="section-desc">填入教育局系統備註欄，每組最多約 10 字元</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="info">
+        代號格式：<b>字母 + 數字 + 符號</b>，例如 <span class="code-badge code-red">A1-</span>、<span class="code-badge code-green">A1+</span><br>
+        2年級和4年級的代號<b>各自獨立</b>從 A 開始，不會互相衝突。
+      </div>
+      <table class="code-table">
+        <tr>
+          <th>代號</th>
+          <th>角色</th>
+          <th>意義</th>
+          <th>編班規則</th>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-red">A1-</span></td>
+          <td><b>甲生</b>（目標學生）</td>
+          <td class="desc-text">這位學生需要被完全隔離</td>
+          <td class="desc-text">每個班<b>最多只能有一個「-」代號</b>的學生</td>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-green">A1+</span></td>
+          <td><b>乙生</b>（單向隔離）</td>
+          <td class="desc-text">不能跟甲生（A1-）同班，但乙生彼此之間<b>可以同班</b></td>
+          <td class="desc-text">同一班可以有多個「A1+」的學生</td>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-red">A1-</span><br><small style="color:var(--text3);">群組隔離時</small></td>
+          <td><b>所有成員</b>（群組隔離）</td>
+          <td class="desc-text">全部人都要分到不同班，沒有人可以同班</td>
+          <td class="desc-text">每人在每個班都只能出現一次</td>
+        </tr>
+      </table>
+
+      <hr class="sep">
+      <div class="desc-text"><b>代號字母分配規則（系統自動產生）：</b></div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
+          <div style="font-weight:700;margin-bottom:4px;">2年1班 第1條規則</div>
+          <span class="code-badge code-red" style="font-size:.85rem;">A1-</span>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
+          <div style="font-weight:700;margin-bottom:4px;">2年1班 第2條規則</div>
+          <span class="code-badge code-red" style="font-size:.85rem;">B1-</span>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
+          <div style="font-weight:700;margin-bottom:4px;">2年2班 第1條規則</div>
+          <span class="code-badge code-red" style="font-size:.85rem;">C1-</span>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
+          <div style="font-weight:700;margin-bottom:4px;">4年1班 第1條（獨立）</div>
+          <span class="code-badge code-red" style="font-size:.85rem;">A1-</span>
+        </div>
+      </div>
+
+      <hr class="sep">
+      <div class="notice">
+        ⚠️ <b>填入教育局系統時：</b>每位學生的備註欄填入對應代號即可（最長約 10 字元，空間充裕）。<br>
+        看到「-」= 這一組每班只能有一個人；看到「+」= 這一組可以多人同班，但不能跟同字母「-」的人同班。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- 二、學生標記 -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-head head-navy">
+      <div>
+        <div class="section-title">🏷️ 二、學生標記（系統內部用）</div>
+        <div class="section-desc">在系統中標記學生類別，影響編班與統計顯示</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="code-table">
+        <tr>
+          <th>標記</th>
+          <th>填系統代號</th>
+          <th>說明</th>
+          <th>編班影響</th>
+        </tr>
+        <tr>
+          <td><span class="tag tag-bighead">⚠ 大頭</span></td>
+          <td><span class="code-badge code-red" style="font-size:.95rem;">*</span></td>
+          <td class="desc-text">需多費心管教的學生。若同時有不能同班規則，備註可為 <span class="example">*A1-</span>，仍在 10 字元內</td>
+          <td class="desc-text">模擬編班時<b>平均分散</b>至各班，避免集中</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-special">🔵 鑑輔生</span></td>
+          <td><span class="code-badge code-purple" style="font-size:.95rem;">S</span></td>
+          <td class="desc-text">Special needs，身障或智能障礙需特殊照護。若同時是大頭：<span class="example">*S</span></td>
+          <td class="desc-text">可綁定特定導師，模擬編班時分配到對應班包</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-gifted">⭐ 資優生</span></td>
+          <td><span class="code-badge code-gold" style="font-size:.95rem;">G</span></td>
+          <td class="desc-text">Gifted，資優班學生需跳班上課。若同時是大頭：<span class="example">*G</span></td>
+          <td class="desc-text">預設<b>全部同班</b>（方便跳班上課），可調整為平均分散</td>
+        </tr>
+      </table>
+      <div class="info" style="margin-top:14px;">
+        以上三種標記可以<b>同時存在</b>於同一學生身上，例如一位學生可以同時是「大頭」又是「鑑輔生」。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- 三、雙胞胎代號 -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-head head-teal">
+      <div>
+        <div class="section-title">👫 三、多胞胎代號</div>
+        <div class="section-desc">填入教育局系統備註欄</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="code-table">
+        <tr>
+          <th>代號</th>
+          <th>意義</th>
+          <th>範例</th>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-teal">T1+</span></td>
+          <td class="desc-text">第1組雙胞胎，家長希望<b>同班</b></td>
+          <td class="desc-sub">兩人備註欄都填 T1+</td>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-red">T1-</span></td>
+          <td class="desc-text">第1組雙胞胎，家長希望<b>分班</b></td>
+          <td class="desc-sub">兩人備註欄都填 T1-</td>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-teal">T2+</span></td>
+          <td class="desc-text">第2組雙胞胎，家長希望<b>同班</b></td>
+          <td class="desc-sub">依此類推，每組遞增數字</td>
+        </tr>
+      </table>
+
+      <hr class="sep">
+      <div class="notice">
+        ⚠️ 雙胞胎代號目前需<b>手動</b>填入教育局系統（本系統暫不自動產生雙胞胎代號）。<br>
+        建議從 T1 開始依序編號，2年級和4年級的 T1 代號雖然相同，但因為分在不同年級不會衝突。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- 四、導師與特殊生綁定 -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-head head-purple">
+      <div>
+        <div class="section-title">👩‍🏫 四、導師與特殊生綁定</div>
+        <div class="section-desc">模擬編班時的特殊分配規則</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="code-table">
+        <tr>
+          <th>類型</th>
+          <th>說明</th>
+          <th>操作方式</th>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap;"><b>鑑輔生綁定</b></td>
+          <td class="desc-text">某位鑑輔生必須分配到特定導師的班</td>
+          <td class="desc-sub">導師名單 → 鑑輔生綁定 → 選學生 + 選導師</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap;"><b>資優生同班</b></td>
+          <td class="desc-text">資優生預設全部分在同一包，由一位導師帶</td>
+          <td class="desc-sub">模擬分班設定可切換為「平均分散」</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- 五、快速對照表 -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section">
+    <div class="section-head head-blue">
+      <div>
+        <div class="section-title">📋 五、快速對照表（填教育局系統用）</div>
+        <div class="section-desc">一頁速查，以免忘記</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="code-table">
+        <tr>
+          <th>分類</th>
+          <th>代號</th>
+          <th>一句話說明</th>
+          <th>字元數</th>
+        </tr>
+        <tr>
+          <td>不能同班（甲）</td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">A1-</span></td>
+          <td class="desc-text">此人每班只能有一個</td>
+          <td><span class="example">3字元</span></td>
+        </tr>
+        <tr>
+          <td>不能同班（乙/單向）</td>
+          <td><span class="code-badge code-green" style="font-size:.85rem;">A1+</span></td>
+          <td class="desc-text">不能跟A1-同班，但乙生之間可同班</td>
+          <td><span class="example">3字元</span></td>
+        </tr>
+        <tr>
+          <td>不能同班（群組）</td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">A1-</span></td>
+          <td class="desc-text">全員都要拆開，每人每班只能一個</td>
+          <td><span class="example">3字元</span></td>
+        </tr>
+        <tr>
+          <td>雙胞胎（同班）</td>
+          <td><span class="code-badge code-teal" style="font-size:.85rem;">T1+</span></td>
+          <td class="desc-text">第1組雙胞胎，希望同班</td>
+          <td><span class="example">3字元</span></td>
+        </tr>
+        <tr>
+          <td>雙胞胎（分班）</td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">T1-</span></td>
+          <td class="desc-text">第1組雙胞胎，希望分班</td>
+          <td><span class="example">3字元</span></td>
+        </tr>
+        <tr>
+          <td>大頭</td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">*</span></td>
+          <td class="desc-text">需多費心，編班時平均分散</td>
+          <td><span class="example">1字元</span></td>
+        </tr>
+        <tr>
+          <td>鑑輔生</td>
+          <td><span class="code-badge code-purple" style="font-size:.85rem;">S</span></td>
+          <td class="desc-text">特殊需求學生，可綁定導師</td>
+          <td><span class="example">1字元</span></td>
+        </tr>
+        <tr>
+          <td>資優生</td>
+          <td><span class="code-badge code-gold" style="font-size:.85rem;">G</span></td>
+          <td class="desc-text">資優班，預設同班</td>
+          <td><span class="example">1字元</span></td>
+        </tr>
+        <tr>
+          <td>組合範例</td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">*A1-</span></td>
+          <td class="desc-text">大頭 + 不能同班甲生</td>
+          <td><span class="example">4字元</span></td>
+        </tr>
+        <tr>
+          <td>組合範例</td>
+          <td><span class="code-badge code-purple" style="font-size:.85rem;">*S</span></td>
+          <td class="desc-text">大頭 + 鑑輔生</td>
+          <td><span class="example">2字元</span></td>
+        </tr>
+        <tr style="background:var(--bg);">
+          <td colspan="4" style="font-size:.8rem;color:var(--text3);padding:6px 14px;">
+            ※ 所有代號都在 4 字元內，教育局系統 10 字元限制完全夠用。<br>
+            ※ 2年級和4年級代號各自獨立，A1- 在兩個年級分別計算，不會混淆。
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="updated">📅 最後更新：<span id="updateDate"></span>　｜　如有代號規則異動，請手動更新此頁面</div>
+</div>
+
+<script>
+document.getElementById('updateDate').textContent = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'});
+</script>
+</body>
+</html>
