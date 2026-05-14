@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>編班代號總覽</title>
+<style>
+:root {
+  --navy:#0f2044;--navy2:#1a3060;--blue:#2d5be3;--blue-light:#e8eefb;
+  --red:#dc2626;--red-light:#fee2e2;--green:#16a34a;--green-light:#dcfce7;
+  --purple:#7c3aed;--purple-light:#ede9fe;--gold:#b45309;--gold-light:#fef9c3;
+  --teal:#0d9488;--teal-light:#ccfbf1;--pink:#be185d;--pink-light:#fce7f3;
+  --bg:#f4f6fb;--surface:#fff;--border:#dde3f0;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --radius:10px;--shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+/* LOCK */
+.lock-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy),#1e3a6e);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.lock-box{background:rgba(255,255,255,.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:48px 40px;width:100%;max-width:380px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4);}
+.lock-title{color:#fff;font-size:1.4rem;font-weight:800;margin-bottom:6px;}
+.lock-sub{color:rgba(255,255,255,.6);font-size:.85rem;margin-bottom:32px;}
+.lock-input{width:100%;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:1rem;text-align:center;letter-spacing:.15em;outline:none;font-family:inherit;margin-bottom:14px;}
+.lock-input::placeholder{color:rgba(255,255,255,.4);letter-spacing:0;}
+.lock-btn{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;background:var(--blue);color:#fff;font-size:1rem;font-weight:700;font-family:inherit;}
+.lock-btn:hover{background:#2347c5;}
+.lock-error{color:#fca5a5;font-size:.85rem;margin-top:10px;min-height:20px;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:0 2px 12px rgba(15,32,68,.25);position:sticky;top:0;z-index:100;}
+.header-title{font-size:1rem;font-weight:700;}
+.header-sub{font-size:.7rem;opacity:.6;margin-top:1px;}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:4px 10px;font-size:.75rem;text-decoration:none;display:inline-block;cursor:pointer;font-family:inherit;}
+.hbtn:hover{background:rgba(255,255,255,.25);}
+.db-badge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border-radius:99px;padding:3px 10px;font-size:.72rem;}
+.db-dot{width:7px;height:7px;border-radius:50%;background:#9ca3af;}
+.db-dot.ok{background:#4ade80;box-shadow:0 0 5px #4ade80;}
+
+/* CONTROLS */
+.controls{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:56px;z-index:90;}
+.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:.83rem;font-weight:600;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:#2347c5;}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+.btn-active{background:var(--navy);color:#fff;border:1.5px solid var(--navy);}
+select,input[type=text]{border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.83rem;color:var(--text);background:#fff;outline:none;font-family:inherit;}
+select:focus,input:focus{border-color:var(--blue);}
+.ctrl-sep{width:1px;height:24px;background:var(--border);margin:0 2px;}
+
+/* MAIN */
+.main{padding:16px 20px;max-width:1400px;margin:0 auto;}
+
+/* CLASS GRID */
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.class-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.class-head{padding:9px 14px;background:var(--navy);display:flex;justify-content:space-between;align-items:center;}
+.class-head-title{font-weight:800;color:#fff;font-size:.95rem;}
+.class-head-badges{display:flex;gap:5px;flex-wrap:wrap;}
+.class-stats{display:flex;gap:8px;padding:6px 12px;background:#f8f9fd;border-bottom:1px solid var(--border);font-size:.78rem;flex-wrap:wrap;}
+
+/* STUDENT ROW */
+.stu-row{display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid #f0f2f8;font-size:.855rem;transition:background .1s;}
+.stu-row:last-child{border-bottom:none;}
+.stu-row.male{background:rgba(219,234,254,.18);}
+.stu-row.female{background:rgba(252,231,243,.15);}
+.stu-row.special-row{border-left:3px solid var(--red);}
+.stu-row.normal-hidden{display:none;}
+.stu-num{font-size:.74rem;font-family:monospace;font-weight:600;min-width:28px;}
+.stu-name{font-weight:600;flex:1;}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:99px;font-size:.68rem;font-weight:700;}
+.tag-bighead{background:var(--red-light);color:var(--red);}
+.tag-special{background:var(--purple-light);color:var(--purple);}
+.tag-gifted{background:var(--gold-light);color:var(--gold);}
+
+/* CODE BADGE */
+.code-b{display:inline-block;font-family:monospace;font-weight:800;font-size:.78rem;padding:1px 5px;border-radius:4px;border:1.5px solid;white-space:nowrap;}
+.code-red   {background:var(--red-light);color:var(--red);border-color:var(--red);}
+.code-green {background:var(--green-light);color:var(--green);border-color:var(--green);}
+.code-purple{background:var(--purple-light);color:var(--purple);border-color:var(--purple);}
+.code-gold  {background:var(--gold-light);color:var(--gold);border-color:var(--gold);}
+.code-teal  {background:var(--teal-light);color:var(--teal);border-color:var(--teal);}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px;color:var(--text3);}
+
+/* SUMMARY BAR */
+.summary-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;box-shadow:var(--shadow);}
+.sum-item{font-size:.83rem;display:flex;align-items:center;gap:5px;}
+.sum-num{font-weight:800;font-size:1.1rem;}
+
+@media print {
+  .lock-screen,.header,.controls{display:none!important;}
+  .class-grid{grid-template-columns:repeat(3,1fr);}
+  .class-card{break-inside:avoid;}
+  .stu-row.normal-hidden{display:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div style="font-size:3rem;margin-bottom:12px;">🏫</div>
+    <div class="lock-title">編班代號總覽</div>
+    <div class="lock-sub">輸入查詢密碼</div>
+    <input class="lock-input" type="password" id="pwInput" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="lock-btn" onclick="checkPw()">🔓 進入</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="mainApp" style="display:none;">
+
+<div class="header">
+  <div>
+    <div class="header-title">📊 編班代號總覽</div>
+    <div class="header-sub">各班學生代號一覽</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="db-badge"><div class="db-dot" id="dbDot"></div><span id="dbStatus">連接中…</span></div>
+    <a href="codename.html" class="hbtn">📖 代號說明</a>
+    <a href="index.html" class="hbtn">前台</a>
+    <button class="hbtn" onclick="lockOut()">🔒</button>
+  </div>
+</div>
+
+<div class="controls">
+  <select id="ctrlGrade" onchange="renderAll()">
+    <option value="">全部年級</option>
+    <option value="2">2年級</option>
+    <option value="4">4年級</option>
+  </select>
+  <div class="ctrl-sep"></div>
+  <button id="btnHideNormal" class="btn btn-ghost" onclick="toggleHideNormal()">👁 只顯示特殊學生</button>
+  <div class="ctrl-sep"></div>
+  <div style="font-size:.8rem;color:var(--text3);">
+    <span class="code-b code-red">*</span> 大頭　
+    <span class="code-b code-purple">S</span> 鑑輔生　
+    <span class="code-b code-gold">G</span> 資優生　
+    <span class="code-b code-red">A1-</span> 不能同班甲　
+    <span class="code-b code-green">A1+</span> 不能同班乙
+  </div>
+</div>
+
+<div class="main" id="mainArea">
+  <div class="empty">載入中…</div>
+</div>
+
+</div><!-- end mainApp -->
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script>
+const PASSWORDS = ['073411373'];
+const firebaseConfig = {
+  apiKey: "AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
+  authDomain: "sjps-classchange.firebaseapp.com",
+  projectId: "sjps-classchange",
+  storageBucket: "sjps-classchange.firebasestorage.app",
+  messagingSenderId: "907928897295",
+  appId: "1:907928897295:web:b6bfb2dcb3c8c447ad607a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const state = { students:{}, rules:{}, twins:{} };
+let hideNormal = false;
+
+// ── LOCK ──
+function checkPw() {
+  const val = document.getElementById('pwInput').value.trim();
+  if(PASSWORDS.includes(val)) {
+    sessionStorage.setItem('sc_auth','1');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('mainApp').style.display='';
+    initApp();
+  } else {
+    const err = document.getElementById('lockError');
+    err.textContent='密碼錯誤';
+    setTimeout(()=>err.textContent='',2500);
+    document.getElementById('pwInput').value='';
+  }
+}
+function lockOut() { sessionStorage.removeItem('sc_auth'); location.reload(); }
+if(sessionStorage.getItem('sc_auth')==='1') {
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='';
+}
+
+// ── INIT ──
+async function initApp() {
+  try {
+    const [stuSnap, ruleSnap, twinSnap] = await Promise.all([
+      db.collection('students').get(),
+      db.collection('separationRules').get(),
+      db.collection('gradeTwins').get()
+    ]);
+    stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
+    ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
+    twinSnap.forEach(d=>{ state.twins[d.id]={id:d.id,...d.data()}; });
+    document.getElementById('dbDot').className='db-dot ok';
+    document.getElementById('dbStatus').textContent='已載入';
+    renderAll();
+  } catch(e) {
+    document.getElementById('dbDot').className='db-dot';
+    document.getElementById('dbStatus').textContent='載入失敗';
+  }
+}
+if(sessionStorage.getItem('sc_auth')==='1') initApp();
+
+// ── HELPERS ──
+function classLabel(g,c){ return `${g}年${c}班`; }
+function stuCode(s){ return `${s.grade}0${s.class}${String(s.number).padStart(2,'0')}`; }
+
+// 取得學生在不能同班規則中的代號
+function getRuleCodes(stuId) {
+  const codes = [];
+  Object.values(state.rules).forEach(r => {
+    const gc = r.groupCode||'';
+    const base = gc.replace(/[0-9+-]+$/,'');
+    if(!gc) return;
+    if(r.targetStudentId === stuId) {
+      codes.push({ code: gc, cls: r.type==='group'?'code-red':'code-red' });
+    }
+    (r.separateFrom||[]).forEach(s => {
+      if(s.id === stuId) {
+        const sign = r.type==='group' ? '-' : '+';
+        codes.push({ code: `${base}1${sign}`, cls: r.type==='group'?'code-red':'code-green' });
+      }
+    });
+  });
+  // deduplicate
+  const seen = new Set();
+  return codes.filter(c=>{ if(seen.has(c.code)) return false; seen.add(c.code); return true; });
+}
+
+// 取得學生多胞胎代號（目前手動，顯示標記）
+function getTwinCode(stuId) {
+  const t = Object.values(state.twins).find(t=>
+    (t.members||[{id:t.s1Id},{id:t.s2Id}]).some(m=>m.id===stuId)
+  );
+  if(!t) return null;
+  return t.preference==='same' ? {code:'T?+',cls:'code-teal'} : {code:'T?-',cls:'code-red'};
+}
+
+// 組合所有代號字串
+function buildAllCodes(stu) {
+  const codes = [];
+  if(stu.tags.includes('bighead')) codes.push({code:'*', cls:'code-red'});
+  if(stu.tags.includes('special')) codes.push({code:'S', cls:'code-purple'});
+  if(stu.tags.includes('gifted'))  codes.push({code:'G', cls:'code-gold'});
+  const ruleCodes = getRuleCodes(stu.id);
+  codes.push(...ruleCodes);
+  const twinCode = getTwinCode(stu.id);
+  if(twinCode) codes.push(twinCode);
+  return codes;
+}
+
+// ── RENDER ──
+function toggleHideNormal() {
+  hideNormal = !hideNormal;
+  const btn = document.getElementById('btnHideNormal');
+  btn.textContent = hideNormal ? '👁 顯示全部學生' : '👁 只顯示特殊學生';
+  btn.className = hideNormal ? 'btn btn-active' : 'btn btn-ghost';
+  document.querySelectorAll('.stu-row.can-hide').forEach(el => {
+    el.classList.toggle('normal-hidden', hideNormal);
+  });
+}
+
+function renderAll() {
+  const filterGrade = document.getElementById('ctrlGrade').value;
+  const main = document.getElementById('mainArea');
+
+  // Group by grade+class
+  const map = {};
+  Object.values(state.students).forEach(s => {
+    if(filterGrade && s.grade != filterGrade) return;
+    const key = `${s.grade}-${s.class}`;
+    if(!map[key]) map[key]={grade:s.grade,class:s.class,students:[]};
+    map[key].students.push(s);
+  });
+
+  const keys = Object.keys(map).sort();
+  if(!keys.length) { main.innerHTML='<div class="empty">無學生資料</div>'; return; }
+
+  // Summary
+  const allStus = Object.values(state.students).filter(s=>!filterGrade||s.grade==filterGrade);
+  const totalBH = allStus.filter(s=>s.tags.includes('bighead')).length;
+  const totalSP = allStus.filter(s=>s.tags.includes('special')).length;
+  const totalGF = allStus.filter(s=>s.tags.includes('gifted')).length;
+  const totalRules = Object.values(state.rules).filter(r=>!filterGrade||r.grade==filterGrade).length;
+
+  let html = `<div class="summary-bar">
+    <div class="sum-item"><span class="sum-num">${allStus.length}</span> 位學生</div>
+    <div class="sum-item"><span class="code-b code-red">*</span> 大頭 <span class="sum-num" style="color:var(--red);">${totalBH}</span></div>
+    <div class="sum-item"><span class="code-b code-purple">S</span> 鑑輔生 <span class="sum-num" style="color:var(--purple);">${totalSP}</span></div>
+    <div class="sum-item"><span class="code-b code-gold">G</span> 資優生 <span class="sum-num" style="color:var(--gold);">${totalGF}</span></div>
+    <div class="sum-item">🚫 不能同班規則 <span class="sum-num">${totalRules}</span> 條</div>
+  </div>
+  <div class="class-grid">`;
+
+  for(const key of keys) {
+    const {grade,class:cls,students} = map[key];
+    const sorted = [...students].sort((a,b)=>a.number-b.number);
+    const M = students.filter(s=>s.gender==='M').length;
+    const F = students.filter(s=>s.gender==='F').length;
+    const specialCount = students.filter(s=>buildAllCodes(s).length>0).length;
+
+    const rows = sorted.map(s => {
+      const codes = buildAllCodes(s);
+      const hasSpecial = codes.length > 0;
+      const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+      const glyph = s.gender==='M'?'♂':'♀';
+      const codeBadges = codes.map(c=>`<span class="code-b ${c.cls}">${c.code}</span>`).join(' ');
+      const rowClass = ['stu-row', s.gender==='M'?'male':'female', hasSpecial?'special-row':'can-hide'].join(' ');
+      return `<div class="${rowClass}">
+        <span style="color:${gc};font-size:.78rem;">${glyph}</span>
+        <span class="stu-num" style="color:${gc};">${String(s.number).padStart(2,'0')}</span>
+        <span class="stu-name">${s.name}</span>
+        ${codeBadges}
+      </div>`;
+    }).join('');
+
+    const headBadges = [
+      students.filter(s=>s.tags.includes('bighead')).length ? `<span class="tag tag-bighead">大頭 ${students.filter(s=>s.tags.includes('bighead')).length}</span>` : '',
+      students.filter(s=>s.tags.includes('special')).length ? `<span class="tag tag-special">鑑輔 ${students.filter(s=>s.tags.includes('special')).length}</span>` : '',
+      students.filter(s=>s.tags.includes('gifted')).length  ? `<span class="tag tag-gifted">資優 ${students.filter(s=>s.tags.includes('gifted')).length}</span>`  : '',
+    ].filter(Boolean).join('');
+
+    html += `<div class="class-card">
+      <div class="class-head">
+        <span class="class-head-title">${classLabel(grade,cls)}</span>
+        <div class="class-head-badges">${headBadges}</div>
+      </div>
+      <div class="class-stats">
+        <span>共 ${students.length} 人</span>
+        <span style="color:var(--blue);">♂ ${M}</span>
+        <span style="color:var(--pink);">♀ ${F}</span>
+        ${specialCount?`<span style="color:var(--red);">特殊 ${specialCount}</span>`:''}
+      </div>
+      ${rows}
+    </div>`;
+  }
+
+  html += '</div>';
+  main.innerHTML = html;
+
+  // Re-apply hide state
+  if(hideNormal) {
+    document.querySelectorAll('.stu-row.can-hide').forEach(el=>el.classList.add('normal-hidden'));
+  }
+}
+</script>
+</body>
+</html>
