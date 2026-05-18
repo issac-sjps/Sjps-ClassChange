@@ -145,7 +145,9 @@ select:focus,input:focus{border-color:var(--blue);}
     <span class="code-b code-purple">S</span> 鑑輔生　
     <span class="code-b code-gold">G</span> 資優生　
     <span class="code-b code-red">A1-</span> 不能同班甲　
-    <span class="code-b code-green">A1+</span> 不能同班乙
+    <span class="code-b code-green">A1+</span> 不能同班乙　
+    <span class="code-b code-teal">T1+</span> 雙胞胎同班　
+    <span class="code-b code-red">T1-</span> 雙胞胎分班
   </div>
 </div>
 
@@ -206,6 +208,8 @@ async function initApp() {
     stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
     ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
     twinSnap.forEach(d=>{ state.twins[d.id]={id:d.id,...d.data()}; });
+    // 產生雙胞胎代號 map（studentId → twinCode）
+    buildTwinCodeMap();
     document.getElementById('dbDot').className='db-dot ok';
     document.getElementById('dbStatus').textContent='已載入';
     renderAll();
@@ -242,13 +246,34 @@ function getRuleCodes(stuId) {
   return codes.filter(c=>{ if(seen.has(c.code)) return false; seen.add(c.code); return true; });
 }
 
-// 取得學生多胞胎代號（目前手動，顯示標記）
+// 雙胞胎代號 map：studentId → {code, cls}
+const twinCodeMap = {};
+
+function buildTwinCodeMap() {
+  Object.keys(twinCodeMap).forEach(k=>delete twinCodeMap[k]);
+  [2,4].forEach(grade=>{
+    const gradeGroup = Object.values(state.twins)
+      .filter(t=>t.grade===grade)
+      .sort((a,b)=>{
+        const ma=(a.members||[{id:a.s1Id}])[0];
+        const mb=(b.members||[{id:b.s1Id}])[0];
+        const sa=state.students[ma.id]; const sb=state.students[mb.id];
+        if(!sa||!sb) return 0;
+        if(sa.class!==sb.class) return sa.class-sb.class;
+        return sa.number-sb.number;
+      });
+    gradeGroup.forEach((t,i)=>{
+      // 優先用手動指定的代號
+      const code = t.twinCode || `T${i+1}${t.preference==='same'?'+':'-'}`;
+      const cls  = t.preference==='same'?'code-teal':'code-red';
+      const members = t.members||[{id:t.s1Id},{id:t.s2Id}];
+      members.forEach(m=>{ twinCodeMap[m.id]={code,cls}; });
+    });
+  });
+}
+
 function getTwinCode(stuId) {
-  const t = Object.values(state.twins).find(t=>
-    (t.members||[{id:t.s1Id},{id:t.s2Id}]).some(m=>m.id===stuId)
-  );
-  if(!t) return null;
-  return t.preference==='same' ? {code:'T?+',cls:'code-teal'} : {code:'T?-',cls:'code-red'};
+  return twinCodeMap[stuId]||null;
 }
 
 // 組合所有代號字串
@@ -297,6 +322,7 @@ function renderAll() {
   const totalSP = allStus.filter(s=>s.tags.includes('special')).length;
   const totalGF = allStus.filter(s=>s.tags.includes('gifted')).length;
   const totalRules = Object.values(state.rules).filter(r=>!filterGrade||r.grade==filterGrade).length;
+  const totalTwins = Object.values(state.twins).filter(t=>!filterGrade||t.grade==filterGrade).length;
 
   let html = `<div class="summary-bar">
     <div class="sum-item"><span class="sum-num">${allStus.length}</span> 位學生</div>
@@ -304,6 +330,7 @@ function renderAll() {
     <div class="sum-item"><span class="code-b code-purple">S</span> 鑑輔生 <span class="sum-num" style="color:var(--purple);">${totalSP}</span></div>
     <div class="sum-item"><span class="code-b code-gold">G</span> 資優生 <span class="sum-num" style="color:var(--gold);">${totalGF}</span></div>
     <div class="sum-item">🚫 不能同班規則 <span class="sum-num">${totalRules}</span> 條</div>
+    <div class="sum-item"><span class="code-b code-teal" style="font-size:.75rem;">T</span> 多胞胎 <span class="sum-num" style="color:var(--teal);">${totalTwins}</span> 組</div>
   </div>
   <div class="class-grid">`;
 
@@ -345,6 +372,7 @@ function renderAll() {
         <span style="color:var(--blue);">♂ ${M}</span>
         <span style="color:var(--pink);">♀ ${F}</span>
         ${specialCount?`<span style="color:var(--red);">特殊 ${specialCount}</span>`:''}
+        ${(()=>{const tc=students.filter(s=>twinCodeMap[s.id]).length; return tc?`<span style="color:var(--teal);">多胞胎 ${tc}</span>`:'';})()}
       </div>
       ${rows}
     </div>`;
