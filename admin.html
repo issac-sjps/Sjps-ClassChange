@@ -975,9 +975,15 @@ tr:hover td { background: #f8f9fd; }
   <div class="modal" style="max-width:460px;">
     <div class="modal-title">✏️ 編輯多胞胎記錄</div>
     <input type="hidden" id="editTwinId">
-    <div style="margin-bottom:12px;">
-      <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">成員（唯讀）</label>
-      <div id="editTwinMembers" style="padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
+    <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;">
+      <div style="flex:1;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">成員（唯讀）</label>
+        <div id="editTwinMembers" style="padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:.875rem;"></div>
+      </div>
+      <div style="min-width:90px;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">代號</label>
+        <input type="text" id="editTwinCode" placeholder="T1+" style="width:100%;font-family:monospace;font-size:1rem;font-weight:700;text-align:center;">
+      </div>
     </div>
     <div class="form-group" style="margin-bottom:12px;">
       <label>家長意願</label>
@@ -2773,7 +2779,26 @@ function renderGradeTwinList() {
   if(filterGrade) twins = twins.filter(t=>t.grade==filterGrade);
   if(!twins.length) { cont.innerHTML='<div class="empty">尚無升級生多胞胎記錄</div>'; return; }
   cont.innerHTML='';
-  twins.sort((a,b)=>a.grade-b.grade||(a.members?a.members[0].name:a.s1Name).localeCompare(b.members?b.members[0].name:b.s1Name)).forEach(t=>{
+  // 依年級 → 第一位成員座號排序
+  twins.sort((a,b)=>{
+    if(a.grade !== b.grade) return a.grade - b.grade;
+    const ma = (a.members||[{id:a.s1Id}])[0];
+    const mb = (b.members||[{id:b.s1Id}])[0];
+    const sa = state.students[ma.id]; const sb = state.students[mb.id];
+    if(!sa||!sb) return 0;
+    if(sa.class !== sb.class) return sa.class - sb.class;
+    return sa.number - sb.number;
+  });
+  // 自動產生 T 代號（2年級 T1、T2… 4年級重新 T1、T2…）
+  const twinCodes = {};
+  [2,4].forEach(grade=>{
+    const gradeGroup = twins.filter(t=>t.grade===grade);
+    gradeGroup.forEach((t,i)=>{
+      const sign = t.preference==='same' ? '+' : '-';
+      twinCodes[t.id] = `T${i+1}${sign}`;
+    });
+  });
+  twins.forEach(t=>{
     const members = t.members || [
       {id:t.s1Id,name:t.s1Name,class:t.s1Class},
       {id:t.s2Id,name:t.s2Name,class:t.s2Class}
@@ -2782,6 +2807,9 @@ function renderGradeTwinList() {
       ? '<span class="tag tag-twin">✅ 同班</span>'
       : '<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
     const countLabel = members.length === 2 ? '雙胞胎' : members.length === 3 ? '三胞胎' : `${members.length}胞胎`;
+    const tCode = twinCodes[t.id]||'';
+    const tCodeColor = t.preference==='same' ? 'var(--teal)' : 'var(--red)';
+    const tCodeBg    = t.preference==='same' ? 'var(--teal-light)' : 'var(--red-light)';
     const nameHtml = members.map(m=>{
       const stu = state.students[m.id];
       const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
@@ -2793,6 +2821,7 @@ function renderGradeTwinList() {
     div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div style="flex:1;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+          ${tCode?`<span style="font-family:monospace;font-weight:800;font-size:.88rem;background:${tCodeBg};color:${tCodeColor};border:1.5px solid ${tCodeColor};border-radius:5px;padding:1px 7px;">${tCode}</span>`:''}
           ${nameHtml}
           ${prefLabel}
           <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;">${t.grade}年級・${countLabel}</span>
@@ -2800,7 +2829,7 @@ function renderGradeTwinList() {
         ${t.note?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;">📝 ${t.note}</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditTwin('${t.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditTwin('${t.id}','${tCode}')">✏️</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGradeTwin('${t.id}')">🗑</button>
       </div>
     </div>`;
@@ -3409,12 +3438,13 @@ async function addLog(action, detail) {
 }
 
 // ── 編輯多胞胎 ──
-function openEditTwin(id) {
+function openEditTwin(id, tCode) {
   const t = state.gradeTwins[id];
   if(!t) return;
   document.getElementById('editTwinId').value = id;
   document.querySelector(`input[name="editTwinPref"][value="${t.preference}"]`).checked = true;
   document.getElementById('editTwinNote').value = t.note||'';
+  document.getElementById('editTwinCode').value = tCode||t.twinCode||'';
   const members = t.members || [{id:t.s1Id,name:t.s1Name,class:t.s1Class},{id:t.s2Id,name:t.s2Name,class:t.s2Class}];
   document.getElementById('editTwinMembers').innerHTML = members.map(m=>{
     const stu = state.students[m.id];
@@ -3429,10 +3459,12 @@ async function saveEditTwin() {
   const id   = document.getElementById('editTwinId').value;
   const pref = document.querySelector('input[name="editTwinPref"]:checked').value;
   const note = document.getElementById('editTwinNote').value.trim();
+  const twinCode = document.getElementById('editTwinCode').value.trim();
   try {
-    await db.collection('gradeTwins').doc(id).update({ preference: pref, note });
+    await db.collection('gradeTwins').doc(id).update({ preference: pref, note, twinCode });
     state.gradeTwins[id].preference = pref;
     state.gradeTwins[id].note = note;
+    state.gradeTwins[id].twinCode = twinCode;
     addLog('編輯多胞胎意願', `${state.gradeTwins[id]?.members?.map(m=>m.name).join(' 👫 ')||id} → ${pref==='same'?'同班':'分班'}`);
     closeModal('editTwinModal');
     renderGradeTwinList();
