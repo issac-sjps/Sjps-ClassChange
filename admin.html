@@ -211,7 +211,7 @@ tr:hover td { background: #f8f9fd; }
     <div class="header-icon">📋</div>
     <div>
       <div class="header-title">編班名單整理系統</div>
-      <div class="header-sub">後台管理 ─ 僅限管理員</div>
+      <div class="header-sub">後台管理 ─ 教務處註冊組</div>
     </div>
   </div>
   <div id="adminBar" style="display:none;flex-direction:column;align-items:flex-end;gap:5px;">
@@ -224,6 +224,7 @@ tr:hover td { background: #f8f9fd; }
       <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">前台 →</a>
       <a href="admin-users.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">👥 權限管理</a>
       <a href="print.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">🖨️ 列印調查表</a>
+      <a href="report.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">📄 核章列印</a>
       <a href="log.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">📋 操作記錄</a>
       <a href="codename.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">📖 代號說明</a>
       <a href="showcode.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:5px 12px;font-size:.78rem;text-decoration:none;white-space:nowrap;">📊 代號總覽</a>
@@ -237,6 +238,7 @@ tr:hover td { background: #f8f9fd; }
   <button class="tab-btn" onclick="switchTab('rules')">🚫 不能同班</button>
   <button class="tab-btn" onclick="switchTab('newstu')">👶 新生名單</button>
   <button class="tab-btn" onclick="switchTab('teachers')">👩‍🏫 導師名單</button>
+  <!-- 導師設定已整合在導師名單分頁 -->
   <button class="tab-btn" onclick="switchTab('simulate')">🎲 模擬分班</button>
   <button class="tab-btn" onclick="switchTab('special-entry')" style="border-left:2px solid var(--border);">🏷️ 特殊生導入</button>
   <button class="tab-btn" onclick="switchTab('twins')">👫 雙胞胎</button>
@@ -494,6 +496,19 @@ tr:hover td { background: #f8f9fd; }
 
 <!-- ==================== TAB 4: 導師名單 ==================== -->
 <div id="tab-teachers" class="tab-pane">
+  <!-- 班級導師快速設定 -->
+  <div class="card">
+    <div class="card-title">📋 班級導師設定（升級後班級對應）
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="loadTeacherGrid(3)">顯示3年級</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadTeacherGrid(5)">顯示5年級</button>
+      </div>
+    </div>
+    <div class="notice" style="margin-bottom:12px;">直接在格子裡修改導師姓名，按「儲存」更新。格式：升上去的年級（3年級 = 現在2年級升上去）。</div>
+    <div id="teacherGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:12px;"></div>
+    <button class="btn btn-primary" id="saveTeacherGridBtn" style="display:none;" onclick="saveTeacherGrid()">💾 儲存導師名單</button>
+  </div>
+
   <div class="two-col">
     <div>
       <div class="card">
@@ -1747,7 +1762,10 @@ function renderRuleList() {
             ${((r.remarks&&r.remarks.length)?r.remarks:(r.reason?[{text:r.reason,createdAt:''}]:[])).map((rm,ri)=>`
               <div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:var(--bg);border-radius:4px;margin-bottom:3px;font-size:.8rem;">
                 <span style="color:var(--text3);flex-shrink:0;">📝</span>
-                <span style="flex:1;line-height:1.5;">${rm.text}</span>
+                <span style="flex:1;line-height:1.5;cursor:pointer;padding:2px 4px;border-radius:3px;transition:background .15s;"
+                  onclick="openRuleRemarkEditModal('${r.id}',${ri},${JSON.stringify(rm.text)})"
+                  onmouseenter="this.style.background='#e8eefb'" onmouseleave="this.style.background=''"
+                  title="點擊編輯">${rm.text}</span>
                 <button onclick="deleteRuleRemark('${r.id}',${ri})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.78rem;padding:0;flex-shrink:0;">🗑</button>
               </div>`).join('')}
             <button class="btn btn-ghost btn-sm" style="margin-top:2px;font-size:.78rem;" onclick="openRuleRemarkModal('${r.id}')">＋ 新增說明</button>
@@ -3062,9 +3080,9 @@ function renderStudentNotes(studentId, containerId) {
     ? notes.map(n => {
         const dt = n.createdAt instanceof Date ? n.createdAt.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
         return `<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
-          <div style="flex:1;font-size:.84rem;line-height:1.5;">${n.text}</div>
+          <div style="flex:1;font-size:.84rem;line-height:1.5;cursor:pointer;padding:2px 4px;border-radius:4px;transition:background .15s;" onclick="openNoteModal('${studentId}','${containerId}','${n.id}',${JSON.stringify(n.text)})" title="點擊編輯"
+            onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">${n.text}</div>
           <div style="font-size:.72rem;color:var(--text3);white-space:nowrap;margin-top:1px;">${dt}</div>
-          <button onclick="openNoteModal('${studentId}','${containerId}','${n.id}',${JSON.stringify(n.text)})" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:.78rem;padding:0 2px;flex-shrink:0;">✏️</button>
           <button onclick="deleteStudentNote('${n.id}','${studentId}').then(()=>renderStudentNotes('${studentId}','${containerId}'))" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.8rem;padding:0;flex-shrink:0;">🗑</button>
         </div>`;
       }).join('')
@@ -3207,6 +3225,15 @@ async function reassignAfterAdd(grade) {
 }
 
 // ── 規則說明（多則）──
+
+// ── 編輯規則說明（既有的那一則）──
+function openRuleRemarkEditModal(ruleId, idx, existingText) {
+  document.getElementById('rrModalRuleId').value = ruleId + '|edit|' + idx;
+  document.getElementById('rrModalText').value = existingText;
+  openModal('ruleRemarkModal');
+  setTimeout(()=>document.getElementById('rrModalText').focus(),100);
+}
+
 function openRuleRemarkModal(ruleId) {
   document.getElementById('rrModalRuleId').value = ruleId;
   document.getElementById('rrModalText').value = '';
@@ -3215,19 +3242,31 @@ function openRuleRemarkModal(ruleId) {
 }
 
 async function saveRuleRemark() {
-  const ruleId = document.getElementById('rrModalRuleId').value;
-  const text   = document.getElementById('rrModalText').value.trim();
+  const rawId = document.getElementById('rrModalRuleId').value;
+  const text  = document.getElementById('rrModalText').value.trim();
   if(!text){ showAlert('請輸入說明內容','warn'); return; }
+
+  // 判斷是新增還是編輯
+  const isEdit = rawId.includes('|edit|');
+  const ruleId = isEdit ? rawId.split('|edit|')[0] : rawId;
+  const editIdx = isEdit ? parseInt(rawId.split('|edit|')[1]) : -1;
+
   const r = state.rules[ruleId];
   if(!r) return;
   if(!r.remarks) r.remarks = r.reason ? [{text:r.reason,createdAt:''}] : [];
-  r.remarks.push({ text, createdAt: new Date().toISOString() });
+
+  if(isEdit) {
+    r.remarks[editIdx] = { ...r.remarks[editIdx], text };
+  } else {
+    r.remarks.push({ text, createdAt: new Date().toISOString() });
+  }
+
   try {
     await db.collection('separationRules').doc(ruleId).update({ remarks: r.remarks });
     closeModal('ruleRemarkModal');
     renderRuleList();
     renderOverviewRules();
-    showAlert('說明已新增');
+    showAlert(isEdit ? '說明已更新' : '說明已新增');
   } catch(e){ showAlert('儲存失敗：'+e.message,'warn'); }
 }
 
@@ -3527,6 +3566,94 @@ document.addEventListener('click', e => {
     if(dd) dd.style.display='none';
   }
 });
+
+
+
+// ── 班級導師快速設定 ──
+let teacherGridGrade = 3;
+let teacherGridData  = {}; // class → {id, name, grade, class}
+
+async function loadTeacherGrid(grade) {
+  teacherGridGrade = grade;
+  const cont = document.getElementById('teacherGrid');
+  cont.innerHTML = '<div style="color:var(--text3);font-size:.85rem;">載入中…</div>';
+  document.getElementById('saveTeacherGridBtn').style.display = '';
+
+  // 從 state 取得，或重新載入
+  const teachers = Object.values(state.teachers).filter(t=>t.grade===grade);
+  const maxClass = grade===3 ? 6 : 9;
+
+  teacherGridData = {};
+  teachers.forEach(t=>{ teacherGridData[t.class] = t; });
+
+  cont.innerHTML = '';
+  for(let cls=1; cls<=maxClass; cls++) {
+    const t = teacherGridData[cls];
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    div.innerHTML = `
+      <label style="font-size:.73rem;font-weight:700;color:var(--text2);">${grade}年${cls}班</label>
+      <input type="text" id="tg_${grade}_${cls}" value="${t?t.name:''}" placeholder="導師姓名" style="font-size:.875rem;">`;
+    cont.appendChild(div);
+  }
+}
+
+async function saveTeacherGrid() {
+  const grade    = teacherGridGrade;
+  const maxClass = grade===3 ? 6 : 9;
+  const batch    = db.batch();
+
+  for(let cls=1; cls<=maxClass; cls++) {
+    const input = document.getElementById(`tg_${grade}_${cls}`);
+    if(!input) continue;
+    const name = input.value.trim();
+    const ref  = db.collection('teachers').doc(`${grade}-${cls}`);
+    batch.set(ref, { grade, class:cls, name }, { merge:true });
+    // 更新 state
+    if(!state.teachers[`${grade}-${cls}`]) state.teachers[`${grade}-${cls}`] = {id:`${grade}-${cls}`};
+    state.teachers[`${grade}-${cls}`] = { id:`${grade}-${cls}`, grade, class:cls, name };
+  }
+
+  try {
+    await batch.commit();
+    showAlert(`${grade}年級導師名單已儲存`);
+    renderTeachers();
+    updateBindTeacherList();
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+// ── 導師名單預設資料 ──
+async function seedTeachersIfEmpty() {
+  const snap = await db.collection('teachers').limit(1).get();
+  if(!snap.empty) return; // 已有資料就不重複寫入
+
+  const defaultTeachers = [
+    // 2年級（升3年級）
+    {grade:3, class:1, name:'祉暄宜'},
+    {grade:3, class:2, name:'周著涵'},
+    {grade:3, class:3, name:'陸恬蓓'},
+    {grade:3, class:4, name:'曾麗玲'},
+    {grade:3, class:5, name:'郭乃菁'},
+    {grade:3, class:6, name:'紀淑苹'},
+    // 4年級（升5年級）
+    {grade:5, class:1, name:'郭佳鸞'},
+    {grade:5, class:2, name:'吳淑妃'},
+    {grade:5, class:3, name:'楊麗燕'},
+    {grade:5, class:4, name:'林春慧'},
+    {grade:5, class:5, name:'高日美'},
+    {grade:5, class:6, name:'林干琪'},
+    {grade:5, class:7, name:'許毓潔'},
+    {grade:5, class:8, name:'葉淑綾'},
+    {grade:5, class:9, name:'蕭婉如'},
+  ];
+  const batch = db.batch();
+  defaultTeachers.forEach(t=>{
+    const ref = db.collection('teachers').doc(`${t.grade}-${t.class}`);
+    batch.set(ref, t);
+  });
+  await batch.commit();
+  console.log('導師名單初始化完成');
+}
 
 // =============================================
 // START
