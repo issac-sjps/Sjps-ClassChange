@@ -143,16 +143,23 @@ const state = {students:{},rules:{},twins:{},teachers:{}};
 document.getElementById('cfgDate').value = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
 
 async function loadAll() {
-  const [s,r,t,tc] = await Promise.all([
+  const [s,r,t,tc,ns] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('gradeTwins').get(),
-    db.collection('teachers').get()
+    db.collection('teachers').get(),
+    db.collection('studentNotes').get()
   ]);
   s.forEach(d=>{state.students[d.id]={id:d.id,...d.data()};});
   r.forEach(d=>{state.rules[d.id]={id:d.id,...d.data()};});
   t.forEach(d=>{state.twins[d.id]={id:d.id,...d.data()};});
   tc.forEach(d=>{state.teachers[d.id]={id:d.id,...d.data()};});
+  state.studentNotes={};
+  ns.forEach(d=>{
+    const n={id:d.id,...d.data()};
+    if(!state.studentNotes[n.studentId]) state.studentNotes[n.studentId]=[];
+    state.studentNotes[n.studentId].push(n);
+  });
 }
 
 function v(id){return document.getElementById(id).value.trim();}
@@ -233,129 +240,133 @@ ${stampRow()}`;
 }
 
 // ═══════════════════════════════════════
-// 附件四-A：需費心關懷學生（每班一頁）
+// 附件四-A：需費心關懷學生（全年級一張表）
 // ═══════════════════════════════════════
 function buildBighead(grade) {
   const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
-  const targetGrade=grade+1; const gl=gradeLabel(grade);
+  const gl=gradeLabel(grade);
   const maxClass = grade===2?6:9;
-  const pages = [];
 
+  // 收集全年級大頭，依班級→座號排序
+  const rows = [];
   for(let cls=1;cls<=maxClass;cls++){
-    const stus = Object.values(state.students)
-      .filter(s=>s.grade===grade&&s.class===cls)
-      .sort((a,b)=>a.number-b.number);
-    const bigheads = stus.filter(s=>s.tags.includes('bighead'));
     const tName = teacher(grade,cls);
+    const bigheads = Object.values(state.students)
+      .filter(s=>s.grade===grade&&s.class===cls&&s.tags.includes('bighead'))
+      .sort((a,b)=>a.number-b.number);
+    bigheads.forEach(s=>{
+      // 取得說明
+      const notes = state.studentNotes ? (state.studentNotes[s.id]||[]) : [];
+      const noteText = notes.map(n=>n.text).join('；');
+      rows.push(`<tr>
+        <td class="c" style="white-space:nowrap;">${grade}0${cls}${String(s.number).padStart(2,'0')}</td>
+        <td style="white-space:nowrap;">${s.name}</td>
+        <td class="c">${s.gender==='M'?'男':'女'}</td>
+        <td class="c" style="white-space:nowrap;">${tName||''}</td>
+        <td style="font-size:8.5pt;line-height:1.5;">${noteText}</td>
+      </tr>`);
+    });
+  }
 
-    const rows = bigheads.length
-      ? bigheads.map(s=>`<tr>
-          <td class="c">${String(s.number).padStart(2,'0')}</td>
-          <td>${s.name}</td>
-          <td class="c">${s.gender==='M'?'男':'女'}</td>
-          <td></td>
-        </tr>`).join('')
-      : `<tr><td colspan="4" class="c" style="color:#aaa;font-size:9pt;padding:10pt;">本班無需費心學生</td></tr>`;
-
-    const div=document.createElement('div'); div.className='print-page';
-    div.innerHTML=`
-<div class="doc-header">
-  <div class="doc-annex">（附件四-A）　${school} ${year} 學年度</div>
-  <div class="doc-title">「需費心關懷學生」編班申請一覽表</div>
-  <div class="doc-grade">升${gl}年級　${clsLabel(grade,cls)}　導師：${tName||'　　　　'}</div>
-  <div style="text-align:right;font-size:8.5pt;color:#555;">製表日期：${date}</div>
+  const div=document.createElement('div'); div.className='print-page';
+  div.innerHTML=`
+<div style="margin-bottom:6pt;">
+  <div style="font-size:13pt;font-weight:bold;text-align:center;">（附件四-A）「需費心關懷學生」編班申請一覽表 ─ 升${gl}年級</div>
+  <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#333;margin-top:3pt;">
+    <span>※ ${year}學年度 ${grade}升${gl}年級依導師與科任教師建議平均分散至各班</span>
+    <span>製表日期：${date}</span>
+  </div>
 </div>
-<div class="doc-note">※ ${year} 學年度 ${grade}升${gl}年級「需費心關懷學生」依據導師與科任教師建議平均分散至各班，如下表列：</div>
 <table class="rpt-table">
   <thead>
     <tr>
-      <th style="width:36pt;">座號</th>
-      <th style="width:80pt;">學生姓名</th>
-      <th style="width:36pt;">性別</th>
-      <th>備　註（行為特徵、需注意事項等）</th>
+      <th style="width:46pt;">班級座號</th>
+      <th style="width:54pt;">學生姓名</th>
+      <th style="width:28pt;">性別</th>
+      <th style="width:54pt;">導師</th>
+      <th>說明（行為特徵、需注意事項等）</th>
     </tr>
   </thead>
-  <tbody>${rows}</tbody>
+  <tbody>
+    ${rows.length?rows.join(''):'<tr><td colspan="5" class="c" style="color:#aaa;padding:12pt;">本年級無需費心學生</td></tr>'}
+  </tbody>
 </table>
 ${stampRow()}`;
-    pages.push(div);
-  }
-  return pages;
+  return [div];
 }
 
 // ═══════════════════════════════════════
-// 附件四-B：不宜再同班學生（每班一頁）
+// 附件四-B：不宜再同班學生（全年級一張表）
 // ═══════════════════════════════════════
 function buildRules(grade) {
   const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
-  const targetGrade=grade+1; const gl=gradeLabel(grade);
+  const gl=gradeLabel(grade);
   const maxClass = grade===2?6:9;
-  const pages = [];
 
-  for(let cls=1;cls<=maxClass;cls++){
-    const clsRules = Object.values(state.rules)
-      .filter(r=>r.grade===grade&&r.targetStudentClass===cls)
-      .sort((a,b)=>{
-        const sa=state.students[a.targetStudentId];
-        const sb=state.students[b.targetStudentId];
-        return sa&&sb?sa.number-sb.number:0;
-      });
+  // 全年級規則，依班級→目標學生座號排序
+  const allRules = Object.values(state.rules)
+    .filter(r=>r.grade===grade)
+    .sort((a,b)=>{
+      if(a.targetStudentClass!==b.targetStudentClass) return a.targetStudentClass-b.targetStudentClass;
+      const sa=state.students[a.targetStudentId]; const sb=state.students[b.targetStudentId];
+      return sa&&sb?sa.number-sb.number:0;
+    });
+
+  const rows = allRules.map(r=>{
+    const stu   = state.students[r.targetStudentId];
+    const cls   = r.targetStudentClass;
     const tName = teacher(grade,cls);
+    const code  = r.groupCode||'';
+    const stuCode = stu ? `${grade}0${cls}${String(stu.number).padStart(2,'0')}` : '';
+    const typeLabel = r.type==='group'?'全拆開':'甲避乙';
+    const sepList = [...(r.separateFrom||[])]
+      .sort((a,b)=>{
+        const sa=state.students[a.id]; const sb=state.students[b.id];
+        return sa&&sb?sa.class-sb.class||sa.number-sb.number:0;
+      })
+      .map(s=>{
+        const st=state.students[s.id];
+        const sc=st?`${grade}0${st.class}${String(st.number).padStart(2,'0')}`:'';
+        return st?`<span style="white-space:nowrap;">${sc} ${st.name}</span>`:s.name;
+      }).join('<br>');
+    const remarks = (r.remarks&&r.remarks.length)
+      ? r.remarks.map(rm=>rm.text).join('；')
+      : (r.reason||'');
+    return `<tr>
+      <td class="c" style="white-space:nowrap;font-size:9pt;">${stuCode}<br><b>${stu?stu.name:r.targetStudentName}</b>${code?`<br><span style="font-family:monospace;font-weight:bold;color:#dc2626;">${code}</span>`:''}
+      </td>
+      <td class="c" style="white-space:nowrap;font-size:9pt;">${tName||''}</td>
+      <td class="c" style="white-space:nowrap;font-size:9pt;">${typeLabel}</td>
+      <td style="font-size:8.5pt;line-height:1.5;">${sepList}</td>
+      <td style="font-size:8.5pt;line-height:1.5;">${remarks}</td>
+    </tr>`;
+  });
 
-    const rows = clsRules.length
-      ? clsRules.map(r=>{
-          const stu=state.students[r.targetStudentId];
-          const stuLabel = stu
-            ? `${String(stu.number).padStart(2,'0')} ${stu.name}`
-            : r.targetStudentName;
-          const code = r.groupCode||'';
-          const typeLabel = r.type==='group'?'全拆開':'甲避乙';
-          const sepList = [...(r.separateFrom||[])]
-            .sort((a,b)=>{
-              const sa=state.students[a.id]; const sb=state.students[b.id];
-              return sa&&sb?sa.class-sb.class||sa.number-sb.number:0;
-            })
-            .map(s=>{
-              const st=state.students[s.id];
-              return st?`${clsLabel(st.grade,st.class)} ${String(st.number).padStart(2,'0')} ${st.name}`:s.name;
-            }).join('<br>');
-          const remarks = (r.remarks&&r.remarks.length)
-            ? r.remarks.map(rm=>rm.text).join('<br>')
-            : (r.reason||'');
-          return `<tr>
-            <td class="c">${stuLabel}${code?`<br><span style="font-family:monospace;font-weight:bold;font-size:9pt;">${code}</span>`:''}
-            </td>
-            <td class="c">${typeLabel}</td>
-            <td>${sepList}</td>
-            <td>${remarks}</td>
-          </tr>`;
-        }).join('')
-      : `<tr><td colspan="4" class="c" style="color:#aaa;font-size:9pt;padding:10pt;">本班無不宜同班規則</td></tr>`;
-
-    const div=document.createElement('div'); div.className='print-page';
-    div.innerHTML=`
-<div class="doc-header">
-  <div class="doc-annex">（附件四-B）　${school} ${year} 學年度</div>
-  <div class="doc-title">「不宜再同班學生」編班申請一覽表</div>
-  <div class="doc-grade">升${gl}年級　${clsLabel(grade,cls)}　導師：${tName||'　　　　'}</div>
-  <div style="text-align:right;font-size:8.5pt;color:#555;">製表日期：${date}</div>
+  const div=document.createElement('div'); div.className='print-page';
+  div.innerHTML=`
+<div style="margin-bottom:6pt;">
+  <div style="font-size:13pt;font-weight:bold;text-align:center;">（附件四-B）「不宜再同班學生」編班申請一覽表 ─ 升${gl}年級</div>
+  <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#333;margin-top:3pt;">
+    <span>※ ${year}學年度 ${grade}升${gl}年級依導師與科任教師建議分散處理，如下表列</span>
+    <span>製表日期：${date}</span>
+  </div>
 </div>
-<div class="doc-note">※ ${year} 學年度 ${grade}升${gl}年級「不宜再同班學生」依據導師與科任教師建議分散處理，如下表列：</div>
 <table class="rpt-table">
   <thead>
     <tr>
-      <th style="width:70pt;">學生（甲）</th>
-      <th style="width:46pt;">隔離方式</th>
-      <th>不宜同班對象（乙）</th>
+      <th style="width:56pt;">班級座號<br>學生（甲）</th>
+      <th style="width:46pt;">導師</th>
+      <th style="width:40pt;">隔離方式</th>
+      <th style="width:35%;">不宜同班對象（乙）</th>
       <th>說　明</th>
     </tr>
   </thead>
-  <tbody>${rows}</tbody>
+  <tbody>
+    ${rows.length?rows.join(''):'<tr><td colspan="5" class="c" style="color:#aaa;padding:12pt;">本年級無不宜同班規則</td></tr>'}
+  </tbody>
 </table>
 ${stampRow()}`;
-    pages.push(div);
-  }
-  return pages;
+  return [div];
 }
 
 // ═══════════════════════════════════════
