@@ -500,8 +500,8 @@ tr:hover td { background: #f8f9fd; }
   <div class="card">
     <div class="card-title">📋 班級導師設定（升級後班級對應）
       <div style="margin-left:auto;display:flex;gap:6px;">
-        <button class="btn btn-ghost btn-sm" onclick="loadTeacherGrid(3)">顯示3年級</button>
-        <button class="btn btn-ghost btn-sm" onclick="loadTeacherGrid(5)">顯示5年級</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadTeacherGrid(2)">顯示2年級</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadTeacherGrid(4)">顯示4年級</button>
       </div>
     </div>
     <div class="notice" style="margin-bottom:12px;">直接在格子裡修改導師姓名，按「儲存」更新。格式：升上去的年級（3年級 = 現在2年級升上去）。</div>
@@ -3579,9 +3579,8 @@ async function loadTeacherGrid(grade) {
   cont.innerHTML = '<div style="color:var(--text3);font-size:.85rem;">載入中…</div>';
   document.getElementById('saveTeacherGridBtn').style.display = '';
 
-  // 從 state 取得，或重新載入
   const teachers = Object.values(state.teachers).filter(t=>t.grade===grade);
-  const maxClass = grade===3 ? 6 : 9;
+  const maxClass = grade===2 ? 6 : 9;
 
   teacherGridData = {};
   teachers.forEach(t=>{ teacherGridData[t.class] = t; });
@@ -3592,7 +3591,7 @@ async function loadTeacherGrid(grade) {
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
     div.innerHTML = `
-      <label style="font-size:.73rem;font-weight:700;color:var(--text2);">${grade}年${cls}班</label>
+      <label style="font-size:.73rem;font-weight:700;color:var(--text2);">現${grade}年${cls}班</label>
       <input type="text" id="tg_${grade}_${cls}" value="${t?t.name:''}" placeholder="導師姓名" style="font-size:.875rem;">`;
     cont.appendChild(div);
   }
@@ -3600,7 +3599,7 @@ async function loadTeacherGrid(grade) {
 
 async function saveTeacherGrid() {
   const grade    = teacherGridGrade;
-  const maxClass = grade===3 ? 6 : 9;
+  const maxClass = grade===2 ? 6 : 9;
   const batch    = db.batch();
 
   for(let cls=1; cls<=maxClass; cls++) {
@@ -3628,23 +3627,23 @@ async function seedTeachersIfEmpty() {
   if(!snap.empty) return; // 已有資料就不重複寫入
 
   const defaultTeachers = [
-    // 2年級（升3年級）
-    {grade:3, class:1, name:'祉暄宜'},
-    {grade:3, class:2, name:'周著涵'},
-    {grade:3, class:3, name:'陸恬蓓'},
-    {grade:3, class:4, name:'曾麗玲'},
-    {grade:3, class:5, name:'郭乃菁'},
-    {grade:3, class:6, name:'紀淑苹'},
-    // 4年級（升5年級）
-    {grade:5, class:1, name:'郭佳鸞'},
-    {grade:5, class:2, name:'吳淑妃'},
-    {grade:5, class:3, name:'楊麗燕'},
-    {grade:5, class:4, name:'林春慧'},
-    {grade:5, class:5, name:'高日美'},
-    {grade:5, class:6, name:'林干琪'},
-    {grade:5, class:7, name:'許毓潔'},
-    {grade:5, class:8, name:'葉淑綾'},
-    {grade:5, class:9, name:'蕭婉如'},
+    // 現2年級導師（填調查表的老師）
+    {grade:2, class:1, name:'祉暄宜'},
+    {grade:2, class:2, name:'周著涵'},
+    {grade:2, class:3, name:'陸恬蓓'},
+    {grade:2, class:4, name:'曾麗玲'},
+    {grade:2, class:5, name:'郭乃菁'},
+    {grade:2, class:6, name:'紀淑苹'},
+    // 現4年級導師（填調查表的老師）
+    {grade:4, class:1, name:'郭佳鸞'},
+    {grade:4, class:2, name:'吳淑妃'},
+    {grade:4, class:3, name:'楊麗燕'},
+    {grade:4, class:4, name:'林春慧'},
+    {grade:4, class:5, name:'高日美'},
+    {grade:4, class:6, name:'林干琪'},
+    {grade:4, class:7, name:'許毓潔'},
+    {grade:4, class:8, name:'葉淑綾'},
+    {grade:4, class:9, name:'蕭婉如'},
   ];
   const batch = db.batch();
   defaultTeachers.forEach(t=>{
