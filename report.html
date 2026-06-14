@@ -5,43 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>核章列印 ─ 教務處註冊組</title>
 <style>
-:root {
-  --navy:#0f2044;--navy2:#1a3060;--blue:#2d5be3;--blue-light:#e8eefb;
-  --red:#dc2626;--red-light:#fee2e2;--green:#16a34a;
-  --bg:#f4f6fb;--surface:#fff;--border:#dde3f0;
-  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
-  --radius:10px;--shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
-}
+:root{--navy:#0f2044;--navy2:#1a3060;--blue:#2d5be3;--blue-light:#e8eefb;--red:#dc2626;--bg:#f4f6fb;--surface:#fff;--border:#dde3f0;--text:#111827;--text2:#4b5563;--text3:#9ca3af;--radius:10px;--shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;}
-
-/* SCREEN UI */
-@media screen {
+@media screen{
   .header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,32,68,.25);}
   .header-title{font-size:1rem;font-weight:700;}
   .header-sub{font-size:.7rem;opacity:.6;margin-top:1px;}
   .hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:4px 10px;font-size:.75rem;text-decoration:none;display:inline-block;}
-  .main{max-width:900px;margin:0 auto;padding:20px;}
+  .main{max-width:860px;margin:0 auto;padding:20px;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow);}
   .card-title{font-size:.9rem;font-weight:700;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
   .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
   .form-group{display:flex;flex-direction:column;gap:4px;}
   label.lbl{font-size:.73rem;font-weight:700;color:var(--text2);letter-spacing:.04em;}
-  select,input[type=text]{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:.875rem;color:var(--text);background:#fff;outline:none;font-family:inherit;}
-  select:focus,input:focus{border-color:var(--blue);}
-  .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.875rem;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:6px;}
-  .btn-primary{background:var(--blue);color:#fff;}
-  .btn-primary:hover{background:#2347c5;}
-  .btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2);}
-  .notice{background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:8px 12px;font-size:.8rem;color:#1e40af;line-height:1.6;margin-bottom:10px;}
-  .preview-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:12px;}
-  .preview-label{background:var(--bg);padding:8px 14px;font-size:.78rem;color:var(--text3);border-bottom:1px solid var(--border);}
-  .no-print{}.print-only{display:none!important;}
+  input[type=text]{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:.875rem;color:var(--text);background:#fff;outline:none;font-family:inherit;}
+  input:focus{border-color:var(--blue);}
+  .btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.875rem;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+  .btn-primary{background:var(--blue);color:#fff;}.btn-primary:hover{background:#2347c5;}
+  .btn-red{background:var(--red);color:#fff;}.btn-red:hover{background:#b91c1c;}
+  .btn-group{display:flex;flex-direction:column;gap:6px;margin-bottom:6px;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .group-label{font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:4px;}
+  .notice{background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:8px 12px;font-size:.8rem;color:#1e40af;line-height:1.6;margin-bottom:12px;}
+  .preview-wrap{border:2px dashed var(--border);border-radius:var(--radius);padding:12px;margin-top:12px;background:var(--bg);}
+  .preview-label{font-size:.78rem;color:var(--text3);margin-bottom:8px;}
+  .no-print{display:block;}.print-only{display:none!important;}
 }
-
-/* PRINT */
-@media print {
-  body{background:#fff;margin:0;}
+@media print{
+  body{background:#fff;}
   .no-print{display:none!important;}
   .print-only{display:block!important;}
   .print-page{page-break-after:always;}
@@ -50,143 +42,129 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
 }
 @page{margin:12mm 14mm;}
 
-/* ── PRINT PAGE STYLES ── */
-.print-page{
-  background:#fff;
-  font-family:'Microsoft JhengHei','PingFang TC','DFKai-SB',sans-serif;
-  font-size:10.5pt;
-  color:#000;
-  padding:0;
-}
-
-.doc-header{text-align:center;margin-bottom:6pt;}
+/* ── 列印樣式 ── */
+.print-page{background:#fff;font-family:'Microsoft JhengHei','PingFang TC','DFKai-SB',sans-serif;font-size:10pt;color:#000;padding:0;}
+.doc-header{text-align:center;margin-bottom:8pt;}
+.doc-annex{font-size:9.5pt;color:#333;}
 .doc-school{font-size:11pt;}
-.doc-title{font-size:14pt;font-weight:bold;margin:4pt 0;}
-.doc-subtitle{font-size:10pt;margin-bottom:4pt;}
+.doc-title{font-size:14pt;font-weight:bold;margin:4pt 0 2pt;}
+.doc-grade{font-size:10.5pt;margin-bottom:4pt;}
 .doc-note{font-size:9pt;color:#333;text-align:left;margin-bottom:8pt;line-height:1.6;}
-
-/* 核章欄 */
-.stamp-row{display:flex;justify-content:flex-end;gap:0;margin-top:14pt;border-top:1pt solid #bbb;padding-top:8pt;}
-.stamp-cell{border:1pt solid #aaa;padding:6pt 8pt;min-width:80pt;min-height:50pt;text-align:center;font-size:9.5pt;}
-
-/* 附件三：雙胞胎一覽表 */
-.report-table{width:100%;border-collapse:collapse;font-size:10pt;}
-.report-table th{border:0.75pt solid #555;padding:5pt 6pt;text-align:center;background:#e8e8e8;font-weight:bold;}
-.report-table td{border:0.75pt solid #555;padding:4pt 6pt;vertical-align:middle;text-align:center;}
-.report-table td.left{text-align:left;}
-
-/* 附件四：大頭/不宜同班 */
-.class-section{margin-bottom:14pt;}
-.class-section-head{font-size:11pt;font-weight:bold;background:#222;color:#fff;padding:3pt 8pt;margin-bottom:0;}
-.inner-table{width:100%;border-collapse:collapse;font-size:9.5pt;}
-.inner-table th{border:0.75pt solid #555;padding:4pt 5pt;text-align:center;background:#eee;font-weight:bold;}
-.inner-table td{border:0.75pt solid #555;padding:4pt 5pt;vertical-align:top;}
-.inner-table td.center{text-align:center;}
+.stamp-row{display:flex;justify-content:flex-end;gap:0;margin-top:16pt;border-top:1pt solid #bbb;padding-top:8pt;}
+.stamp-cell{border:1pt solid #aaa;padding:6pt 8pt;min-width:80pt;min-height:52pt;text-align:center;font-size:9.5pt;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:10pt;}
+.rpt-table th{border:0.75pt solid #555;padding:4pt 6pt;text-align:center;background:#ddd;font-weight:bold;}
+.rpt-table td{border:0.75pt solid #555;padding:4pt 6pt;vertical-align:top;}
+.rpt-table td.c{text-align:center;vertical-align:middle;}
+.cls-bar{background:#222;color:#fff;font-weight:bold;font-size:10pt;padding:3pt 8pt;border:0.75pt solid #333;}
+.cls-bar-gray{background:#555;color:#fff;font-weight:bold;font-size:9pt;padding:2pt 6pt;border:0.75pt solid #444;}
 </style>
 </head>
 <body>
 
-<!-- SCREEN UI -->
 <div class="no-print">
 <div class="header">
-  <div>
-    <div class="header-title">📄 核章列印</div>
-    <div class="header-sub">教務處註冊組 ─ 正式文件列印</div>
-  </div>
+  <div><div class="header-title">📄 核章列印</div><div class="header-sub">教務處註冊組</div></div>
   <div style="display:flex;gap:8px;">
     <a href="admin.html" class="hbtn">← 後台</a>
-    <a href="print.html" class="hbtn">調查表列印</a>
+    <a href="print.html" class="hbtn">調查表</a>
   </div>
 </div>
-
 <div class="main">
   <div class="card">
-    <div class="card-title">⚙️ 基本設定</div>
+    <div class="card-title">⚙️ 設定</div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="lbl">學年度</label>
-        <input type="text" id="cfgYear" value="114" style="width:70px;">
-      </div>
-      <div class="form-group">
-        <label class="lbl">學校名稱</label>
-        <input type="text" id="cfgSchool" value="高雄市新莊國民小學" style="width:200px;">
-      </div>
-      <div class="form-group">
-        <label class="lbl">製表日期</label>
-        <input type="text" id="cfgDate" style="width:130px;">
-      </div>
+      <div class="form-group"><label class="lbl">學年度</label><input type="text" id="cfgYear" value="114" style="width:64px;"></div>
+      <div class="form-group"><label class="lbl">學校名稱</label><input type="text" id="cfgSchool" value="高雄市新莊國民小學" style="width:200px;"></div>
+      <div class="form-group"><label class="lbl">製表日期</label><input type="text" id="cfgDate" style="width:130px;"></div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">🖨️ 選擇列印文件</div>
-    <div class="notice">點擊後會開啟列印對話框，請設定 A4、直向、背景圖形勾選。</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="printReport('twin')">🖨️ 附件三：雙胞胎申請一覽表</button>
-      <button class="btn btn-primary" onclick="printReport('special4')">🖨️ 附件四：需費心＆不宜同班一覽表（2年級）</button>
-      <button class="btn btn-primary" onclick="printReport('special4g4')">🖨️ 附件四：需費心＆不宜同班一覽表（4年級）</button>
+    <div class="notice">列印時請在瀏覽器勾選「背景圖形」，確保黑色標題列正確列印。</div>
+
+    <div class="btn-group">
+      <div class="group-label">📋 附件三：雙胞胎申請一覽表</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('twin2')">🖨️ 2年級雙胞胎</button>
+        <button class="btn btn-primary" onclick="go('twin4')">🖨️ 4年級雙胞胎</button>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+
+    <div class="btn-group">
+      <div class="group-label">📋 附件四-A：需費心關懷學生一覽表</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('bighead2')">🖨️ 2年級需費心（升3年級）</button>
+        <button class="btn btn-primary" onclick="go('bighead4')">🖨️ 4年級需費心（升5年級）</button>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+
+    <div class="btn-group">
+      <div class="group-label">📋 附件四-B：不宜再同班學生一覽表</div>
+      <div class="btn-row">
+        <button class="btn btn-red" onclick="go('rules2')">🖨️ 2年級不宜同班（升3年級）</button>
+        <button class="btn btn-red" onclick="go('rules4')">🖨️ 4年級不宜同班（升5年級）</button>
+      </div>
     </div>
   </div>
 
   <div class="card" id="previewCard" style="display:none;">
     <div class="card-title">👁 預覽</div>
-    <div class="preview-label">以下為預覽，列印結果以實際輸出為準</div>
-    <div id="previewArea"></div>
+    <div class="notice">以下為預覽，實際列印以瀏覽器輸出為準。</div>
+    <div class="preview-wrap">
+      <div class="preview-label">預覽區</div>
+      <div id="previewArea"></div>
+    </div>
   </div>
 </div>
-</div><!-- end no-print -->
+</div>
 
-<!-- PRINT AREA -->
 <div id="printArea"></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
-  authDomain: "sjps-classchange.firebaseapp.com",
-  projectId: "sjps-classchange",
-  storageBucket: "sjps-classchange.firebasestorage.app",
-  messagingSenderId: "907928897295",
-  appId: "1:907928897295:web:b6bfb2dcb3c8c447ad607a"
-};
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp({
+  apiKey:"AIzaSyBLo5kR4_h0H9HY370ySQslTQCKvXR4SvE",
+  authDomain:"sjps-classchange.firebaseapp.com",
+  projectId:"sjps-classchange",
+  storageBucket:"sjps-classchange.firebasestorage.app",
+  messagingSenderId:"907928897295",
+  appId:"1:907928897295:web:b6bfb2dcb3c8c447ad607a"
+});
 const db = firebase.firestore();
+const state = {students:{},rules:{},twins:{},teachers:{}};
 
-const state = { students:{}, rules:{}, twins:{}, teachers:{} };
-
-// set today's date
 document.getElementById('cfgDate').value = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
 
 async function loadAll() {
-  const [stuSnap, ruleSnap, twinSnap, teachSnap] = await Promise.all([
+  const [s,r,t,tc] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('gradeTwins').get(),
     db.collection('teachers').get()
   ]);
-  stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
-  ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
-  twinSnap.forEach(d=>{ state.twins[d.id]={id:d.id,...d.data()}; });
-  teachSnap.forEach(d=>{ state.teachers[d.id]={id:d.id,...d.data()}; });
+  s.forEach(d=>{state.students[d.id]={id:d.id,...d.data()};});
+  r.forEach(d=>{state.rules[d.id]={id:d.id,...d.data()};});
+  t.forEach(d=>{state.twins[d.id]={id:d.id,...d.data()};});
+  tc.forEach(d=>{state.teachers[d.id]={id:d.id,...d.data()};});
 }
-loadAll();
 
-function v(id){ return document.getElementById(id).value.trim(); }
-function classLabel(g,c){ return `${g}年${c}班`; }
-
-// ── 取得班級導師姓名 ──
-function getTeacherName(grade, cls) {
-  // 用現在的年級查詢（grade:2 class:1 = 現2年1班導師）
-  const key = `${grade}-${cls}`;
+function v(id){return document.getElementById(id).value.trim();}
+function clsLabel(g,c){return `${g}年${c}班`;}
+function teacher(grade,cls){
+  const key=`${grade}-${cls}`;
   if(state.teachers[key]) return state.teachers[key].name;
-  const t = Object.values(state.teachers).find(t=>t.grade===grade && t.class===cls);
-  return t ? t.name : '';
+  const t=Object.values(state.teachers).find(t=>t.grade===grade&&t.class===cls);
+  return t?t.name:'';
 }
-
-// ── 核章欄 ──
-function stampRow() {
+function gradeLabel(g){return {2:'三',4:'五'}[g]||g;}
+function stampRow(){
   return `<div class="stamp-row">
     <div class="stamp-cell">承辦人</div>
     <div class="stamp-cell">教務主任</div>
@@ -194,193 +172,215 @@ function stampRow() {
   </div>`;
 }
 
-// ════════════════════════════════════════
-// 附件三：雙胞胎申請一覽表
-// ════════════════════════════════════════
-function buildTwinReport() {
-  const year  = v('cfgYear');
-  const school= v('cfgSchool');
-  const date  = v('cfgDate');
-
-  // 排序雙胞胎：年級 → 班級 → 座號
-  const twins = Object.values(state.twins).sort((a,b)=>{
-    if(a.grade!==b.grade) return a.grade-b.grade;
-    const ma=(a.members||[{id:a.s1Id}])[0];
-    const mb=(b.members||[{id:b.s1Id}])[0];
-    const sa=state.students[ma.id]; const sb=state.students[mb.id];
-    if(!sa||!sb) return 0;
-    if(sa.class!==sb.class) return sa.class-sb.class;
-    return sa.number-sb.number;
-  });
-
-  // 依年級分組，產生代號
-  const twinWithCode = [];
-  [2,4].forEach(grade=>{
-    const grp = twins.filter(t=>t.grade===grade);
-    grp.forEach((t,i)=>{
-      const code = t.twinCode || `T${i+1}${t.preference==='same'?'+':'-'}`;
-      twinWithCode.push({...t, autoCode:code});
+// ═══════════════════════════════════════
+// 附件三：雙胞胎（依年級）
+// ═══════════════════════════════════════
+function buildTwin(grade) {
+  const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
+  const targetGrade = grade+1;
+  const twins = Object.values(state.twins)
+    .filter(t=>t.grade===grade)
+    .sort((a,b)=>{
+      const ma=(a.members||[{id:a.s1Id}])[0]; const mb=(b.members||[{id:b.s1Id}])[0];
+      const sa=state.students[ma.id]; const sb=state.students[mb.id];
+      if(!sa||!sb) return 0;
+      return sa.class!==sb.class ? sa.class-sb.class : sa.number-sb.number;
     });
-  });
 
-  const rows = twinWithCode.map((t,i)=>{
+  const rows = twins.map((t,i)=>{
     const members = t.members||[{id:t.s1Id,name:t.s1Name},{id:t.s2Id,name:t.s2Name}];
     const names   = members.map(m=>m.name).join('、');
-    const targetGrade = t.grade+1;
     const pref    = t.preference==='same'?'同班':'不同班';
     const note    = t.note||'';
+    const code    = t.twinCode || `T${i+1}${t.preference==='same'?'+':'-'}`;
     return `<tr>
-      <td class="center">${i+1}</td>
-      <td class="center">${targetGrade}</td>
+      <td class="c">${i+1}</td>
+      <td class="c">${targetGrade}</td>
       <td>${names}</td>
-      <td class="center">雙胞胎</td>
-      <td class="center">${pref}</td>
-      <td class="left">${note}</td>
+      <td class="c">雙胞胎</td>
+      <td class="c" style="font-family:monospace;font-weight:bold;">${code}</td>
+      <td class="c">${pref}</td>
+      <td>${note}</td>
     </tr>`;
   }).join('');
 
-  const div = document.createElement('div');
-  div.className = 'print-page';
-  div.innerHTML = `
+  const div=document.createElement('div'); div.className='print-page';
+  div.innerHTML=`
 <div class="doc-header">
-  <div class="doc-school">（附件三）　${school}</div>
+  <div class="doc-annex">（附件三）　${school}</div>
   <div class="doc-title">${year} 學年度同年級複數子女學生編班申請一覽表</div>
-  <div style="font-size:9pt;color:#555;text-align:right;">製表日期：${date}</div>
+  <div class="doc-grade">升${gradeLabel(grade)}年級</div>
+  <div style="text-align:right;font-size:8.5pt;color:#555;">製表日期：${date}</div>
 </div>
-<table class="report-table">
+<table class="rpt-table">
   <thead>
     <tr>
-      <th style="width:30pt;">編號</th>
-      <th style="width:50pt;">${year} 學年度<br>就讀年級</th>
+      <th style="width:24pt;">編號</th>
+      <th style="width:46pt;">${year}學年度<br>就讀年級</th>
       <th>學生姓名</th>
-      <th style="width:50pt;">申請原因</th>
-      <th style="width:60pt;">希望同班或<br>不同班</th>
+      <th style="width:44pt;">申請原因</th>
+      <th style="width:40pt;">代號</th>
+      <th style="width:56pt;">希望同班<br>或不同班</th>
       <th>備　註</th>
     </tr>
   </thead>
   <tbody>
-    ${rows}
-    ${Array(Math.max(0,3-twinWithCode.length)).fill('<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}
+    ${rows||'<tr><td colspan="7" class="c" style="color:#aaa;padding:12pt;">尚無資料</td></tr>'}
   </tbody>
 </table>
 ${stampRow()}`;
   return div;
 }
 
-// ════════════════════════════════════════
-// 附件四：需費心 & 不宜同班 一覽表
-// ════════════════════════════════════════
-function buildSpecialReport(grade) {
-  const year   = v('cfgYear');
-  const school = v('cfgSchool');
-  const date   = v('cfgDate');
-  const targetGrade = grade+1;
-  const gradeLabel  = {3:'三',5:'五'}[targetGrade]||targetGrade;
-  const classCount  = grade===2 ? 6 : 9;
+// ═══════════════════════════════════════
+// 附件四-A：需費心關懷學生（每班一頁）
+// ═══════════════════════════════════════
+function buildBighead(grade) {
+  const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
+  const targetGrade=grade+1; const gl=gradeLabel(grade);
+  const maxClass = grade===2?6:9;
+  const pages = [];
 
-  // 依班級產生各班內容
-  let classHtml = '';
-  for(let cls=1; cls<=classCount; cls++) {
-    const clsStudents = Object.values(state.students)
+  for(let cls=1;cls<=maxClass;cls++){
+    const stus = Object.values(state.students)
       .filter(s=>s.grade===grade&&s.class===cls)
       .sort((a,b)=>a.number-b.number);
-    if(!clsStudents.length) continue;
+    const bigheads = stus.filter(s=>s.tags.includes('bighead'));
+    const tName = teacher(grade,cls);
 
-    // 大頭名單
-    const bigheads = clsStudents.filter(s=>s.tags.includes('bighead'));
-    const bigheadRows = bigheads.length
+    const rows = bigheads.length
       ? bigheads.map(s=>`<tr>
-          <td class="center">${String(s.number).padStart(2,'0')} ${s.name}</td>
+          <td class="c">${String(s.number).padStart(2,'0')}</td>
+          <td>${s.name}</td>
+          <td class="c">${s.gender==='M'?'男':'女'}</td>
           <td></td>
         </tr>`).join('')
-      : '<tr><td colspan="2" class="center" style="color:#aaa;font-size:9pt;">無</td></tr>';
+      : `<tr><td colspan="4" class="c" style="color:#aaa;font-size:9pt;padding:10pt;">本班無需費心學生</td></tr>`;
 
-    // 不宜同班名單（這班的目標學生）
+    const div=document.createElement('div'); div.className='print-page';
+    div.innerHTML=`
+<div class="doc-header">
+  <div class="doc-annex">（附件四-A）　${school} ${year} 學年度</div>
+  <div class="doc-title">「需費心關懷學生」編班申請一覽表</div>
+  <div class="doc-grade">升${gl}年級　${clsLabel(grade,cls)}　導師：${tName||'　　　　'}</div>
+  <div style="text-align:right;font-size:8.5pt;color:#555;">製表日期：${date}</div>
+</div>
+<div class="doc-note">※ ${year} 學年度 ${grade}升${gl}年級「需費心關懷學生」依據導師與科任教師建議平均分散至各班，如下表列：</div>
+<table class="rpt-table">
+  <thead>
+    <tr>
+      <th style="width:36pt;">座號</th>
+      <th style="width:80pt;">學生姓名</th>
+      <th style="width:36pt;">性別</th>
+      <th>備　註（行為特徵、需注意事項等）</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+</table>
+${stampRow()}`;
+    pages.push(div);
+  }
+  return pages;
+}
+
+// ═══════════════════════════════════════
+// 附件四-B：不宜再同班學生（每班一頁）
+// ═══════════════════════════════════════
+function buildRules(grade) {
+  const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
+  const targetGrade=grade+1; const gl=gradeLabel(grade);
+  const maxClass = grade===2?6:9;
+  const pages = [];
+
+  for(let cls=1;cls<=maxClass;cls++){
     const clsRules = Object.values(state.rules)
-      .filter(r=>r.grade===grade && r.targetStudentClass===cls)
+      .filter(r=>r.grade===grade&&r.targetStudentClass===cls)
       .sort((a,b)=>{
-        const sa=state.students[a.targetStudentId]; const sb=state.students[b.targetStudentId];
-        return sa&&sb ? sa.number-sb.number : 0;
+        const sa=state.students[a.targetStudentId];
+        const sb=state.students[b.targetStudentId];
+        return sa&&sb?sa.number-sb.number:0;
       });
+    const tName = teacher(grade,cls);
 
-    const ruleRows = clsRules.length
+    const rows = clsRules.length
       ? clsRules.map(r=>{
-          const stu = state.students[r.targetStudentId];
-          const sepNames = (r.separateFrom||[])
-            .sort((a,b)=>{const sa=state.students[a.id];const sb=state.students[b.id]; return sa&&sb?sa.class-sb.class||sa.number-sb.number:0;})
+          const stu=state.students[r.targetStudentId];
+          const stuLabel = stu
+            ? `${String(stu.number).padStart(2,'0')} ${stu.name}`
+            : r.targetStudentName;
+          const code = r.groupCode||'';
+          const typeLabel = r.type==='group'?'全拆開':'甲避乙';
+          const sepList = [...(r.separateFrom||[])]
+            .sort((a,b)=>{
+              const sa=state.students[a.id]; const sb=state.students[b.id];
+              return sa&&sb?sa.class-sb.class||sa.number-sb.number:0;
+            })
             .map(s=>{
               const st=state.students[s.id];
-              return st ? `${classLabel(st.grade,st.class)} ${st.name}` : s.name;
-            }).join('、');
-          const remarks = (r.remarks&&r.remarks.length) ? r.remarks.map(rm=>rm.text).join('；') : (r.reason||'');
-          const code = r.groupCode||'';
+              return st?`${clsLabel(st.grade,st.class)} ${String(st.number).padStart(2,'0')} ${st.name}`:s.name;
+            }).join('<br>');
+          const remarks = (r.remarks&&r.remarks.length)
+            ? r.remarks.map(rm=>rm.text).join('<br>')
+            : (r.reason||'');
           return `<tr>
-            <td class="center">${stu?`${String(stu.number).padStart(2,'0')} ${stu.name}`:r.targetStudentName}${code?` <b style="font-family:monospace;">${code}</b>`:''}</td>
-            <td>${sepNames}</td>
+            <td class="c">${stuLabel}${code?`<br><span style="font-family:monospace;font-weight:bold;font-size:9pt;">${code}</span>`:''}
+            </td>
+            <td class="c">${typeLabel}</td>
+            <td>${sepList}</td>
             <td>${remarks}</td>
           </tr>`;
         }).join('')
-      : '<tr><td colspan="3" class="center" style="color:#aaa;font-size:9pt;">無</td></tr>';
+      : `<tr><td colspan="4" class="c" style="color:#aaa;font-size:9pt;padding:10pt;">本班無不宜同班規則</td></tr>`;
 
-    // 導師姓名（從 teachers collection 找，grade+1 = 升上去的年級）
-    const teacherName = getTeacherName(grade, cls) || '　　　　';
-
-    classHtml += `
-<div class="class-section">
-  <table class="inner-table" style="margin-bottom:0;">
-    <tr>
-      <td colspan="4" style="background:#222;color:#fff;font-weight:bold;font-size:10pt;padding:3pt 6pt;border:0.75pt solid #555;">
-        ${classLabel(grade,cls)}　　導師：${teacherName}
-      </td>
-    </tr>
-  </table>
-  <table class="inner-table" style="width:48%;display:inline-table;vertical-align:top;border-right:none;">
-    <tr><th colspan="2" style="background:#555;color:#fff;font-size:9pt;">需多費心學生</th></tr>
-    <tr><th style="width:60%;">學生姓名</th><th>備　註</th></tr>
-    ${bigheadRows}
-  </table><table class="inner-table" style="width:52%;display:inline-table;vertical-align:top;">
-    <tr><th colspan="3" style="background:#555;color:#fff;font-size:9pt;">不宜再同班學生</th></tr>
-    <tr><th style="width:28%;">學生</th><th style="width:35%;">不宜同班對象</th><th>說明</th></tr>
-    ${ruleRows}
-  </table>
-</div>`;
-  }
-
-  const div = document.createElement('div');
-  div.className = 'print-page';
-  div.innerHTML = `
+    const div=document.createElement('div'); div.className='print-page';
+    div.innerHTML=`
 <div class="doc-header">
-  <div class="doc-school">（附件四）　${school} ${year} 學年度</div>
-  <div class="doc-title">「需費心關懷學生」、「不宜再同班學生」編班申請一覽表</div>
-  <div class="doc-subtitle">升${gradeLabel}年級</div>
-  <div class="doc-note">※ ${year} 學年度 ${grade}升${gradeLabel}年級「需費心關懷學生」、「不宜再同班學生」依據導師與科任教師建議分散處理，如下表列：</div>
+  <div class="doc-annex">（附件四-B）　${school} ${year} 學年度</div>
+  <div class="doc-title">「不宜再同班學生」編班申請一覽表</div>
+  <div class="doc-grade">升${gl}年級　${clsLabel(grade,cls)}　導師：${tName||'　　　　'}</div>
+  <div style="text-align:right;font-size:8.5pt;color:#555;">製表日期：${date}</div>
 </div>
-${classHtml}
+<div class="doc-note">※ ${year} 學年度 ${grade}升${gl}年級「不宜再同班學生」依據導師與科任教師建議分散處理，如下表列：</div>
+<table class="rpt-table">
+  <thead>
+    <tr>
+      <th style="width:70pt;">學生（甲）</th>
+      <th style="width:46pt;">隔離方式</th>
+      <th>不宜同班對象（乙）</th>
+      <th>說　明</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+</table>
 ${stampRow()}`;
-  return div;
+    pages.push(div);
+  }
+  return pages;
 }
 
-// ════════════════════════════════════════
-// 主列印函數
-// ════════════════════════════════════════
-async function printReport(type) {
-  await loadAll(); // 重新載入確保最新資料
+// ═══════════════════════════════════════
+// 主函數
+// ═══════════════════════════════════════
+async function go(type) {
+  await loadAll();
   const printArea   = document.getElementById('printArea');
   const previewArea = document.getElementById('previewArea');
-  printArea.innerHTML='';
-  previewArea.innerHTML='';
+  printArea.innerHTML=''; previewArea.innerHTML='';
 
-  let pages = [];
-  if(type==='twin')       pages = [buildTwinReport()];
-  if(type==='special4')   pages = [buildSpecialReport(2)];
-  if(type==='special4g4') pages = [buildSpecialReport(4)];
+  let pages=[];
+  if(type==='twin2')    pages=[buildTwin(2)];
+  if(type==='twin4')    pages=[buildTwin(4)];
+  if(type==='bighead2') pages=buildBighead(2);
+  if(type==='bighead4') pages=buildBighead(4);
+  if(type==='rules2')   pages=buildRules(2);
+  if(type==='rules4')   pages=buildRules(4);
 
   pages.forEach(p=>{
     printArea.appendChild(p.cloneNode(true));
     previewArea.appendChild(p);
   });
   document.getElementById('previewCard').style.display='';
-  setTimeout(()=>window.print(), 400);
+  setTimeout(()=>window.print(),500);
 }
 </script>
 </body>
