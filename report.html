@@ -178,7 +178,10 @@ function classLabel(g,c){ return `${g}年${c}班`; }
 
 // ── 取得班級導師姓名 ──
 function getTeacherName(grade, cls) {
-  const t = Object.values(state.teachers).find(t=>t.grade===(grade+1) && t.class===cls);
+  // 用現在的年級查詢（grade:2 class:1 = 現2年1班導師）
+  const key = `${grade}-${cls}`;
+  if(state.teachers[key]) return state.teachers[key].name;
+  const t = Object.values(state.teachers).find(t=>t.grade===grade && t.class===cls);
   return t ? t.name : '';
 }
 
@@ -320,9 +323,7 @@ function buildSpecialReport(grade) {
       : '<tr><td colspan="3" class="center" style="color:#aaa;font-size:9pt;">無</td></tr>';
 
     // 導師姓名（從 teachers collection 找，grade+1 = 升上去的年級）
-    const teacher = Object.values(state.teachers)
-      .find(t => t.grade===(grade+1) && (t.class===cls || t.classNum===cls));
-    const teacherName = teacher ? teacher.name : '　　　　';
+    const teacherName = getTeacherName(grade, cls) || '　　　　';
 
     classHtml += `
 <div class="class-section">
