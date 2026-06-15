@@ -55,7 +55,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
 .rpt-table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:10pt;}
 .rpt-table th{border:0.75pt solid #555;padding:4pt 6pt;text-align:center;background:#ddd;font-weight:bold;}
 .rpt-table td{border:0.75pt solid #555;padding:4pt 6pt;vertical-align:top;background:#fff;}
-.rpt-table tbody tr{background:#fff;}
+.rpt-table tbody tr{background:#fff;break-inside:avoid;page-break-inside:avoid;}
 .rpt-table td.c{text-align:center;vertical-align:middle;}
 .cls-bar{background:#222;color:#fff;font-weight:bold;font-size:10pt;padding:3pt 8pt;border:0.75pt solid #333;}
 .cls-bar-gray{background:#555;color:#fff;font-weight:bold;font-size:9pt;padding:2pt 6pt;border:0.75pt solid #444;}
@@ -175,9 +175,9 @@ function gradeLabel(g){return {2:'三',4:'五'}[g]||g;}
 function stampRow(){
   return `<table style="width:100%;border-collapse:collapse;margin-top:14pt;border-top:1pt solid #bbb;">
     <tr>
-      <td style="border:1pt solid #aaa;padding:8pt;height:60pt;text-align:center;font-size:10pt;width:33.33%;">承辦人</td>
-      <td style="border:1pt solid #aaa;padding:8pt;height:60pt;text-align:center;font-size:10pt;width:33.33%;">教務主任</td>
-      <td style="border:1pt solid #aaa;padding:8pt;height:60pt;text-align:center;font-size:10pt;width:33.33%;">校　長</td>
+      <td style="border:1pt solid #aaa;padding:6pt 8pt 0 8pt;height:72pt;text-align:center;font-size:10pt;width:33.33%;vertical-align:top;">承辦人</td>
+      <td style="border:1pt solid #aaa;padding:6pt 8pt 0 8pt;height:72pt;text-align:center;font-size:10pt;width:33.33%;vertical-align:top;">教務主任</td>
+      <td style="border:1pt solid #aaa;padding:6pt 8pt 0 8pt;height:72pt;text-align:center;font-size:10pt;width:33.33%;vertical-align:top;">校　長</td>
     </tr>
   </table>`;
 }
@@ -261,7 +261,7 @@ function buildBighead(grade) {
       // 取得說明
       const notes = state.studentNotes ? (state.studentNotes[s.id]||[]) : [];
       const noteText = notes.map(n=>n.text).join('；');
-      rows.push(`<tr>
+      rows.push(`<tr style="break-inside:avoid;page-break-inside:avoid;">
         <td class="c" style="white-space:nowrap;">${grade}0${cls}${String(s.number).padStart(2,'0')}</td>
         <td style="white-space:nowrap;">${s.name}</td>
         <td class="c">${s.gender==='M'?'男':'女'}</td>
@@ -341,7 +341,7 @@ function buildRules(grade) {
     const remarks = (r.remarks&&r.remarks.length)
       ? r.remarks.map(rm=>rm.text).join('；')
       : (r.reason||'');
-    return `<tr>
+    return `<tr style="break-inside:avoid;page-break-inside:avoid;">
       <td class="c" style="white-space:nowrap;font-size:9pt;vertical-align:middle;">${stuCode}<br><b>${stu?stu.name:r.targetStudentName}</b>${code?`<br><span style="font-family:monospace;font-weight:bold;color:#dc2626;">${code}</span>`:''}
       </td>
       <td class="c" style="white-space:nowrap;font-size:9pt;">${tName||''}</td>
