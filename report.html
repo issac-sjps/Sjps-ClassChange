@@ -90,6 +90,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
       <div class="btn-row">
         <button class="btn btn-primary" onclick="go('twin2')">🖨️ 2年級雙胞胎</button>
         <button class="btn btn-primary" onclick="go('twin4')">🖨️ 4年級雙胞胎</button>
+        <button class="btn btn-primary" onclick="go('twinNew')">🖨️ 新生雙胞胎</button>
       </div>
     </div>
 
@@ -139,17 +140,19 @@ firebase.initializeApp({
   appId:"1:907928897295:web:b6bfb2dcb3c8c447ad607a"
 });
 const db = firebase.firestore();
-const state = {students:{},rules:{},twins:{},teachers:{}};
+const state = {students:{},rules:{},twins:{},teachers:{},newStudents:{},newTwins:{},studentNotes:{}};
 
 document.getElementById('cfgDate').value = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
 
 async function loadAll() {
-  const [s,r,t,tc,ns] = await Promise.all([
+  const [s,r,t,tc,ns,nstu,ntwins] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('gradeTwins').get(),
     db.collection('teachers').get(),
-    db.collection('studentNotes').get()
+    db.collection('studentNotes').get(),
+    db.collection('newStudents').get(),
+    db.collection('twins').get()
   ]);
   s.forEach(d=>{state.students[d.id]={id:d.id,...d.data()};});
   r.forEach(d=>{state.rules[d.id]={id:d.id,...d.data()};});
@@ -161,6 +164,10 @@ async function loadAll() {
     if(!state.studentNotes[n.studentId]) state.studentNotes[n.studentId]=[];
     state.studentNotes[n.studentId].push(n);
   });
+  state.newStudents={};
+  nstu.forEach(d=>{state.newStudents[d.id]={id:d.id,...d.data()};});
+  state.newTwins={};
+  ntwins.forEach(d=>{state.newTwins[d.id]={id:d.id,...d.data()};});
 }
 
 function v(id){return document.getElementById(id).value.trim();}
@@ -240,6 +247,61 @@ function buildTwin(grade) {
 </table>
 ${stampRow()}`;
   return div;
+}
+
+
+// ═══════════════════════════════════════
+// 附件三：新生雙胞胎申請一覽表
+// ═══════════════════════════════════════
+function buildNewTwin() {
+  const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
+
+  const twins = Object.values(state.newTwins);
+  const rows = twins.map((t,i)=>{
+    const s1 = state.newStudents[t.s1Id];
+    const s2 = state.newStudents[t.s2Id];
+    const names = [t.s1Name||( s1?s1.name:''), t.s2Name||(s2?s2.name:'')].filter(Boolean).join('、');
+    const pref  = t.preference==='same'?'同班':'不同班';
+    const note  = t.note||'';
+    return `<tr>
+      <td class="c">${i+1}</td>
+      <td class="c">一</td>
+      <td>${names}</td>
+      <td class="c">雙胞胎</td>
+      <td class="c">─</td>
+      <td class="c">${pref}</td>
+      <td>${note}</td>
+    </tr>`;
+  }).join('');
+
+  const div=document.createElement('div'); div.className='print-page';
+  div.innerHTML=`
+<div style="margin-bottom:6pt;">
+  <div style="font-size:9.5pt;color:#333;text-align:center;">（附件三）　${school}</div>
+  <div style="font-size:13pt;font-weight:bold;text-align:center;">${year} 學年度同年級複數子女學生編班申請一覽表</div>
+  <div style="font-size:10.5pt;text-align:center;margin-top:2pt;">新生（升一年級）</div>
+  <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#555;margin-top:3pt;">
+    <span></span><span>製表日期：${date}</span>
+  </div>
+</div>
+<table class="rpt-table">
+  <thead>
+    <tr>
+      <th style="width:24pt;">編號</th>
+      <th style="width:46pt;">${year}學年度<br>就讀年級</th>
+      <th>學生姓名</th>
+      <th style="width:44pt;">申請原因</th>
+      <th style="width:40pt;">代號</th>
+      <th style="width:56pt;">希望同班<br>或不同班</th>
+      <th>備　註</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rows||'<tr><td colspan="7" class="c" style="color:#aaa;padding:12pt;">尚無新生雙胞胎資料</td></tr>'}
+  </tbody>
+</table>
+${stampRow()}`;
+  return [div];
 }
 
 // ═══════════════════════════════════════
@@ -389,6 +451,7 @@ async function go(type) {
 
   let pages=[];
   if(type==='twin2')    pages=[buildTwin(2)];
+  if(type==='twinNew')   pages=buildNewTwin();
   if(type==='twin4')    pages=[buildTwin(4)];
   if(type==='bighead2') pages=buildBighead(2);
   if(type==='bighead4') pages=buildBighead(4);
