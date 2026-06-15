@@ -1952,15 +1952,21 @@ function renderTwinList() {
   const twins = Object.values(state.twins);
   if(!twins.length) { cont.innerHTML='<div class="empty">尚無雙胞胎記錄</div>'; return; }
   cont.innerHTML = '';
-  twins.forEach(t=>{
+  // 新生雙胞胎依序給 NT1+/NT1- 代號
+  twins.forEach((t,i)=>{
     const div=document.createElement('div');
     div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
     const prefLabel = t.preference==='same'?'<span class="tag tag-twin">✅ 同班</span>':'<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
-    div.innerHTML=`<div>
+    const tCode = `NT${i+1}${t.preference==='same'?'+':'-'}`;
+    const tColor = t.preference==='same'?'var(--teal)':'var(--red)';
+    const tBg    = t.preference==='same'?'var(--teal-light)':'var(--red-light)';
+    div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="font-family:monospace;font-weight:800;font-size:.88rem;background:${tBg};color:${tColor};border:1.5px solid ${tColor};border-radius:5px;padding:1px 7px;">${tCode}</span>
       <span style="font-weight:700;">${t.s1Name}</span>
-      <span style="color:var(--text3);margin:0 6px;">👫</span>
+      <span style="color:var(--text3);">👫</span>
       <span style="font-weight:700;">${t.s2Name}</span>
       ${prefLabel}
+      <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;">新生・雙胞胎</span>
     </div>
     <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTwin('${t.id}')">🗑</button>`;
     cont.appendChild(div);
