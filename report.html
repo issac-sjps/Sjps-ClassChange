@@ -88,9 +88,9 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="btn-group">
       <div class="group-label">📋 附件三：雙胞胎申請一覽表</div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="go('twin2')">🖨️ 2年級雙胞胎</button>
-        <button class="btn btn-primary" onclick="go('twin4')">🖨️ 4年級雙胞胎</button>
-        <button class="btn btn-primary" onclick="go('twinNew')">🖨️ 新生雙胞胎</button>
+        <button class="btn btn-primary" onclick="go('twinNew')">🖨️ 新生雙胞胎（升1年級）</button>
+        <button class="btn btn-primary" onclick="go('twin2')">🖨️ 2年級雙胞胎（升3年級）</button>
+        <button class="btn btn-primary" onclick="go('twin4')">🖨️ 4年級雙胞胎（升5年級）</button>
       </div>
     </div>
 
@@ -206,16 +206,17 @@ function buildTwin(grade) {
 
   const rows = twins.map((t,i)=>{
     const members = t.members||[{id:t.s1Id,name:t.s1Name},{id:t.s2Id,name:t.s2Name}];
-    const names   = members.map(m=>m.name).join('、');
     const pref    = t.preference==='same'?'同班':'不同班';
     const note    = t.note||'';
     const code    = t.twinCode || `T${i+1}${t.preference==='same'?'+':'-'}`;
-    return `<tr>
+    const cColor  = t.preference==='same'?'#0d9488':'#dc2626';
+    const cBg     = t.preference==='same'?'#ccfbf1':'#fee2e2';
+    const nameCells = members.map(m=>`<span style="white-space:nowrap;"><span style="font-family:monospace;font-weight:800;font-size:9pt;background:${cBg};color:${cColor};border:0.5pt solid ${cColor};border-radius:2pt;padding:0 3pt;">${code}</span> ${m.name}</span>`).join('　');
+    return `<tr style="break-inside:avoid;page-break-inside:avoid;">
       <td class="c">${i+1}</td>
       <td class="c">${targetGrade}</td>
-      <td>${names}</td>
+      <td>${nameCells}</td>
       <td class="c">雙胞胎</td>
-      <td class="c" style="font-family:monospace;font-weight:bold;">${code}</td>
       <td class="c">${pref}</td>
       <td>${note}</td>
     </tr>`;
@@ -234,9 +235,8 @@ function buildTwin(grade) {
     <tr>
       <th style="width:24pt;">編號</th>
       <th style="width:46pt;">${year}學年度<br>就讀年級</th>
-      <th>學生姓名</th>
+      <th>學生姓名（含代號）</th>
       <th style="width:44pt;">申請原因</th>
-      <th style="width:40pt;">代號</th>
       <th style="width:56pt;">希望同班<br>或不同班</th>
       <th>備　註</th>
     </tr>
@@ -256,19 +256,25 @@ ${stampRow()}`;
 function buildNewTwin() {
   const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
 
-  const twins = Object.values(state.newTwins);
-  const rows = twins.map((t,i)=>{
+  const newTwinArr = Object.values(state.newTwins);
+  const rows = newTwinArr.map((t,i)=>{
     const s1 = state.newStudents[t.s1Id];
     const s2 = state.newStudents[t.s2Id];
-    const names = [t.s1Name||( s1?s1.name:''), t.s2Name||(s2?s2.name:'')].filter(Boolean).join('、');
     const pref  = t.preference==='same'?'同班':'不同班';
     const note  = t.note||'';
-    return `<tr>
+    const code  = `T${i+1}${t.preference==='same'?'+':'-'}`;
+    const cColor= t.preference==='same'?'#0d9488':'#dc2626';
+    const cBg   = t.preference==='same'?'#ccfbf1':'#fee2e2';
+    const members = [
+      {name: t.s1Name||(s1?s1.name:'')},
+      {name: t.s2Name||(s2?s2.name:'')}
+    ].filter(m=>m.name);
+    const nameCells = members.map(m=>`<span style="white-space:nowrap;"><span style="font-family:monospace;font-weight:800;font-size:9pt;background:${cBg};color:${cColor};border:0.5pt solid ${cColor};border-radius:2pt;padding:0 3pt;">${code}</span> ${m.name}</span>`).join('　');
+    return `<tr style="break-inside:avoid;page-break-inside:avoid;">
       <td class="c">${i+1}</td>
       <td class="c">一</td>
-      <td>${names}</td>
+      <td>${nameCells}</td>
       <td class="c">雙胞胎</td>
-      <td class="c">─</td>
       <td class="c">${pref}</td>
       <td>${note}</td>
     </tr>`;
@@ -289,9 +295,8 @@ function buildNewTwin() {
     <tr>
       <th style="width:24pt;">編號</th>
       <th style="width:46pt;">${year}學年度<br>就讀年級</th>
-      <th>學生姓名</th>
+      <th>學生姓名（含代號）</th>
       <th style="width:44pt;">申請原因</th>
-      <th style="width:40pt;">代號</th>
       <th style="width:56pt;">希望同班<br>或不同班</th>
       <th>備　註</th>
     </tr>
