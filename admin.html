@@ -3627,37 +3627,9 @@ async function saveTeacherGrid() {
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
 
-// ── 導師名單預設資料 ──
+// ── 導師名單預設資料（已移除，資料庫已有資料）──
 async function seedTeachersIfEmpty() {
-  const snap = await db.collection('teachers').limit(1).get();
-  if(!snap.empty) return; // 已有資料就不重複寫入
-
-  const defaultTeachers = [
-    // 現2年級導師（填調查表的老師）
-    {grade:2, class:1, name:'祉暄宜'},
-    {grade:2, class:2, name:'周著涵'},
-    {grade:2, class:3, name:'陸恬蓓'},
-    {grade:2, class:4, name:'曾麗玲'},
-    {grade:2, class:5, name:'郭乃菁'},
-    {grade:2, class:6, name:'紀淑苹'},
-    // 現4年級導師（填調查表的老師）
-    {grade:4, class:1, name:'郭佳鸞'},
-    {grade:4, class:2, name:'吳淑妃'},
-    {grade:4, class:3, name:'楊麗燕'},
-    {grade:4, class:4, name:'林春慧'},
-    {grade:4, class:5, name:'高日美'},
-    {grade:4, class:6, name:'林干琪'},
-    {grade:4, class:7, name:'許毓潔'},
-    {grade:4, class:8, name:'葉淑綾'},
-    {grade:4, class:9, name:'蕭婉如'},
-  ];
-  const batch = db.batch();
-  defaultTeachers.forEach(t=>{
-    const ref = db.collection('teachers').doc(`${t.grade}-${t.class}`);
-    batch.set(ref, t);
-  });
-  await batch.commit();
-  console.log('導師名單初始化完成');
+  // 資料已在 Firestore，不再自動寫入
 }
 
 // =============================================
