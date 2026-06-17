@@ -86,7 +86,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="notice">列印時請在瀏覽器勾選「背景圖形」，確保黑色標題列正確列印。</div>
 
     <div class="btn-group">
-      <div class="group-label">📋 附件三：雙胞胎申請一覽表</div>
+      <div class="group-label">📋 附件A：雙胞胎申請一覽表</div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="go('twinNew')">🖨️ 新生雙胞胎（升1年級）</button>
         <button class="btn btn-primary" onclick="go('twin2')">🖨️ 2年級雙胞胎（升3年級）</button>
@@ -97,7 +97,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
 
     <div class="btn-group">
-      <div class="group-label">📋 附件四-A：需費心關懷學生一覽表</div>
+      <div class="group-label">📋 附件B-1：需費心關懷學生一覽表</div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="go('bighead2')">🖨️ 2年級需費心（升3年級）</button>
         <button class="btn btn-primary" onclick="go('bighead4')">🖨️ 4年級需費心（升5年級）</button>
@@ -107,7 +107,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
 
     <div class="btn-group">
-      <div class="group-label">📋 附件四-B：不宜再同班學生一覽表</div>
+      <div class="group-label">📋 附件B-2：不宜再同班學生一覽表</div>
       <div class="btn-row">
         <button class="btn btn-red" onclick="go('rules2')">🖨️ 2年級不宜同班（升3年級）</button>
         <button class="btn btn-red" onclick="go('rules4')">🖨️ 4年級不宜同班（升5年級）</button>
@@ -225,7 +225,7 @@ function buildTwin(grade) {
   const div=document.createElement('div'); div.className='print-page';
   div.innerHTML=`
 <div class="doc-header">
-  <div class="doc-annex">（附件三）　${school}</div>
+  <div class="doc-annex">（附件A）　${school}</div>
   <div class="doc-title">${year} 學年度同年級複數子女學生編班申請一覽表</div>
   <div class="doc-grade">升${gradeLabel(grade)}年級</div>
   <div style="text-align:right;font-size:8.5pt;color:#555;">製表日期：${date}</div>
@@ -283,7 +283,7 @@ function buildNewTwin() {
   const div=document.createElement('div'); div.className='print-page';
   div.innerHTML=`
 <div style="margin-bottom:6pt;">
-  <div style="font-size:9.5pt;color:#333;text-align:center;">（附件三）　${school}</div>
+  <div style="font-size:9.5pt;color:#333;text-align:center;">（附件A）　${school}</div>
   <div style="font-size:13pt;font-weight:bold;text-align:center;">${year} 學年度同年級複數子女學生編班申請一覽表</div>
   <div style="font-size:10.5pt;text-align:center;margin-top:2pt;">新生（升一年級）</div>
   <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#555;margin-top:3pt;">
@@ -341,7 +341,7 @@ function buildBighead(grade) {
   const div=document.createElement('div'); div.className='print-page';
   div.innerHTML=`
 <div style="margin-bottom:6pt;">
-  <div style="font-size:13pt;font-weight:bold;text-align:center;">（附件四-A）「需費心關懷學生」編班申請一覽表 ─ 升${gl}年級</div>
+  <div style="font-size:13pt;font-weight:bold;text-align:center;">（附件B-1）「需費心關懷學生」編班申請一覽表 ─ 升${gl}年級</div>
   <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#333;margin-top:3pt;">
     <span>※ ${year}學年度 ${grade}升${gl}年級依導師與科任教師建議平均分散至各班</span>
     <span>製表日期：${date}</span>
@@ -421,7 +421,7 @@ function buildRules(grade) {
   const div=document.createElement('div'); div.className='print-page';
   div.innerHTML=`
 <div style="margin-bottom:6pt;">
-  <div style="font-size:13pt;font-weight:bold;text-align:center;">（附件四-B）「不宜再同班學生」編班申請一覽表 ─ 升${gl}年級</div>
+  <div style="font-size:13pt;font-weight:bold;text-align:center;">（附件B-2）「不宜再同班學生」編班申請一覽表 ─ 升${gl}年級</div>
   <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#333;margin-top:3pt;">
     <span>※ ${year}學年度 ${grade}升${gl}年級依導師與科任教師建議分散處理，如下表列</span>
     <span>製表日期：${date}</span>
