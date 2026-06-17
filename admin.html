@@ -2661,7 +2661,18 @@ function renderOverviewRules() {
           <div style="font-size:.72rem;color:var(--text3);margin-bottom:2px;">↳ 不能同班</div>
           ${sepRows}
         </div>
-        ${r.reason?`<div style="font-size:.78rem;color:var(--text3);font-style:italic;margin-top:6px;padding:4px 8px;background:var(--bg);border-radius:4px;">📝 ${r.reason}</div>`:''}
+        <div style="margin-top:6px;">
+          ${((r.remarks&&r.remarks.length)?r.remarks:(r.reason?[{text:r.reason,createdAt:''}]:[])).map((rm,ri)=>`
+            <div style="display:flex;align-items:flex-start;gap:5px;padding:3px 6px;background:var(--bg);border-radius:4px;margin-bottom:2px;font-size:.79rem;">
+              <span style="color:var(--text3);flex-shrink:0;">📝</span>
+              <span style="flex:1;line-height:1.5;cursor:pointer;padding:1px 3px;border-radius:3px;transition:background .15s;"
+                onclick="openRuleRemarkEditModal('${r.id}',${ri},${JSON.stringify(rm.text)})"
+                onmouseenter="this.style.background='#e8eefb'" onmouseleave="this.style.background=''"
+                title="點擊編輯">${rm.text}</span>
+              <button onclick="deleteRuleRemark('${r.id}',${ri})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.75rem;padding:0;flex-shrink:0;">🗑</button>
+            </div>`).join('')}
+          <button class="btn btn-ghost btn-sm" style="margin-top:3px;font-size:.75rem;padding:3px 8px;" onclick="openRuleRemarkModal('${r.id}')">＋ 新增說明</button>
+        </div>
       </div>`;
     }).join('');
 
