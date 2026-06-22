@@ -259,8 +259,12 @@ tr:hover td { background: #f8f9fd; }
           <div class="form-group">
             <label>年級</label>
             <select id="upGrade" onchange="updateClassOptions('upGrade','upClass')">
+              <option value="1">1年級</option>
               <option value="2">2年級</option>
+              <option value="3">3年級</option>
               <option value="4">4年級</option>
+              <option value="5">5年級</option>
+              <option value="6">6年級</option>
             </select>
           </div>
           <div class="form-group">
@@ -297,8 +301,12 @@ tr:hover td { background: #f8f9fd; }
             <label>篩選年級</label>
             <select id="viewGrade" onchange="renderUploadedClasses()">
               <option value="">全部</option>
+              <option value="1">1年級</option>
               <option value="2">2年級</option>
+              <option value="3">3年級</option>
               <option value="4">4年級</option>
+              <option value="5">5年級</option>
+              <option value="6">6年級</option>
             </select>
           </div>
         </div>
@@ -321,9 +329,13 @@ tr:hover td { background: #f8f9fd; }
     <div>
       <div class="card">
         <div class="card-title">🎯 年級篩選</div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="ruleGradeBtn1" class="btn btn-ghost" onclick="setRuleGrade(1)">1年級</button>
           <button id="ruleGradeBtn2" class="btn btn-primary" onclick="setRuleGrade(2)">2年級</button>
+          <button id="ruleGradeBtn3" class="btn btn-ghost" onclick="setRuleGrade(3)">3年級</button>
           <button id="ruleGradeBtn4" class="btn btn-ghost" onclick="setRuleGrade(4)">4年級</button>
+          <button id="ruleGradeBtn5" class="btn btn-ghost" onclick="setRuleGrade(5)">5年級</button>
+          <button id="ruleGradeBtn6" class="btn btn-ghost" onclick="setRuleGrade(6)">6年級</button>
         </div>
         <input type="hidden" id="ruleGrade" value="2">
       </div>
@@ -403,8 +415,12 @@ tr:hover td { background: #f8f9fd; }
             <label>顯示年級</label>
             <select id="ruleViewGrade" onchange="renderRuleList()">
               <option value="">全部</option>
+              <option value="1">1年級</option>
               <option value="2">2年級</option>
+              <option value="3">3年級</option>
               <option value="4">4年級</option>
+              <option value="5">5年級</option>
+              <option value="6">6年級</option>
             </select>
           </div>
           <div class="form-group">
@@ -666,6 +682,16 @@ tr:hover td { background: #f8f9fd; }
     <div class="card">
       <div class="card-title">⭐ 資優生名單</div>
       <div class="form-group" style="margin-bottom:8px;">
+        <label>資優群組</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button id="gfGroupBtn1" class="btn btn-primary btn-sm" onclick="setGiftedGroup(1)">G1 群組</button>
+          <button id="gfGroupBtn2" class="btn btn-ghost btn-sm" onclick="setGiftedGroup(2)">G2 群組</button>
+          <button id="gfGroupBtn3" class="btn btn-ghost btn-sm" onclick="setGiftedGroup(3)">G3 群組</button>
+        </div>
+        <input type="hidden" id="gfGroupNum" value="1">
+        <div style="font-size:.75rem;color:var(--text3);margin-top:4px;">同一群組的資優生編班時會分在同一包</div>
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
         <label>搜尋學生</label>
         <input type="text" id="entryGFSearch" placeholder="座號或姓名…" oninput="entrySearch('gifted','entryGFSearch','entryGFDropdown','entryGFList')" autocomplete="off">
         <div id="entryGFDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
@@ -674,7 +700,7 @@ tr:hover td { background: #f8f9fd; }
       <div id="entryGFList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
         <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
       </div>
-      <button class="btn btn-warning btn-sm" onclick="entryCommit('gifted','entryGFList')">⭐ 加入資優生名單</button>
+      <button class="btn btn-warning btn-sm" onclick="entryCommitGifted()">⭐ 加入資優生（G<span id="gfGroupLabel">1</span>）</button>
     </div>
 
   </div>
@@ -692,8 +718,12 @@ tr:hover td { background: #f8f9fd; }
           <div class="form-group">
             <label>年級</label>
             <select id="twGrade" onchange="twClearMembers()">
+              <option value="1">1年級</option>
               <option value="2">2年級</option>
+              <option value="3">3年級</option>
               <option value="4">4年級</option>
+              <option value="5">5年級</option>
+              <option value="6">6年級</option>
             </select>
           </div>
           <div class="form-group grow">
@@ -767,8 +797,12 @@ tr:hover td { background: #f8f9fd; }
             <label>篩選年級</label>
             <select id="twViewGrade" onchange="renderGradeTwinList()">
               <option value="">全部</option>
+              <option value="1">1年級</option>
               <option value="2">2年級</option>
+              <option value="3">3年級</option>
               <option value="4">4年級</option>
+              <option value="5">5年級</option>
+              <option value="6">6年級</option>
             </select>
           </div>
         </div>
@@ -829,8 +863,12 @@ tr:hover td { background: #f8f9fd; }
         <label>顯示年級</label>
         <select id="ovSPGrade" onchange="renderOverviewTag('special','ovSPGrade','ovSPContent')">
           <option value="">全部</option>
+          <option value="1">1年級</option>
           <option value="2">2年級</option>
+          <option value="3">3年級</option>
           <option value="4">4年級</option>
+          <option value="5">5年級</option>
+          <option value="6">6年級</option>
         </select>
       </div>
     </div>
@@ -847,8 +885,12 @@ tr:hover td { background: #f8f9fd; }
         <label>顯示年級</label>
         <select id="ovGFGrade" onchange="renderOverviewTag('gifted','ovGFGrade','ovGFContent')">
           <option value="">全部</option>
+          <option value="1">1年級</option>
           <option value="2">2年級</option>
+          <option value="3">3年級</option>
           <option value="4">4年級</option>
+          <option value="5">5年級</option>
+          <option value="6">6年級</option>
         </select>
       </div>
     </div>
@@ -871,8 +913,12 @@ tr:hover td { background: #f8f9fd; }
         <label>顯示年級</label>
         <select id="ovRuleGrade" onchange="renderOverviewRules()">
           <option value="">全部</option>
+          <option value="1">1年級</option>
           <option value="2">2年級</option>
+          <option value="3">3年級</option>
           <option value="4">4年級</option>
+          <option value="5">5年級</option>
+          <option value="6">6年級</option>
         </select>
       </div>
     </div>
@@ -2826,7 +2872,8 @@ function renderGradeTwinList() {
   });
   // 自動產生 T 代號（2年級 T1、T2… 4年級重新 T1、T2…）
   const twinCodes = {};
-  [2,4].forEach(grade=>{
+  const gradesInState = [...new Set(Object.values(state.rules).map(r=>r.grade))].sort();
+  gradesInState.forEach(grade=>{
     const gradeGroup = twins.filter(t=>t.grade===grade);
     gradeGroup.forEach((t,i)=>{
       const sign = t.preference==='same' ? '+' : '-';
@@ -3302,8 +3349,10 @@ async function deleteRuleRemark(ruleId, idx) {
 // ── 年級按鈕 ──
 function setRuleGrade(grade) {
   document.getElementById('ruleGrade').value = grade;
-  document.getElementById('ruleGradeBtn2').className = grade===2?'btn btn-primary':'btn btn-ghost';
-  document.getElementById('ruleGradeBtn4').className = grade===4?'btn btn-primary':'btn btn-ghost';
+  [1,2,3,4,5,6].forEach(g=>{
+    const btn = document.getElementById('ruleGradeBtn'+g);
+    if(btn) btn.className = grade===g?'btn btn-primary':'btn btn-ghost';
+  });
   onRuleGradeChange();
 }
 
@@ -3526,6 +3575,50 @@ async function saveEditTwin() {
     renderGradeTwinList();
     showAlert('已更新');
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+
+// ── 資優生群組設定 ──
+function setGiftedGroup(n) {
+  document.getElementById('gfGroupNum').value = n;
+  document.getElementById('gfGroupLabel').textContent = n;
+  [1,2,3].forEach(i=>{
+    const btn = document.getElementById('gfGroupBtn'+i);
+    if(btn) btn.className = i===n?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  });
+}
+
+async function entryCommitGifted() {
+  const list    = entryPending['gifted'];
+  const groupNum= parseInt(document.getElementById('gfGroupNum').value)||1;
+  const tagVal  = `gifted_g${groupNum}`; // e.g. gifted_g1
+  if(!list.length) { showAlert('請先搜尋並加入學生','warn'); return; }
+  try {
+    const batch = db.batch();
+    list.forEach(m => {
+      const stu = state.students[m.id];
+      // Remove old gifted tags, add new one
+      stu.tags = stu.tags.filter(t=>t!=='gifted'&&!t.startsWith('gifted_g'));
+      if(!stu.tags.includes(tagVal)) stu.tags.push(tagVal);
+      // Keep backward compat: also mark as 'gifted'
+      if(!stu.tags.includes('gifted')) stu.tags.push('gifted');
+      batch.update(db.collection('students').doc(m.id), { tags: stu.tags });
+    });
+    await batch.commit();
+    const names = list.map(m=>m.name).join('、');
+    entryPending['gifted'] = [];
+    entryRenderList('gifted', 'entryGFList');
+    renderOverviewTag('gifted','ovGFGrade','ovGFContent');
+    renderGradeStats();
+    renderUploadedClasses();
+    showAlert(`已將 ${names} 加入資優生 G${groupNum} 群組`);
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+// ── 取得資優生群組號碼 ──
+function getGiftedGroup(tags) {
+  const gTag = (tags||[]).find(t=>t.startsWith('gifted_g'));
+  return gTag ? parseInt(gTag.replace('gifted_g','')) : 1;
 }
 
 // ── 大頭快速新增 ──
