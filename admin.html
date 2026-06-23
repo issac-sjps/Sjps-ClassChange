@@ -259,6 +259,8 @@ tr:hover td { background: #f8f9fd; }
           <div class="form-group">
             <label>年級</label>
             <select id="upGrade" onchange="updateClassOptions('upGrade','upClass')">
+              <option value="0">0年級（新生）</option>
+              <option value="0">0年級（新生）</option>
               <option value="1">1年級</option>
               <option value="2">2年級</option>
               <option value="3">3年級</option>
@@ -301,6 +303,8 @@ tr:hover td { background: #f8f9fd; }
             <label>篩選年級</label>
             <select id="viewGrade" onchange="renderUploadedClasses()">
               <option value="">全部</option>
+              <option value="0">0年級（新生）</option>
+              <option value="0">0年級（新生）</option>
               <option value="1">1年級</option>
               <option value="2">2年級</option>
               <option value="3">3年級</option>
@@ -330,6 +334,7 @@ tr:hover td { background: #f8f9fd; }
       <div class="card">
         <div class="card-title">🎯 年級篩選</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="ruleGradeBtn0" class="btn btn-ghost" onclick="setRuleGrade(0)">0年（新生）</button>
           <button id="ruleGradeBtn1" class="btn btn-ghost" onclick="setRuleGrade(1)">1年級</button>
           <button id="ruleGradeBtn2" class="btn btn-primary" onclick="setRuleGrade(2)">2年級</button>
           <button id="ruleGradeBtn3" class="btn btn-ghost" onclick="setRuleGrade(3)">3年級</button>
@@ -415,6 +420,8 @@ tr:hover td { background: #f8f9fd; }
             <label>顯示年級</label>
             <select id="ruleViewGrade" onchange="renderRuleList()">
               <option value="">全部</option>
+              <option value="0">0年級（新生）</option>
+              <option value="0">0年級（新生）</option>
               <option value="1">1年級</option>
               <option value="2">2年級</option>
               <option value="3">3年級</option>
@@ -667,6 +674,17 @@ tr:hover td { background: #f8f9fd; }
     <div class="card">
       <div class="card-title">🔵 鑑輔生名單</div>
       <div class="form-group" style="margin-bottom:8px;">
+        <label>鑑輔群組 <span style="font-size:.72rem;color:var(--text3);">（同群組分配到同一導師班）</span></label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;" id="spGroupBtns">
+          <button class="btn btn-primary btn-sm" onclick="setSpecialGroup(1)" id="spGroupBtn1">S1</button>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <input type="hidden" id="spGroupNum" value="1">
+          <button class="btn btn-ghost btn-sm" onclick="addSpecialGroup()">＋ 新增群組</button>
+        </div>
+        <div style="font-size:.75rem;color:var(--text3);margin-top:4px;">同一群組的鑑輔生編班時會分配到同一導師的班</div>
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
         <label>搜尋學生</label>
         <input type="text" id="entrySPSearch" placeholder="座號或姓名…" oninput="entrySearch('special','entrySPSearch','entrySPDropdown','entrySPList')" autocomplete="off">
         <div id="entrySPDropdown" style="display:none;border:1.5px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;box-shadow:var(--shadow);margin-top:2px;position:relative;z-index:50;"></div>
@@ -675,20 +693,21 @@ tr:hover td { background: #f8f9fd; }
       <div id="entrySPList" style="min-height:36px;display:flex;flex-wrap:wrap;gap:5px;padding:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;">
         <span class="entry-empty" style="font-size:.78rem;color:var(--text3);">尚未選擇</span>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="entryCommit('special','entrySPList')" style="background:var(--purple);">🔵 加入鑑輔生名單</button>
+      <button class="btn btn-primary btn-sm" onclick="entryCommitSpecial()" style="background:var(--purple);">🔵 加入鑑輔生（S<span id="spGroupLabel">1</span>）</button>
     </div>
 
     <!-- 資優生 -->
     <div class="card">
       <div class="card-title">⭐ 資優生名單</div>
       <div class="form-group" style="margin-bottom:8px;">
-        <label>資優群組</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button id="gfGroupBtn1" class="btn btn-primary btn-sm" onclick="setGiftedGroup(1)">G1 群組</button>
-          <button id="gfGroupBtn2" class="btn btn-ghost btn-sm" onclick="setGiftedGroup(2)">G2 群組</button>
-          <button id="gfGroupBtn3" class="btn btn-ghost btn-sm" onclick="setGiftedGroup(3)">G3 群組</button>
+        <label>資優群組 <span style="font-size:.72rem;color:var(--text3);">（現有群組自動列出，可新增）</span></label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;" id="gfGroupBtns">
+          <button class="btn btn-primary btn-sm" onclick="setGiftedGroup(1)" id="gfGroupBtn1">G1</button>
         </div>
-        <input type="hidden" id="gfGroupNum" value="1">
+        <div style="display:flex;gap:6px;">
+          <input type="hidden" id="gfGroupNum" value="1">
+          <button class="btn btn-ghost btn-sm" onclick="addGiftedGroup()">＋ 新增群組</button>
+        </div>
         <div style="font-size:.75rem;color:var(--text3);margin-top:4px;">同一群組的資優生編班時會分在同一包</div>
       </div>
       <div class="form-group" style="margin-bottom:8px;">
@@ -718,6 +737,8 @@ tr:hover td { background: #f8f9fd; }
           <div class="form-group">
             <label>年級</label>
             <select id="twGrade" onchange="twClearMembers()">
+              <option value="0">0年級（新生）</option>
+              <option value="0">0年級（新生）</option>
               <option value="1">1年級</option>
               <option value="2">2年級</option>
               <option value="3">3年級</option>
@@ -797,6 +818,8 @@ tr:hover td { background: #f8f9fd; }
             <label>篩選年級</label>
             <select id="twViewGrade" onchange="renderGradeTwinList()">
               <option value="">全部</option>
+              <option value="0">0年級（新生）</option>
+              <option value="0">0年級（新生）</option>
               <option value="1">1年級</option>
               <option value="2">2年級</option>
               <option value="3">3年級</option>
@@ -863,6 +886,7 @@ tr:hover td { background: #f8f9fd; }
         <label>顯示年級</label>
         <select id="ovSPGrade" onchange="renderOverviewTag('special','ovSPGrade','ovSPContent')">
           <option value="">全部</option>
+          <option value="0">0年（新生）</option>
           <option value="1">1年級</option>
           <option value="2">2年級</option>
           <option value="3">3年級</option>
@@ -885,6 +909,7 @@ tr:hover td { background: #f8f9fd; }
         <label>顯示年級</label>
         <select id="ovGFGrade" onchange="renderOverviewTag('gifted','ovGFGrade','ovGFContent')">
           <option value="">全部</option>
+          <option value="0">0年（新生）</option>
           <option value="1">1年級</option>
           <option value="2">2年級</option>
           <option value="3">3年級</option>
@@ -913,6 +938,7 @@ tr:hover td { background: #f8f9fd; }
         <label>顯示年級</label>
         <select id="ovRuleGrade" onchange="renderOverviewRules()">
           <option value="">全部</option>
+          <option value="0">0年（新生）</option>
           <option value="1">1年級</option>
           <option value="2">2年級</option>
           <option value="3">3年級</option>
@@ -1244,6 +1270,7 @@ function renderAll() {
   updateBindTeacherList();
   renderBindingList();
   renderOverviewTag('bighead','ovBHGrade','ovBHContent');
+  setTimeout(refreshGroupBtns, 200);
   renderOverviewTag('special','ovSPGrade','ovSPContent');
   renderOverviewTag('gifted','ovGFGrade','ovGFContent');
   renderOverviewRules();
@@ -3349,7 +3376,7 @@ async function deleteRuleRemark(ruleId, idx) {
 // ── 年級按鈕 ──
 function setRuleGrade(grade) {
   document.getElementById('ruleGrade').value = grade;
-  [1,2,3,4,5,6].forEach(g=>{
+  [0,1,2,3,4,5,6].forEach(g=>{
     const btn = document.getElementById('ruleGradeBtn'+g);
     if(btn) btn.className = grade===g?'btn btn-primary':'btn btn-ghost';
   });
@@ -3578,8 +3605,111 @@ async function saveEditTwin() {
 }
 
 
-// ── 資優生群組設定 ──
-function setGiftedGroup(n) {
+
+// ── 動態群組系統（資優生/鑑輔生共用）──
+function getMaxGroup(prefix) {
+  // 從現有學生 tags 找最大群組號碼
+  let max = 1;
+  Object.values(state.students).forEach(s=>{
+    (s.tags||[]).forEach(t=>{
+      if(t.startsWith(prefix+'_g')) {
+        const n = parseInt(t.replace(prefix+'_g',''));
+        if(n > max) max = n;
+      }
+    });
+  });
+  return max;
+}
+
+function initGroupBtns(prefix, btnContainerId, hiddenId, labelId) {
+  const max    = getMaxGroup(prefix);
+  const cont   = document.getElementById(btnContainerId);
+  const letter = prefix==='gifted'?'G':'S';
+  if(!cont) return;
+  cont.innerHTML = '';
+  for(let i=1; i<=max; i++) {
+    const btn = document.createElement('button');
+    btn.id        = btnContainerId.replace('Btns','Btn')+i;
+    btn.className = i===1?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+    btn.textContent = letter+i;
+    btn.onclick   = () => setGroup(prefix, i, btnContainerId, hiddenId, labelId);
+    cont.appendChild(btn);
+  }
+  if(hiddenId) document.getElementById(hiddenId).value = 1;
+}
+
+function setGroup(prefix, n, btnContainerId, hiddenId, labelId) {
+  if(hiddenId) document.getElementById(hiddenId).value = n;
+  if(labelId)  document.getElementById(labelId).textContent = n;
+  const cont = document.getElementById(btnContainerId);
+  if(cont) cont.querySelectorAll('button').forEach((btn,i)=>{
+    btn.className = (i+1===n)?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  });
+}
+
+function addGroup(prefix, btnContainerId, hiddenId, labelId) {
+  const max    = getMaxGroup(prefix);
+  const newNum = max + 1;
+  const letter = prefix==='gifted'?'G':'S';
+  const cont   = document.getElementById(btnContainerId);
+  if(!cont) return;
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-ghost btn-sm';
+  btn.textContent = letter+newNum;
+  btn.onclick = () => setGroup(prefix, newNum, btnContainerId, hiddenId, labelId);
+  cont.appendChild(btn);
+  setGroup(prefix, newNum, btnContainerId, hiddenId, labelId);
+}
+
+// 資優生群組快捷函數
+function setGiftedGroup(n)  { setGroup('gifted',  n, 'gfGroupBtns', 'gfGroupNum', 'gfGroupLabel'); }
+function addGiftedGroup()   { addGroup('gifted', 'gfGroupBtns', 'gfGroupNum', 'gfGroupLabel'); }
+function setSpecialGroup(n) { setGroup('special', n, 'spGroupBtns', 'spGroupNum', 'spGroupLabel'); }
+function addSpecialGroup()  { addGroup('special', 'spGroupBtns', 'spGroupNum', 'spGroupLabel'); }
+
+async function entryCommitSpecial() {
+  const list     = entryPending['special'];
+  const groupNum = parseInt(document.getElementById('spGroupNum').value)||1;
+  const tagVal   = `special_g${groupNum}`;
+  if(!list.length) { showAlert('請先搜尋並加入學生','warn'); return; }
+  try {
+    const batch = db.batch();
+    list.forEach(m => {
+      const stu = state.students[m.id];
+      stu.tags = stu.tags.filter(t=>t!=='special'&&!t.startsWith('special_g'));
+      if(!stu.tags.includes(tagVal)) stu.tags.push(tagVal);
+      if(!stu.tags.includes('special')) stu.tags.push('special');
+      batch.update(db.collection('students').doc(m.id), { tags: stu.tags });
+    });
+    await batch.commit();
+    const names = list.map(m=>m.name).join('、');
+    entryPending['special'] = [];
+    entryRenderList('special', 'entrySPList');
+    renderOverviewTag('special','ovSPGrade','ovSPContent');
+    renderGradeStats();
+    renderUploadedClasses();
+    showAlert(`已將 ${names} 加入鑑輔生 S${groupNum} 群組`);
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
+// 覆蓋舊的 getGiftedGroup
+function getGiftedGroup(tags) {
+  const t = (tags||[]).find(t=>t.startsWith('gifted_g'));
+  return t ? parseInt(t.replace('gifted_g','')) : 1;
+}
+function getSpecialGroup(tags) {
+  const t = (tags||[]).find(t=>t.startsWith('special_g'));
+  return t ? parseInt(t.replace('special_g','')) : 1;
+}
+
+// 初始化群組按鈕（在 renderAll 後呼叫）
+function refreshGroupBtns() {
+  initGroupBtns('gifted',  'gfGroupBtns', 'gfGroupNum', 'gfGroupLabel');
+  initGroupBtns('special', 'spGroupBtns', 'spGroupNum', 'spGroupLabel');
+}
+
+// ── (已替換為動態群組) ──
+function _oldSetGiftedGroup(n) {
   document.getElementById('gfGroupNum').value = n;
   document.getElementById('gfGroupLabel').textContent = n;
   [1,2,3].forEach(i=>{
@@ -3659,6 +3789,7 @@ function bhQuickSearchFn() {
           document.getElementById('bhQuickSearch').value='';
           dd.style.display='none';
           renderOverviewTag('bighead','ovBHGrade','ovBHContent');
+  setTimeout(refreshGroupBtns, 200);
           renderGradeStats();
           renderUploadedClasses();
         } catch(e){ showAlert('儲存失敗：'+e.message,'warn'); }
