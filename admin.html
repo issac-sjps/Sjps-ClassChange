@@ -875,11 +875,16 @@ tr:hover td { background: #f8f9fd; }
 <!-- ==================== TAB: 鑑輔生 ==================== -->
 <div id="tab-ov-special" class="tab-pane">
   <div class="card">
-    <div class="card-title">🔵 鑑輔生名單 <span>特殊需求學生，依班級顯示</span></div>
-    <div class="form-row" style="margin-bottom:0;">
+    <div class="card-title">🔵 鑑輔生名單
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button id="spViewByClass" class="btn btn-primary btn-sm" onclick="setSPView('class')">📚 依班級</button>
+        <button id="spViewByGroup" class="btn btn-ghost btn-sm" onclick="setSPView('group')">🏷️ 依群組</button>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:0;" id="spGradeRow">
       <div class="form-group">
         <label>顯示年級</label>
-        <select id="ovSPGrade" onchange="renderOverviewTag('special','ovSPGrade','ovSPContent')">
+        <select id="ovSPGrade" onchange="renderSPView()">
           <option value="">全部</option>
           <option value="0">0年（新生）</option>
           <option value="1">1年級</option>
@@ -985,6 +990,28 @@ tr:hover td { background: #f8f9fd; }
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('ruleRemarkModal')">取消</button>
       <button class="btn btn-primary" onclick="saveRuleRemark()">💾 新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: 修改學生群組 ==================== -->
+<div class="modal-bg" id="changeGroupModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-title" id="changeGroupTitle">修改群組</div>
+    <div id="changeGroupInfo" style="font-size:.875rem;color:var(--text2);margin-bottom:12px;"></div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>群組號碼</label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="changeGroupPrefix" style="font-family:monospace;font-size:1.1rem;font-weight:700;color:var(--navy);"></span>
+        <input type="number" id="changeGroupValue" min="1" max="99" style="width:80px;font-size:1.1rem;text-align:center;">
+      </div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:5px;">輸入數字，例如 1 = G1，2 = G2</div>
+    </div>
+    <input type="hidden" id="changeGroupStuId">
+    <input type="hidden" id="changeGroupType">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('changeGroupModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveStudentGroup()">💾 儲存</button>
     </div>
   </div>
 </div>
@@ -1271,7 +1298,7 @@ function renderAll() {
   renderBindingList();
   renderOverviewTag('bighead','ovBHGrade','ovBHContent');
   setTimeout(refreshGroupBtns, 200);
-  renderOverviewTag('special','ovSPGrade','ovSPContent');
+  renderSPView();
   renderGFView();
   renderOverviewRules();
   renderGradeTwinList();
@@ -3735,6 +3762,117 @@ function refreshGroupBtns() {
 }
 
 
+
+// ── 鑑輔生顯示模式 ──
+let spViewMode = 'class';
+
+function setSPView(mode) {
+  spViewMode = mode;
+  document.getElementById('spViewByClass').className = mode==='class'?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  document.getElementById('spViewByGroup').className = mode==='group'?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  document.getElementById('spGradeRow').style.display = mode==='class'?'':'none';
+  renderSPView();
+}
+
+function renderSPView() {
+  if(spViewMode==='group') renderSPByGroup();
+  else renderOverviewTag('special','ovSPGrade','ovSPContent');
+}
+
+function renderSPByGroup() {
+  const cont = document.getElementById('ovSPContent');
+  const groups = {};
+  Object.values(state.students).filter(s=>s.tags.includes('special')).forEach(s=>{
+    const g = getSpecialGroup(s.tags);
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(s);
+  });
+
+  const groupNums = Object.keys(groups).map(Number).sort();
+  if(!groupNums.length) { cont.innerHTML='<div class="card"><div class="empty">目前無鑑輔生</div></div>'; return; }
+
+  const totalAll = Object.values(groups).reduce((a,v)=>a+v.length,0);
+
+  let html = `<div class="card" style="margin-bottom:16px;">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" style="color:var(--purple);">${totalAll}</div><div class="stat-lbl">鑑輔生總數</div></div>
+      <div class="stat-box"><div class="stat-num">${groupNums.length}</div><div class="stat-lbl">群組數</div></div>
+      ${groupNums.map(g=>`<div class="stat-box"><div class="stat-num" style="color:var(--purple);">${groups[g].length}</div><div class="stat-lbl">S${g} 群組</div></div>`).join('')}
+    </div>
+  </div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">`;
+
+  groupNums.forEach(g => {
+    const stus = [...groups[g]].sort((a,b)=>a.grade-b.grade||a.class-b.class||a.number-b.number);
+    const rows = stus.map(s => {
+      const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+      const noteCount = (state.studentNotes[s.id]||[]).length;
+      const noteContId = `notes_${s.id}_special_grp`;
+      return `<div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid #f0f2f8;font-size:.855rem;">
+          <span style="color:${gc};font-size:.78rem;">${s.gender==='M'?'♂':'♀'}</span>
+          <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
+          <span style="font-weight:600;flex:1;">${s.name}</span>
+          <span style="font-size:.72rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+          <button onclick="openChangeGroup('${s.id}','special')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:var(--purple);padding:2px 5px;border-radius:4px;border:1px solid var(--purple);" title="修改群組">S${getSpecialGroup(s.tags)} ✏️</button>
+          <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 5px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">💬${noteCount>0?` (${noteCount})`:''}
+          </button>
+        </div>
+        <div id="${noteContId}" style="display:none;padding:8px 12px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;"></div>
+      </div>`;
+    }).join('');
+
+    html += `<div style="border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:9px 14px;background:var(--purple);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:800;color:#fff;font-size:.95rem;">🔵 S${g} 群組</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,.85);">${stus.length} 位學生</span>
+      </div>
+      ${rows}
+    </div>`;
+  });
+
+  html += '</div>';
+  cont.innerHTML = html;
+}
+
+// ── 修改學生群組 ──
+function openChangeGroup(stuId, type) {
+  const stu = state.students[stuId];
+  if(!stu) return;
+  const prefix = type==='gifted'?'G':'S';
+  const curGroup = type==='gifted' ? getGiftedGroup(stu.tags) : getSpecialGroup(stu.tags);
+  document.getElementById('changeGroupTitle').textContent = `修改 ${prefix} 群組 — ${stu.name}`;
+  document.getElementById('changeGroupInfo').textContent = `${classLabel(stu.grade,stu.class)}　目前：${prefix}${curGroup}`;
+  document.getElementById('changeGroupPrefix').textContent = prefix;
+  document.getElementById('changeGroupValue').value = curGroup;
+  document.getElementById('changeGroupStuId').value = stuId;
+  document.getElementById('changeGroupType').value = type;
+  openModal('changeGroupModal');
+  setTimeout(()=>document.getElementById('changeGroupValue').select(),100);
+}
+
+async function saveStudentGroup() {
+  const stuId = document.getElementById('changeGroupStuId').value;
+  const type  = document.getElementById('changeGroupType').value;
+  const newG  = parseInt(document.getElementById('changeGroupValue').value);
+  if(!newG||newG<1) { showAlert('請輸入有效的群組號碼','warn'); return; }
+
+  const stu     = state.students[stuId];
+  const tagBase = type==='gifted'?'gifted':'special';
+  stu.tags = stu.tags.filter(t=>!t.startsWith(tagBase+'_g'));
+  stu.tags.push(`${tagBase}_g${newG}`);
+  if(!stu.tags.includes(tagBase)) stu.tags.push(tagBase);
+
+  try {
+    await db.collection('students').doc(stuId).update({ tags: stu.tags });
+    closeModal('changeGroupModal');
+    if(type==='gifted') renderGFView();
+    else renderSPView();
+    renderGradeStats();
+    renderUploadedClasses();
+    showAlert(`已更新為 ${type==='gifted'?'G':'S'}${newG} 群組`);
+  } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
+}
+
 // ── 資優生顯示模式 ──
 let gfViewMode = 'class'; // 'class' 或 'group'
 
@@ -3789,6 +3927,7 @@ function renderGFByGroup() {
           <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
           <span style="font-weight:600;flex:1;">${s.name}</span>
           <span style="font-size:.72rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+          <button onclick="openChangeGroup('${s.id}','gifted')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:var(--gold);padding:2px 5px;border-radius:4px;border:1px solid var(--gold);" title="修改群組">G${getGiftedGroup(s.tags)} ✏️</button>
           <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 5px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">
             💬${noteCount>0?` (${noteCount})`:''}
           </button>
