@@ -2559,10 +2559,25 @@ function renderOverviewTag(tag, gradeSelId, contId) {
   const tagColor = {'bighead':'var(--red)','special':'var(--purple)','gifted':'var(--gold)'}[filterTag]||'var(--navy)';
   const tagLabelMap = {'bighead':'大頭','special':'鑑輔生','gifted':'資優生'};
   const totalTagged = Object.values(map).reduce((a,{students})=>a+students.filter(s=>s.tags.includes(filterTag)).length, 0);
+
+  // 群組統計
+  const allTaggedStus = Object.values(map).flatMap(({students})=>students.filter(s=>s.tags.includes(filterTag)));
+  let groupStatHtml = '';
+  if(filterTag==='gifted') {
+    const groups = {};
+    allTaggedStus.forEach(s=>{ const g=getGiftedGroup(s.tags); groups[g]=(groups[g]||0)+1; });
+    groupStatHtml = Object.keys(groups).sort().map(g=>`<div class="stat-box"><div class="stat-num" style="color:var(--gold);">${groups[g]}</div><div class="stat-lbl">G${g} 群組</div></div>`).join('');
+  } else if(filterTag==='special') {
+    const groups = {};
+    allTaggedStus.forEach(s=>{ const g=getSpecialGroup(s.tags); groups[g]=(groups[g]||0)+1; });
+    groupStatHtml = Object.keys(groups).sort().map(g=>`<div class="stat-box"><div class="stat-num" style="color:var(--purple);">${groups[g]}</div><div class="stat-lbl">S${g} 群組</div></div>`).join('');
+  }
+
   let html = `<div class="card" style="margin-bottom:16px;">
     <div class="stats-row">
       <div class="stat-box"><div class="stat-num" style="color:${tagColor};">${totalTagged}</div><div class="stat-lbl">${tagLabelMap[filterTag]||filterTag}</div></div>
       <div class="stat-box"><div class="stat-num">${Object.keys(map).length}</div><div class="stat-lbl">涉及班級數</div></div>
+      ${groupStatHtml}
     </div>
   </div>`;
 
@@ -2575,10 +2590,19 @@ function renderOverviewTag(tag, gradeSelId, contId) {
     const sp = students.filter(s=>s.tags.includes('special'));
     const gf = students.filter(s=>s.tags.includes('gifted'));
 
+    // 資優生按群組分計
+    const gfGroups = {};
+    gf.forEach(s=>{ const g=getGiftedGroup(s.tags); gfGroups[g]=(gfGroups[g]||0)+1; });
+    const spGroups = {};
+    sp.forEach(s=>{ const g=getSpecialGroup(s.tags); spGroups[g]=(spGroups[g]||0)+1; });
+
+    const gfBadges = Object.keys(gfGroups).sort().map(g=>`<span class="tag tag-gifted" style="font-size:.65rem;">⭐ G${g}×${gfGroups[g]}</span>`).join('');
+    const spBadges = Object.keys(spGroups).sort().map(g=>`<span class="tag tag-special" style="font-size:.65rem;">🔵 S${g}×${spGroups[g]}</span>`).join('');
+
     const badgesHtml = [
       bh.length ? `<span class="tag tag-bighead">大頭 ${bh.length}</span>` : '',
-      sp.length ? `<span class="tag tag-special">鑑輔生 ${sp.length}</span>` : '',
-      gf.length ? `<span class="tag tag-gifted">資優生 ${gf.length}</span>` : ''
+      spBadges,
+      gfBadges
     ].filter(Boolean).join('');
 
     // Build student rows sorted by tag priority then number
@@ -2586,10 +2610,12 @@ function renderOverviewTag(tag, gradeSelId, contId) {
     const sorted = [...students].sort((a,b)=>tagOrder(a)-tagOrder(b)||a.number-b.number);
 
     const rowsHtml = sorted.map(s => {
+      const gfGrp = getGiftedGroup(s.tags);
+      const spGrp = getSpecialGroup(s.tags);
       const tgs = [
-        s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.68rem;">大頭</span>' : '',
-        s.tags.includes('special') ? '<span class="tag tag-special" style="font-size:.68rem;">鑑輔生</span>' : '',
-        s.tags.includes('gifted')  ? '<span class="tag tag-gifted" style="font-size:.68rem;">資優生</span>'  : ''
+        s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.68rem;">⚠ 大頭</span>' : '',
+        s.tags.includes('special') ? `<span class="tag tag-special" style="font-size:.68rem;">🔵 S${spGrp}</span>` : '',
+        s.tags.includes('gifted')  ? `<span class="tag tag-gifted"  style="font-size:.68rem;">⭐ G${gfGrp}</span>`  : ''
       ].filter(Boolean).join('');
       const binding = Object.values(state.bindings).find(b=>b.studentId===s.id);
       const bindHtml = binding ? `<span class="tag" style="background:#e0f2fe;color:#0369a1;font-size:.65rem;">綁 ${binding.teacherName}</span>` : '';
