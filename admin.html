@@ -898,11 +898,16 @@ tr:hover td { background: #f8f9fd; }
 <!-- ==================== TAB: 資優生 ==================== -->
 <div id="tab-ov-gifted" class="tab-pane">
   <div class="card">
-    <div class="card-title">⭐ 資優生名單 <span>資優班學生，依班級顯示</span></div>
-    <div class="form-row" style="margin-bottom:0;">
+    <div class="card-title">⭐ 資優生名單
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button id="gfViewByClass" class="btn btn-primary btn-sm" onclick="setGFView('class')">📚 依班級</button>
+        <button id="gfViewByGroup" class="btn btn-ghost btn-sm" onclick="setGFView('group')">🏷️ 依群組</button>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:0;" id="gfGradeRow">
       <div class="form-group">
         <label>顯示年級</label>
-        <select id="ovGFGrade" onchange="renderOverviewTag('gifted','ovGFGrade','ovGFContent')">
+        <select id="ovGFGrade" onchange="renderGFView()">
           <option value="">全部</option>
           <option value="0">0年（新生）</option>
           <option value="1">1年級</option>
@@ -1267,7 +1272,7 @@ function renderAll() {
   renderOverviewTag('bighead','ovBHGrade','ovBHContent');
   setTimeout(refreshGroupBtns, 200);
   renderOverviewTag('special','ovSPGrade','ovSPContent');
-  renderOverviewTag('gifted','ovGFGrade','ovGFContent');
+  renderGFView();
   renderOverviewRules();
   renderGradeTwinList();
   renderTwinList();
@@ -3727,6 +3732,82 @@ function getSpecialGroup(tags) {
 function refreshGroupBtns() {
   initGroupBtns('gifted',  'gfGroupBtns', 'gfGroupNum', 'gfGroupLabel');
   initGroupBtns('special', 'spGroupBtns', 'spGroupNum', 'spGroupLabel');
+}
+
+
+// ── 資優生顯示模式 ──
+let gfViewMode = 'class'; // 'class' 或 'group'
+
+function setGFView(mode) {
+  gfViewMode = mode;
+  document.getElementById('gfViewByClass').className = mode==='class'?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  document.getElementById('gfViewByGroup').className = mode==='group'?'btn btn-primary btn-sm':'btn btn-ghost btn-sm';
+  // 依群組模式不需要年級篩選
+  document.getElementById('gfGradeRow').style.display = mode==='class'?'':'none';
+  renderGFView();
+}
+
+function renderGFView() {
+  if(gfViewMode==='group') renderGFByGroup();
+  else renderOverviewTag('gifted','ovGFGrade','ovGFContent');
+}
+
+function renderGFByGroup() {
+  const cont = document.getElementById('ovGFContent');
+
+  // 收集所有資優生，依群組分組
+  const groups = {};
+  Object.values(state.students).filter(s=>s.tags.includes('gifted')).forEach(s=>{
+    const g = getGiftedGroup(s.tags);
+    if(!groups[g]) groups[g] = [];
+    groups[g].push(s);
+  });
+
+  const groupNums = Object.keys(groups).map(Number).sort();
+  if(!groupNums.length) { cont.innerHTML='<div class="card"><div class="empty">目前無資優生</div></div>'; return; }
+
+  const totalAll = Object.values(groups).reduce((a,v)=>a+v.length,0);
+
+  let html = `<div class="card" style="margin-bottom:16px;">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" style="color:var(--gold);">${totalAll}</div><div class="stat-lbl">資優生總數</div></div>
+      <div class="stat-box"><div class="stat-num">${groupNums.length}</div><div class="stat-lbl">群組數</div></div>
+      ${groupNums.map(g=>`<div class="stat-box"><div class="stat-num" style="color:var(--gold);">${groups[g].length}</div><div class="stat-lbl">G${g} 群組</div></div>`).join('')}
+    </div>
+  </div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">`;
+
+  groupNums.forEach(g => {
+    const stus = [...groups[g]].sort((a,b)=>a.grade-b.grade||a.class-b.class||a.number-b.number);
+    const noteContPrefix = `gf_g${g}`;
+    const rows = stus.map(s => {
+      const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
+      const noteCount = (state.studentNotes[s.id]||[]).length;
+      const noteContId = `notes_${s.id}_gifted`;
+      return `<div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid #f0f2f8;font-size:.855rem;">
+          <span style="color:${gc};font-size:.78rem;">${s.gender==='M'?'♂':'♀'}</span>
+          <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
+          <span style="font-weight:600;flex:1;">${s.name}</span>
+          <span style="font-size:.72rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
+          <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 5px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">
+            💬${noteCount>0?` (${noteCount})`:''}
+          </button>
+        </div>
+        <div id="${noteContId}" style="display:none;padding:8px 12px 10px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;"></div>
+      </div>`;
+    }).join('');
+
+    html += `<div style="border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:9px 14px;background:var(--gold);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:800;color:#fff;font-size:.95rem;">⭐ G${g} 群組</span>
+        <span style="font-size:.8rem;color:rgba(255,255,255,.85);">${stus.length} 位學生</span>
+      </div>
+      ${rows}
+    </div>`;
+  });
+
+  html += '</div>';
+  cont.innerHTML = html;
 }
 
 // ── (已替換為動態群組) ──
