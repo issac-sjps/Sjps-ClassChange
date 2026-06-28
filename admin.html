@@ -3723,14 +3723,15 @@ function addSpecialGroup()  { addGroup('special', 'spGroupBtns', 'spGroupNum', '
 async function entryCommitSpecial() {
   const list     = entryPending['special'];
   const groupNum = parseInt(document.getElementById('spGroupNum').value)||1;
-  const tagVal   = `special_g${groupNum}`;
+  // tagVal handled per-student with grade
   if(!list.length) { showAlert('請先搜尋並加入學生','warn'); return; }
   try {
     const batch = db.batch();
     list.forEach(m => {
       const stu = state.students[m.id];
+      const gradeTagSP = `special_g${m.grade}_${groupNum}`;
       stu.tags = stu.tags.filter(t=>t!=='special'&&!t.startsWith('special_g'));
-      if(!stu.tags.includes(tagVal)) stu.tags.push(tagVal);
+      stu.tags.push(gradeTagSP);
       if(!stu.tags.includes('special')) stu.tags.push('special');
       batch.update(db.collection('students').doc(m.id), { tags: stu.tags });
     });
@@ -3746,12 +3747,21 @@ async function entryCommitSpecial() {
 }
 
 // 覆蓋舊的 getGiftedGroup
-function getGiftedGroup(tags) {
-  const t = (tags||[]).find(t=>t.startsWith('gifted_g'));
+function getGiftedGroup(tags, grade) {
+  // 優先找含年級的 gifted_g{grade}_{n}，再找舊格式 gifted_g{n}
+  if(grade !== undefined) {
+    const t = (tags||[]).find(t=>t.startsWith(`gifted_g${grade}_`));
+    if(t) return parseInt(t.split('_').pop());
+  }
+  const t = (tags||[]).find(t=>t.startsWith('gifted_g')&&!t.includes('_', 8));
   return t ? parseInt(t.replace('gifted_g','')) : 1;
 }
-function getSpecialGroup(tags) {
-  const t = (tags||[]).find(t=>t.startsWith('special_g'));
+function getSpecialGroup(tags, grade) {
+  if(grade !== undefined) {
+    const t = (tags||[]).find(t=>t.startsWith(`special_g${grade}_`));
+    if(t) return parseInt(t.split('_').pop());
+  }
+  const t = (tags||[]).find(t=>t.startsWith('special_g')&&!t.includes('_', 9));
   return t ? parseInt(t.replace('special_g','')) : 1;
 }
 
@@ -3781,12 +3791,15 @@ function renderSPView() {
 
 function renderSPByGroup() {
   const cont = document.getElementById('ovSPContent');
-  const groups = {};
+  const spGradeGroups = {};
   Object.values(state.students).filter(s=>s.tags.includes('special')).forEach(s=>{
-    const g = getSpecialGroup(s.tags);
-    if(!groups[g]) groups[g] = [];
-    groups[g].push(s);
+    const g = getSpecialGroup(s.tags, s.grade);
+    if(!spGradeGroups[s.grade]) spGradeGroups[s.grade] = {};
+    if(!spGradeGroups[s.grade][g]) spGradeGroups[s.grade][g] = [];
+    spGradeGroups[s.grade][g].push(s);
   });
+  const groups = {};
+  Object.values(spGradeGroups).forEach(grp=>{ Object.keys(grp).forEach(g=>{ if(!groups[g]) groups[g]=[]; groups[g].push(...grp[g]); }); });
 
   const groupNums = Object.keys(groups).map(Number).sort();
   if(!groupNums.length) { cont.innerHTML='<div class="card"><div class="empty">目前無鑑輔生</div></div>'; return; }
@@ -3801,8 +3814,13 @@ function renderSPByGroup() {
     </div>
   </div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">`;
 
-  groupNums.forEach(g => {
-    const stus = [...groups[g]].sort((a,b)=>a.grade-b.grade||a.class-b.class||a.number-b.number);
+  const sortedSpGrades = Object.keys(spGradeGroups).map(Number).sort();
+  sortedSpGrades.forEach(grade => {
+    const spGrpMap = spGradeGroups[grade];
+    const spGrpNums = Object.keys(spGrpMap).map(Number).sort();
+    html += `<div style="grid-column:1/-1;font-size:.8rem;font-weight:700;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;">${grade}年級</div>`;
+    spGrpNums.forEach(g => {
+    const stus = [...spGrpMap[g]].sort((a,b)=>a.class-b.class||a.number-b.number);
     const rows = stus.map(s => {
       const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
       const noteCount = (state.studentNotes[s.id]||[]).length;
@@ -3828,7 +3846,8 @@ function renderSPByGroup() {
       </div>
       ${rows}
     </div>`;
-  });
+    }); // end spGrpNums
+  }); // end spGrades
 
   html += '</div>';
   cont.innerHTML = html;
@@ -3859,7 +3878,7 @@ async function saveStudentGroup() {
   const stu     = state.students[stuId];
   const tagBase = type==='gifted'?'gifted':'special';
   stu.tags = stu.tags.filter(t=>!t.startsWith(tagBase+'_g'));
-  stu.tags.push(`${tagBase}_g${newG}`);
+  stu.tags.push(`${tagBase}_g${stu.grade}_${newG}`);
   if(!stu.tags.includes(tagBase)) stu.tags.push(tagBase);
 
   try {
@@ -3893,13 +3912,17 @@ function renderGFView() {
 function renderGFByGroup() {
   const cont = document.getElementById('ovGFContent');
 
-  // 收集所有資優生，依群組分組
-  const groups = {};
+  // 收集所有資優生，依年級+群組分組
+  const gradeGroups = {}; // { grade: { groupNum: [students] } }
   Object.values(state.students).filter(s=>s.tags.includes('gifted')).forEach(s=>{
-    const g = getGiftedGroup(s.tags);
-    if(!groups[g]) groups[g] = [];
-    groups[g].push(s);
+    const g = getGiftedGroup(s.tags, s.grade);
+    if(!gradeGroups[s.grade]) gradeGroups[s.grade] = {};
+    if(!gradeGroups[s.grade][g]) gradeGroups[s.grade][g] = [];
+    gradeGroups[s.grade][g].push(s);
   });
+  // flatten for stats
+  const groups = {};
+  Object.values(gradeGroups).forEach(grp=>{ Object.keys(grp).forEach(g=>{ if(!groups[g]) groups[g]=[]; groups[g].push(...grp[g]); }); });
 
   const groupNums = Object.keys(groups).map(Number).sort();
   if(!groupNums.length) { cont.innerHTML='<div class="card"><div class="empty">目前無資優生</div></div>'; return; }
@@ -3914,9 +3937,15 @@ function renderGFByGroup() {
     </div>
   </div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">`;
 
-  groupNums.forEach(g => {
-    const stus = [...groups[g]].sort((a,b)=>a.grade-b.grade||a.class-b.class||a.number-b.number);
-    const noteContPrefix = `gf_g${g}`;
+  // 依年級再依群組渲染
+  const sortedGrades = Object.keys(gradeGroups).map(Number).sort();
+  sortedGrades.forEach(grade => {
+    const gradeGrpMap = gradeGroups[grade];
+    const grpNums = Object.keys(gradeGrpMap).map(Number).sort();
+    html += `<div style="grid-column:1/-1;font-size:.8rem;font-weight:700;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px;">${grade}年級</div>`;
+    grpNums.forEach(g => {
+    const stus = [...gradeGrpMap[g]].sort((a,b)=>a.class-b.class||a.number-b.number);
+    const noteContPrefix = `gf_g${grade}_${g}`;
     const rows = stus.map(s => {
       const gc = s.gender==='M'?'var(--blue)':'var(--pink)';
       const noteCount = (state.studentNotes[s.id]||[]).length;
@@ -3943,7 +3972,8 @@ function renderGFByGroup() {
       </div>
       ${rows}
     </div>`;
-  });
+    }); // end grpNums
+  }); // end grades
 
   html += '</div>';
   cont.innerHTML = html;
@@ -3969,8 +3999,9 @@ async function entryCommitGifted() {
     list.forEach(m => {
       const stu = state.students[m.id];
       // Remove old gifted tags, add new one
+      const gradeTagGF = `gifted_g${m.grade}_${groupNum}`;
       stu.tags = stu.tags.filter(t=>t!=='gifted'&&!t.startsWith('gifted_g'));
-      if(!stu.tags.includes(tagVal)) stu.tags.push(tagVal);
+      stu.tags.push(gradeTagGF);
       // Keep backward compat: also mark as 'gifted'
       if(!stu.tags.includes('gifted')) stu.tags.push('gifted');
       batch.update(db.collection('students').doc(m.id), { tags: stu.tags });
