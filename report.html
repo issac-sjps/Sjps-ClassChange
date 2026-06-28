@@ -113,6 +113,26 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
         <button class="btn btn-red" onclick="go('rules4')">🖨️ 4年級不宜同班（升5年級）</button>
       </div>
     </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+
+    <div class="btn-group">
+      <div class="group-label">📋 附件C：資優生群組一覽表</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('gifted2')" style="background:#b45309;">🖨️ 2年級資優生群組（升3年級）</button>
+        <button class="btn btn-primary" onclick="go('gifted4')" style="background:#b45309;">🖨️ 4年級資優生群組（升5年級）</button>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+
+    <div class="btn-group">
+      <div class="group-label">📋 附件D：鑑輔生群組一覽表</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('special2')" style="background:#7c3aed;">🖨️ 2年級鑑輔生群組（升3年級）</button>
+        <button class="btn btn-primary" onclick="go('special4')" style="background:#7c3aed;">🖨️ 4年級鑑輔生群組（升5年級）</button>
+      </div>
+    </div>
   </div>
 
   <div class="card" id="previewCard" style="display:none;">
@@ -172,6 +192,14 @@ async function loadAll() {
 
 function v(id){return document.getElementById(id).value.trim();}
 function clsLabel(g,c){return `${g}年${c}班`;}
+function getGiftedGroup(tags,grade){
+  if(grade!==undefined){const t=(tags||[]).find(t=>t.startsWith(`gifted_g${grade}_`));if(t)return parseInt(t.split('_').pop());}
+  const t=(tags||[]).find(t=>t.startsWith('gifted_g')&&!t.includes('_',8));return t?parseInt(t.replace('gifted_g','')):1;
+}
+function getSpecialGroup(tags,grade){
+  if(grade!==undefined){const t=(tags||[]).find(t=>t.startsWith(`special_g${grade}_`));if(t)return parseInt(t.split('_').pop());}
+  const t=(tags||[]).find(t=>t.startsWith('special_g')&&!t.includes('_',9));return t?parseInt(t.replace('special_g','')):1;
+}
 function teacher(grade,cls){
   const key=`${grade}-${cls}`;
   if(state.teachers[key]) return state.teachers[key].name;
@@ -462,6 +490,10 @@ async function go(type) {
   if(type==='bighead4') pages=buildBighead(4);
   if(type==='rules2')   pages=buildRules(2);
   if(type==='rules4')   pages=buildRules(4);
+  if(type==='gifted2')  pages=buildGiftedGroup(2);
+  if(type==='gifted4')  pages=buildGiftedGroup(4);
+  if(type==='special2') pages=buildSpecialGroup(2);
+  if(type==='special4') pages=buildSpecialGroup(4);
 
   pages.forEach(p=>{
     printArea.appendChild(p.cloneNode(true));
