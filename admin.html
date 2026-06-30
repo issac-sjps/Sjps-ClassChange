@@ -2597,11 +2597,11 @@ function renderOverviewTag(tag, gradeSelId, contId) {
   let groupStatHtml = '';
   if(filterTag==='gifted') {
     const groups = {};
-    allTaggedStus.forEach(s=>{ const g=getGiftedGroup(s.tags); groups[g]=(groups[g]||0)+1; });
+    allTaggedStus.forEach(s=>{ const g=getGiftedGroup(s.tags, s.grade); groups[g]=(groups[g]||0)+1; });
     groupStatHtml = Object.keys(groups).sort().map(g=>`<div class="stat-box"><div class="stat-num" style="color:var(--gold);">${groups[g]}</div><div class="stat-lbl">G${g} 群組</div></div>`).join('');
   } else if(filterTag==='special') {
     const groups = {};
-    allTaggedStus.forEach(s=>{ const g=getSpecialGroup(s.tags); groups[g]=(groups[g]||0)+1; });
+    allTaggedStus.forEach(s=>{ const g=getSpecialGroup(s.tags, s.grade); groups[g]=(groups[g]||0)+1; });
     groupStatHtml = Object.keys(groups).sort().map(g=>`<div class="stat-box"><div class="stat-num" style="color:var(--purple);">${groups[g]}</div><div class="stat-lbl">S${g} 群組</div></div>`).join('');
   }
 
@@ -2624,9 +2624,9 @@ function renderOverviewTag(tag, gradeSelId, contId) {
 
     // 資優生按群組分計
     const gfGroups = {};
-    gf.forEach(s=>{ const g=getGiftedGroup(s.tags); gfGroups[g]=(gfGroups[g]||0)+1; });
+    gf.forEach(s=>{ const g=getGiftedGroup(s.tags, s.grade); gfGroups[g]=(gfGroups[g]||0)+1; });
     const spGroups = {};
-    sp.forEach(s=>{ const g=getSpecialGroup(s.tags); spGroups[g]=(spGroups[g]||0)+1; });
+    sp.forEach(s=>{ const g=getSpecialGroup(s.tags, s.grade); spGroups[g]=(spGroups[g]||0)+1; });
 
     const gfBadges = Object.keys(gfGroups).sort().map(g=>`<span class="tag tag-gifted" style="font-size:.65rem;">⭐ G${g}×${gfGroups[g]}</span>`).join('');
     const spBadges = Object.keys(spGroups).sort().map(g=>`<span class="tag tag-special" style="font-size:.65rem;">🔵 S${g}×${spGroups[g]}</span>`).join('');
@@ -2642,8 +2642,8 @@ function renderOverviewTag(tag, gradeSelId, contId) {
     const sorted = [...students].sort((a,b)=>tagOrder(a)-tagOrder(b)||a.number-b.number);
 
     const rowsHtml = sorted.map(s => {
-      const gfGrp = getGiftedGroup(s.tags);
-      const spGrp = getSpecialGroup(s.tags);
+      const gfGrp = getGiftedGroup(s.tags, s.grade);
+      const spGrp = getSpecialGroup(s.tags, s.grade);
       const tgs = [
         s.tags.includes('bighead') ? '<span class="tag tag-bighead" style="font-size:.68rem;">⚠ 大頭</span>' : '',
         s.tags.includes('special') ? `<span class="tag tag-special" style="font-size:.68rem;">🔵 S${spGrp}</span>` : '',
