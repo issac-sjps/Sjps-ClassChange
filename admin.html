@@ -3831,7 +3831,7 @@ function renderSPByGroup() {
           <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
           <span style="font-weight:600;flex:1;">${s.name}</span>
           <span style="font-size:.72rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
-          <button onclick="openChangeGroup('${s.id}','special')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:var(--purple);padding:2px 5px;border-radius:4px;border:1px solid var(--purple);" title="修改群組">S${getSpecialGroup(s.tags)} ✏️</button>
+          <button onclick="openChangeGroup('${s.id}','special')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:var(--purple);padding:2px 5px;border-radius:4px;border:1px solid var(--purple);" title="修改群組">S${getSpecialGroup(s.tags, s.grade)} ✏️</button>
           <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 5px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">💬${noteCount>0?` (${noteCount})`:''}
           </button>
         </div>
@@ -3858,7 +3858,7 @@ function openChangeGroup(stuId, type) {
   const stu = state.students[stuId];
   if(!stu) return;
   const prefix = type==='gifted'?'G':'S';
-  const curGroup = type==='gifted' ? getGiftedGroup(stu.tags) : getSpecialGroup(stu.tags);
+  const curGroup = type==='gifted' ? getGiftedGroup(stu.tags, stu.grade) : getSpecialGroup(stu.tags, stu.grade);
   document.getElementById('changeGroupTitle').textContent = `修改 ${prefix} 群組 — ${stu.name}`;
   document.getElementById('changeGroupInfo').textContent = `${classLabel(stu.grade,stu.class)}　目前：${prefix}${curGroup}`;
   document.getElementById('changeGroupPrefix').textContent = prefix;
@@ -3956,7 +3956,7 @@ function renderGFByGroup() {
           <span style="font-size:.74rem;font-family:monospace;color:var(--text3);min-width:28px;">${String(s.number).padStart(2,'0')}</span>
           <span style="font-weight:600;flex:1;">${s.name}</span>
           <span style="font-size:.72rem;color:var(--text3);">${classLabel(s.grade,s.class)}</span>
-          <button onclick="openChangeGroup('${s.id}','gifted')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:var(--gold);padding:2px 5px;border-radius:4px;border:1px solid var(--gold);" title="修改群組">G${getGiftedGroup(s.tags)} ✏️</button>
+          <button onclick="openChangeGroup('${s.id}','gifted')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:var(--gold);padding:2px 5px;border-radius:4px;border:1px solid var(--gold);" title="修改群組">G${getGiftedGroup(s.tags, s.grade)} ✏️</button>
           <button onclick="toggleNotes('${s.id}','${noteContId}')" style="border:none;background:none;cursor:pointer;font-size:.72rem;color:${noteCount>0?'var(--blue)':'var(--text3)'};padding:2px 5px;border-radius:4px;border:1px solid ${noteCount>0?'var(--blue)':'var(--border)'};">
             💬${noteCount>0?` (${noteCount})`:''}
           </button>
