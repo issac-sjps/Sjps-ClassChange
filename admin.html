@@ -3705,12 +3705,6 @@ async function entryCommitGifted() {
   } catch(e) { showAlert('儲存失敗：'+e.message,'warn'); }
 }
 
-// ── 取得資優生群組號碼 ──
-function getGiftedGroup(tags) {
-  const gTag = (tags||[]).find(t=>t.startsWith('gifted_g'));
-  return gTag ? parseInt(gTag.replace('gifted_g','')) : 1;
-}
-
 // ── 大頭快速新增 ──
 function bhQuickSearchFn() {
   const q  = document.getElementById('bhQuickSearch').value.trim();
