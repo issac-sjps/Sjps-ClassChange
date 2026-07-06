@@ -236,7 +236,7 @@ tr:hover td { background: #f8f9fd; }
 <nav class="tabs">
   <button class="tab-btn active" onclick="switchTab('students')">📚 學生名單</button>
   <button class="tab-btn" onclick="switchTab('rules')">🚫 不能同班</button>
-  <button class="tab-btn" onclick="switchTab('newstu')">👶 新生名單</button>
+
   <button class="tab-btn" onclick="switchTab('teachers')">👩‍🏫 導師名單</button>
   <!-- 導師設定已整合在導師名單分頁 -->
   <button class="tab-btn" onclick="switchTab('simulate')">🎲 模擬分班</button>
@@ -435,80 +435,6 @@ tr:hover td { background: #f8f9fd; }
           </div>
         </div>
         <div id="ruleList"><div class="empty">尚無規則</div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== TAB 3: 新生名單 ==================== -->
-<div id="tab-newstu" class="tab-pane">
-  <div class="two-col">
-    <div>
-      <div class="card">
-        <div class="card-title">📤 上傳新生名單</div>
-        <div class="alert alert-info">新生名單格式：座號 姓名（同樣 01~19 男生，21+ 女生），或直接手動新增</div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>貼上名單</label>
-          <textarea id="newStuText" placeholder="01 王小明&#10;21 李小美"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" onclick="parseNewStudents()">📋 解析預覽</button>
-          <button class="btn btn-ghost" id="saveNewStuBtn" style="display:none;" onclick="saveNewStudents()">💾 儲存新生</button>
-        </div>
-        <div id="newStuPreview" style="margin-top:14px;"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">➕ 手動新增新生</div>
-        <div class="form-row">
-          <div class="form-group grow">
-            <label>姓名</label>
-            <input type="text" id="manualName" placeholder="新生姓名">
-          </div>
-          <div class="form-group">
-            <label>性別</label>
-            <select id="manualGender">
-              <option value="M">男</option>
-              <option value="F">女</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" style="align-self:flex-end;" onclick="addManualNewStudent()">新增</button>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <div class="card-title">👶 新生列表</div>
-        <div id="newStuList"><div class="empty">尚無新生資料</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">👫 雙胞胎記錄</div>
-        <div class="form-row" style="align-items:flex-end;">
-          <div class="form-group grow">
-            <label>學生甲</label>
-            <select id="twin1"></select>
-          </div>
-          <div class="form-group grow">
-            <label>學生乙</label>
-            <select id="twin2"></select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <label>家長意願</label>
-          <div style="display:flex;gap:16px;margin-top:4px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="separate" checked> 分開不同班
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="same"> 同班在一起
-            </label>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveTwin()">💾 記錄雙胞胎</button>
-        <hr class="sep-line">
-        <div id="twinList"><div class="empty">尚無雙胞胎記錄</div></div>
       </div>
     </div>
   </div>
@@ -2950,10 +2876,10 @@ function renderGradeTwinList() {
     if(sa.class !== sb.class) return sa.class - sb.class;
     return sa.number - sb.number;
   });
-  // 自動產生 T 代號（2年級 T1、T2… 4年級重新 T1、T2…）
+  // 自動產生 T 代號（每個年級各自從 T1 開始）
   const twinCodes = {};
-  const gradesInState = [...new Set(Object.values(state.rules).map(r=>r.grade))].sort();
-  gradesInState.forEach(grade=>{
+  const twinGrades = [...new Set(twins.map(t=>t.grade))].sort();
+  twinGrades.forEach(grade=>{
     const gradeGroup = twins.filter(t=>t.grade===grade);
     gradeGroup.forEach((t,i)=>{
       const sign = t.preference==='same' ? '+' : '-';
