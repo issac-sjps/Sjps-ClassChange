@@ -877,13 +877,13 @@ tr:hover td { background: #f8f9fd; }
 <!-- ==================== MODAL: 新增規則說明 ==================== -->
 <div class="modal-bg" id="ruleRemarkModal">
   <div class="modal" style="max-width:480px;">
-    <div class="modal-title">📝 新增說明</div>
+    <div class="modal-title" id="rrModalTitle">📝 新增說明</div>
     <input type="hidden" id="rrModalRuleId">
     <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px;">可多次新增，不同老師的說明分開條列</div>
     <textarea id="rrModalText" style="width:100%;min-height:100px;resize:vertical;font-family:inherit;font-size:.9rem;border:1.5px solid var(--border);border-radius:8px;padding:10px;outline:none;" placeholder="輸入說明…"></textarea>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('ruleRemarkModal')">取消</button>
-      <button class="btn btn-primary" onclick="saveRuleRemark()">💾 新增</button>
+      <button class="btn btn-primary" id="rrModalSaveBtn" onclick="saveRuleRemark()">💾 新增</button>
     </div>
   </div>
 </div>
@@ -1207,6 +1207,7 @@ function classLabel(grade, cls) { return `${grade}年${cls}班`; }
 function genderLabel(g) { return g === 'M' ? '男' : '女'; }
 function tagLabel(t) { return {bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[t] || t; }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function escAttr(s) { return JSON.stringify(s||'').replace(/"/g,'&quot;'); }
 
 function updateClassOptions(gradeId, classId) {
   const grade = parseInt(document.getElementById(gradeId).value);
@@ -1746,7 +1747,7 @@ function renderRuleList() {
               <div style="display:flex;align-items:flex-start;gap:6px;padding:4px 8px;background:var(--bg);border-radius:4px;margin-bottom:3px;font-size:.8rem;">
                 <span style="color:var(--text3);flex-shrink:0;">📝</span>
                 <span style="flex:1;line-height:1.5;cursor:pointer;padding:2px 4px;border-radius:3px;transition:background .15s;"
-                  onclick="openRuleRemarkEditModal('${r.id}',${ri},${JSON.stringify(rm.text)})"
+                  onclick="openRuleRemarkEditModal('${r.id}',${ri},${escAttr(rm.text)})"
                   onmouseenter="this.style.background='#e8eefb'" onmouseleave="this.style.background=''"
                   title="點擊編輯">${rm.text}</span>
                 <button onclick="deleteRuleRemark('${r.id}',${ri})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.78rem;padding:0;flex-shrink:0;">🗑</button>
@@ -2475,7 +2476,7 @@ function renderOverviewRules() {
             <div style="display:flex;align-items:flex-start;gap:5px;padding:3px 6px;background:var(--bg);border-radius:4px;margin-bottom:2px;font-size:.79rem;">
               <span style="color:var(--text3);flex-shrink:0;">📝</span>
               <span style="flex:1;line-height:1.5;cursor:pointer;padding:1px 3px;border-radius:3px;transition:background .15s;"
-                onclick="openRuleRemarkEditModal('${r.id}',${ri},${JSON.stringify(rm.text)})"
+                onclick="openRuleRemarkEditModal('${r.id}',${ri},${escAttr(rm.text)})"
                 onmouseenter="this.style.background='#e8eefb'" onmouseleave="this.style.background=''"
                 title="點擊編輯">${rm.text}</span>
               <button onclick="deleteRuleRemark('${r.id}',${ri})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:.75rem;padding:0;flex-shrink:0;">🗑</button>
@@ -3057,6 +3058,8 @@ async function reassignAfterAdd(grade) {
 function openRuleRemarkEditModal(ruleId, idx, existingText) {
   document.getElementById('rrModalRuleId').value = ruleId + '|edit|' + idx;
   document.getElementById('rrModalText').value = existingText;
+  document.getElementById('rrModalTitle').textContent = '📝 編輯說明';
+  document.getElementById('rrModalSaveBtn').textContent = '💾 更新';
   openModal('ruleRemarkModal');
   setTimeout(()=>document.getElementById('rrModalText').focus(),100);
 }
@@ -3064,6 +3067,8 @@ function openRuleRemarkEditModal(ruleId, idx, existingText) {
 function openRuleRemarkModal(ruleId) {
   document.getElementById('rrModalRuleId').value = ruleId;
   document.getElementById('rrModalText').value = '';
+  document.getElementById('rrModalTitle').textContent = '📝 新增說明';
+  document.getElementById('rrModalSaveBtn').textContent = '💾 新增';
   openModal('ruleRemarkModal');
   setTimeout(()=>document.getElementById('rrModalText').focus(),100);
 }
