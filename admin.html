@@ -703,32 +703,6 @@ tr:hover td { background: #f8f9fd; }
         <button class="btn btn-primary" onclick="saveGradeTwin()">💾 儲存多胞胎記錄</button>
       </div>
 
-      <!-- 新生雙胞胎 -->
-      <div class="card">
-        <div class="card-title">➕ 新增雙胞胎（新生）</div>
-        <div class="form-row">
-          <div class="form-group grow">
-            <label>學生甲</label>
-            <select id="twin1"><option value="">─ 選擇新生 ─</option></select>
-          </div>
-          <div class="form-group grow">
-            <label>學生乙</label>
-            <select id="twin2"><option value="">─ 選擇新生 ─</option></select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>家長意願</label>
-          <div style="display:flex;gap:16px;margin-top:5px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="separate" checked> ❌ 分開不同班
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twinPref" value="same"> ✅ 同班在一起
-            </label>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="saveTwin()">💾 儲存新生雙胞胎</button>
-      </div>
     </div>
 
     <div>
@@ -751,12 +725,6 @@ tr:hover td { background: #f8f9fd; }
           </div>
         </div>
         <div id="gradeTwinList"><div class="empty">尚無升級生雙胞胎記錄</div></div>
-      </div>
-
-      <!-- 新生雙胞胎清單 -->
-      <div class="card">
-        <div class="card-title">📋 新生雙胞胎清單</div>
-        <div id="twinList"><div class="empty">尚無新生雙胞胎記錄</div></div>
       </div>
     </div>
   </div>
@@ -1150,9 +1118,7 @@ const state = {
   students: {},   // id -> {id,grade,class,number,name,gender,tags:[]}
   rules: {},      // id -> rule object
   teachers: {},   // id -> {id,name,grade,boundStudents:[]}
-  newStudents: {},// id -> {id,name,gender,tags:[]}
-  twins: {},      // id -> new students twin {id,...}
-  gradeTwins: {}, // id -> grade students twin {id,grade,s1Id,s2Id,preference,...}
+  gradeTwins: {}, // id -> grade students twin {id,grade,s1Id,s2Id,preference,...} (covers all grades incl. 0=新生)
   bindings: {},   // id -> {studentId,teacherId,grade}
   simResult: null,
   previewStudents: [],
@@ -1178,12 +1144,10 @@ async function init() {
 }
 
 async function loadAll() {
-  const [stuSnap, ruleSnap, teachSnap, newStuSnap, twinSnap, gradeTwinSnap, bindSnap, notesSnap] = await Promise.all([
+  const [stuSnap, ruleSnap, teachSnap, gradeTwinSnap, bindSnap, notesSnap] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('teachers').get(),
-    db.collection('newStudents').get(),
-    db.collection('twins').get(),
     db.collection('gradeTwins').get(),
     db.collection('bindings').get(),
     db.collection('studentNotes').get()
@@ -1195,10 +1159,6 @@ async function loadAll() {
   ruleSnap.forEach(d => { state.rules[d.id] = {id:d.id, ...d.data()}; });
   state.teachers = {};
   teachSnap.forEach(d => { state.teachers[d.id] = {id:d.id, ...d.data()}; });
-  state.newStudents = {};
-  newStuSnap.forEach(d => { state.newStudents[d.id] = {id:d.id, ...d.data()}; });
-  state.twins = {};
-  twinSnap.forEach(d => { state.twins[d.id] = {id:d.id, ...d.data()}; });
   state.gradeTwins = {};
   gradeTwinSnap.forEach(d => { state.gradeTwins[d.id] = {id:d.id, ...d.data()}; });
   state.bindings = {};
@@ -1216,8 +1176,6 @@ function renderAll() {
   renderGradeStats();
   renderRuleList();
   updateRuleViewClassOptions();
-  renderNewStudentList();
-  renderTwinList();
   renderTeachers();
   updateBindStudentList();
   updateBindTeacherList();
@@ -1228,7 +1186,6 @@ function renderAll() {
   renderGFView();
   renderOverviewRules();
   renderGradeTwinList();
-  renderTwinList();
   twClearMembers();
 }
 
@@ -1818,206 +1775,6 @@ async function deleteRule(id) {
 }
 
 // =============================================
-// TAB 3: NEW STUDENTS
-// =============================================
-let newStuPreviewList = [];
-
-function parseNewStudents() {
-  const text = document.getElementById('newStuText').value.trim();
-  if(!text) return;
-  newStuPreviewList = [];
-  const lines = text.split('\n');
-  for(const line of lines) {
-    const m = line.trim().match(/^(\d+)\s+(.+)$/);
-    if(m) {
-      const num = parseInt(m[1]);
-      const name = m[2].trim();
-      const gender = num >= 21 ? 'F' : 'M';
-      newStuPreviewList.push({ id: 'new_'+genId(), name, gender, tags:[], twinId:null });
-    }
-  }
-  renderNewStuPreview();
-  document.getElementById('saveNewStuBtn').style.display = '';
-}
-
-function renderNewStuPreview() {
-  const cont = document.getElementById('newStuPreview');
-  if(!newStuPreviewList.length) { cont.innerHTML=''; return; }
-  const grid = document.createElement('div');
-  grid.className = 'student-grid';
-  newStuPreviewList.forEach(s=>{
-    const card = document.createElement('div');
-    card.className = `s-card ${s.gender==='M'?'male':'female'}`;
-    const row = document.createElement('div'); row.className='s-name-row';
-    const name = document.createElement('span'); name.className='s-name'; name.textContent=s.name;
-    const gen = document.createElement('span'); gen.className='s-num'; gen.textContent=genderLabel(s.gender);
-    row.appendChild(name); row.appendChild(gen);
-    const tags = document.createElement('div'); tags.className='s-tags';
-    ['bighead','special','gifted'].forEach(t=>{
-      const btn = makeTagToggle(t, s.tags.includes(t), ()=>{
-        const i=s.tags.indexOf(t); if(i>=0)s.tags.splice(i,1); else s.tags.push(t);
-        btn.classList.toggle('on');
-      });
-      tags.appendChild(btn);
-    });
-    card.appendChild(row); card.appendChild(tags);
-    grid.appendChild(card);
-  });
-  cont.innerHTML=''; cont.appendChild(grid);
-}
-
-async function saveNewStudents() {
-  if(!newStuPreviewList.length) return;
-  const batch = db.batch();
-  for(const s of newStuPreviewList) {
-    const ref = db.collection('newStudents').doc(s.id);
-    batch.set(ref, { name:s.name, gender:s.gender, tags:s.tags, twinId:null });
-    state.newStudents[s.id] = {...s};
-  }
-  await batch.commit();
-  showAlert(`已儲存 ${newStuPreviewList.length} 位新生`);
-  newStuPreviewList = [];
-  document.getElementById('newStuText').value = '';
-  document.getElementById('newStuPreview').innerHTML = '';
-  document.getElementById('saveNewStuBtn').style.display = 'none';
-  renderNewStudentList();
-  updateTwinSelects();
-}
-
-async function addManualNewStudent() {
-  const name = document.getElementById('manualName').value.trim();
-  const gender = document.getElementById('manualGender').value;
-  if(!name) { showAlert('請輸入姓名','warn'); return; }
-  const id = 'new_' + genId();
-  const stu = { name, gender, tags:[], twinId:null };
-  await db.collection('newStudents').doc(id).set(stu);
-  state.newStudents[id] = { id, ...stu };
-  document.getElementById('manualName').value = '';
-  renderNewStudentList();
-  updateTwinSelects();
-  showAlert(`已新增：${name}`);
-}
-
-function renderNewStudentList() {
-  const cont = document.getElementById('newStuList');
-  const stus = Object.values(state.newStudents).sort((a,b)=>a.name.localeCompare(b.name));
-  if(!stus.length) { cont.innerHTML='<div class="empty">尚無新生資料</div>'; return; }
-  const M = stus.filter(s=>s.gender==='M').length;
-  const F = stus.filter(s=>s.gender==='F').length;
-  const bh = stus.filter(s=>s.tags.includes('bighead')).length;
-  cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-    <span class="tag tag-male">男 ${M}</span><span class="tag tag-female">女 ${F}</span>
-    ${bh?`<span class="tag tag-bighead">大頭 ${bh}</span>`:''}
-    <span style="font-size:.8rem;color:var(--text3);">共 ${stus.length} 人</span>
-  </div>`;
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;';
-  stus.forEach(s=>{
-    const div = document.createElement('div');
-    div.style.cssText = `border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;border-left:3px solid ${s.gender==='M'?'var(--blue)':'var(--pink)'};`;
-    div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-weight:600;font-size:.875rem;">${s.name}</span>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteNewStudent('${s.id}')">🗑</button>
-    </div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">
-      ${s.tags.includes('bighead')?'<span class="tag tag-bighead">大頭</span>':''}
-      ${s.tags.includes('special')?'<span class="tag tag-special">鑑輔生</span>':''}
-      ${s.tags.includes('gifted')?'<span class="tag tag-gifted">資優生</span>':''}
-      ${s.twinId?'<span class="tag tag-twin">👫雙胞胎</span>':''}
-    </div>`;
-    grid.appendChild(div);
-  });
-  cont.appendChild(grid);
-  updateTwinSelects();
-}
-
-async function deleteNewStudent(id) {
-  if(!confirm(`確定刪除？`)) return;
-  await db.collection('newStudents').doc(id).delete();
-  delete state.newStudents[id];
-  renderNewStudentList();
-}
-
-// TWINS
-function updateTwinSelects() {
-  const stus = Object.values(state.newStudents).sort((a,b)=>a.name.localeCompare(b.name));
-  ['twin1','twin2'].forEach(id=>{
-    const sel = document.getElementById(id);
-    const old = sel.value;
-    sel.innerHTML = '<option value="">─ 選擇學生 ─</option>';
-    stus.forEach(s=>{
-      const o=document.createElement('option'); o.value=s.id; o.textContent=`${s.name} (${genderLabel(s.gender)})`;
-      sel.appendChild(o);
-    });
-    if(old) sel.value=old;
-  });
-}
-
-async function saveTwin() {
-  const s1 = document.getElementById('twin1').value;
-  const s2 = document.getElementById('twin2').value;
-  const pref = document.querySelector('input[name="twinPref"]:checked').value;
-  if(!s1||!s2) { showAlert('請選擇兩位學生','warn'); return; }
-  if(s1===s2) { showAlert('不能選擇同一位學生','warn'); return; }
-  const stu1 = state.newStudents[s1];
-  const stu2 = state.newStudents[s2];
-  const twin = { s1Id:s1, s1Name:stu1.name, s1Gender:stu1.gender, s2Id:s2, s2Name:stu2.name, s2Gender:stu2.gender, preference:pref };
-  const ref = await db.collection('twins').add(twin);
-  state.twins[ref.id] = { id:ref.id, ...twin };
-  // Update twinId on students
-  await db.collection('newStudents').doc(s1).update({twinId:ref.id});
-  await db.collection('newStudents').doc(s2).update({twinId:ref.id});
-  state.newStudents[s1].twinId = ref.id;
-  state.newStudents[s2].twinId = ref.id;
-  renderTwinList(); renderNewStudentList();
-  showAlert('雙胞胎已記錄');
-}
-
-function renderTwinList() {
-  const cont = document.getElementById('twinList');
-  const twins = Object.values(state.twins);
-  if(!twins.length) { cont.innerHTML='<div class="empty">尚無雙胞胎記錄</div>'; return; }
-  cont.innerHTML = '';
-  // 新生雙胞胎依序給 NT1+/NT1- 代號
-  twins.forEach((t,i)=>{
-    const div=document.createElement('div');
-    div.style.cssText='border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
-    const prefLabel = t.preference==='same'?'<span class="tag tag-twin">✅ 同班</span>':'<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
-    const tCode = `NT${i+1}${t.preference==='same'?'+':'-'}`;
-    const tColor = t.preference==='same'?'var(--teal)':'var(--red)';
-    const tBg    = t.preference==='same'?'var(--teal-light)':'var(--red-light)';
-    div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span style="font-family:monospace;font-weight:800;font-size:.88rem;background:${tBg};color:${tColor};border:1.5px solid ${tColor};border-radius:5px;padding:1px 7px;">${tCode}</span>
-      <span style="font-weight:700;">${t.s1Name}</span>
-      <span style="color:var(--text3);">👫</span>
-      <span style="font-weight:700;">${t.s2Name}</span>
-      ${prefLabel}
-      <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;">新生・雙胞胎</span>
-    </div>
-    <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTwin('${t.id}')">🗑</button>`;
-    cont.appendChild(div);
-  });
-}
-
-async function deleteTwin(id) {
-  if(!confirm('確定刪除此雙胞胎記錄？')) return;
-  const t = state.twins[id];
-  await db.collection('twins').doc(id).delete();
-  // Clear twinId on students
-  if(t.s1Id && state.newStudents[t.s1Id]) {
-    await db.collection('newStudents').doc(t.s1Id).update({twinId:null});
-    state.newStudents[t.s1Id].twinId = null;
-  }
-  if(t.s2Id && state.newStudents[t.s2Id]) {
-    await db.collection('newStudents').doc(t.s2Id).update({twinId:null});
-    state.newStudents[t.s2Id].twinId = null;
-  }
-  delete state.twins[id];
-  renderTwinList(); renderNewStudentList();
-  showAlert('雙胞胎記錄已刪除');
-}
-
-// =============================================
 // TAB 4: TEACHERS
 // =============================================
 async function saveTeacher() {
@@ -2063,7 +1820,7 @@ function renderTeachers() {
   
   teachers.forEach(t=>{
     const boundNames = (t.boundStudents||[]).map(bid=>{
-      const stu = state.students[bid] || state.newStudents[bid];
+      const stu = state.students[bid];
       return stu ? stu.name : bid;
     }).join('、');
     const tr = document.createElement('tr');
