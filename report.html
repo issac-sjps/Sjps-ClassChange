@@ -88,7 +88,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="btn-group">
       <div class="group-label">📋 附件A：雙胞胎申請一覽表</div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="go('twinNew')">🖨️ 新生雙胞胎（升1年級）</button>
+        <button class="btn btn-primary" onclick="go('twin0')">🖨️ 新生雙胞胎（升1年級）</button>
         <button class="btn btn-primary" onclick="go('twin2')">🖨️ 2年級雙胞胎（升3年級）</button>
         <button class="btn btn-primary" onclick="go('twin4')">🖨️ 4年級雙胞胎（升5年級）</button>
       </div>
@@ -99,6 +99,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="btn-group">
       <div class="group-label">📋 附件B-1：需費心關懷學生一覽表</div>
       <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('bighead0')">🖨️ 新生需費心（升1年級）</button>
         <button class="btn btn-primary" onclick="go('bighead2')">🖨️ 2年級需費心（升3年級）</button>
         <button class="btn btn-primary" onclick="go('bighead4')">🖨️ 4年級需費心（升5年級）</button>
       </div>
@@ -109,6 +110,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="btn-group">
       <div class="group-label">📋 附件B-2：不宜再同班學生一覽表</div>
       <div class="btn-row">
+        <button class="btn btn-red" onclick="go('rules0')">🖨️ 新生不宜同班（升1年級）</button>
         <button class="btn btn-red" onclick="go('rules2')">🖨️ 2年級不宜同班（升3年級）</button>
         <button class="btn btn-red" onclick="go('rules4')">🖨️ 4年級不宜同班（升5年級）</button>
       </div>
@@ -119,6 +121,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="btn-group">
       <div class="group-label">📋 附件C：資優生群組一覽表</div>
       <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('gifted0')" style="background:#b45309;">🖨️ 新生資優生群組（升1年級）</button>
         <button class="btn btn-primary" onclick="go('gifted2')" style="background:#b45309;">🖨️ 2年級資優生群組（升3年級）</button>
         <button class="btn btn-primary" onclick="go('gifted4')" style="background:#b45309;">🖨️ 4年級資優生群組（升5年級）</button>
       </div>
@@ -129,6 +132,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     <div class="btn-group">
       <div class="group-label">📋 附件D：鑑輔生群組一覽表</div>
       <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('special0')" style="background:#7c3aed;">🖨️ 新生鑑輔生群組（升1年級）</button>
         <button class="btn btn-primary" onclick="go('special2')" style="background:#7c3aed;">🖨️ 2年級鑑輔生群組（升3年級）</button>
         <button class="btn btn-primary" onclick="go('special4')" style="background:#7c3aed;">🖨️ 4年級鑑輔生群組（升5年級）</button>
       </div>
@@ -160,19 +164,17 @@ firebase.initializeApp({
   appId:"1:907928897295:web:b6bfb2dcb3c8c447ad607a"
 });
 const db = firebase.firestore();
-const state = {students:{},rules:{},twins:{},teachers:{},newStudents:{},newTwins:{},studentNotes:{}};
+const state = {students:{},rules:{},twins:{},teachers:{},studentNotes:{}};
 
 document.getElementById('cfgDate').value = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
 
 async function loadAll() {
-  const [s,r,t,tc,ns,nstu,ntwins] = await Promise.all([
+  const [s,r,t,tc,ns] = await Promise.all([
     db.collection('students').get(),
     db.collection('separationRules').get(),
     db.collection('gradeTwins').get(),
     db.collection('teachers').get(),
-    db.collection('studentNotes').get(),
-    db.collection('newStudents').get(),
-    db.collection('twins').get()
+    db.collection('studentNotes').get()
   ]);
   s.forEach(d=>{state.students[d.id]={id:d.id,...d.data()};});
   r.forEach(d=>{state.rules[d.id]={id:d.id,...d.data()};});
@@ -184,10 +186,6 @@ async function loadAll() {
     if(!state.studentNotes[n.studentId]) state.studentNotes[n.studentId]=[];
     state.studentNotes[n.studentId].push(n);
   });
-  state.newStudents={};
-  nstu.forEach(d=>{state.newStudents[d.id]={id:d.id,...d.data()};});
-  state.newTwins={};
-  ntwins.forEach(d=>{state.newTwins[d.id]={id:d.id,...d.data()};});
 }
 
 function v(id){return document.getElementById(id).value.trim();}
@@ -206,7 +204,7 @@ function teacher(grade,cls){
   const t=Object.values(state.teachers).find(t=>t.grade===grade&&t.class===cls);
   return t?t.name:'';
 }
-function gradeLabel(g){return {2:'三',4:'五'}[g]||g;}
+function gradeLabel(g){return {0:'一',2:'三',4:'五'}[g]||g;}
 function stampRow(){
   return `<table style="width:100%;border-collapse:collapse;margin-top:14pt;border-top:1pt solid #bbb;">
     <tr>
@@ -279,71 +277,12 @@ ${stampRow()}`;
 
 
 // ═══════════════════════════════════════
-// 附件三：新生雙胞胎申請一覽表
-// ═══════════════════════════════════════
-function buildNewTwin() {
-  const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
-
-  const newTwinArr = Object.values(state.newTwins);
-  const rows = newTwinArr.map((t,i)=>{
-    const s1 = state.newStudents[t.s1Id];
-    const s2 = state.newStudents[t.s2Id];
-    const pref  = t.preference==='same'?'同班':'不同班';
-    const note  = t.note||'';
-    const code  = `T${i+1}${t.preference==='same'?'+':'-'}`;
-    const cColor= t.preference==='same'?'#0d9488':'#dc2626';
-    const cBg   = t.preference==='same'?'#ccfbf1':'#fee2e2';
-    const members = [
-      {name: t.s1Name||(s1?s1.name:'')},
-      {name: t.s2Name||(s2?s2.name:'')}
-    ].filter(m=>m.name);
-    const nameCells = members.map(m=>`<span style="white-space:nowrap;"><span style="font-family:monospace;font-weight:800;font-size:9pt;background:${cBg};color:${cColor};border:0.5pt solid ${cColor};border-radius:2pt;padding:0 3pt;">${code}</span> ${m.name}</span>`).join('　');
-    return `<tr style="break-inside:avoid;page-break-inside:avoid;">
-      <td class="c">${i+1}</td>
-      <td class="c">一</td>
-      <td>${nameCells}</td>
-      <td class="c">雙胞胎</td>
-      <td class="c">${pref}</td>
-      <td>${note}</td>
-    </tr>`;
-  }).join('');
-
-  const div=document.createElement('div'); div.className='print-page';
-  div.innerHTML=`
-<div style="margin-bottom:6pt;">
-  <div style="font-size:9.5pt;color:#333;text-align:center;">（附件A）　${school}</div>
-  <div style="font-size:13pt;font-weight:bold;text-align:center;">${year} 學年度同年級複數子女學生編班申請一覽表</div>
-  <div style="font-size:10.5pt;text-align:center;margin-top:2pt;">新生（升一年級）</div>
-  <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#555;margin-top:3pt;">
-    <span></span><span>製表日期：${date}</span>
-  </div>
-</div>
-<table class="rpt-table">
-  <thead>
-    <tr>
-      <th style="width:24pt;">編號</th>
-      <th style="width:46pt;">${year}學年度<br>就讀年級</th>
-      <th>學生姓名（含代號）</th>
-      <th style="width:44pt;">申請原因</th>
-      <th style="width:56pt;">希望同班<br>或不同班</th>
-      <th>備　註</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${rows||'<tr><td colspan="7" class="c" style="color:#aaa;padding:12pt;">尚無新生雙胞胎資料</td></tr>'}
-  </tbody>
-</table>
-${stampRow()}`;
-  return [div];
-}
-
-// ═══════════════════════════════════════
 // 附件四-A：需費心關懷學生（全年級一張表）
 // ═══════════════════════════════════════
 function buildBighead(grade) {
   const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
   const gl=gradeLabel(grade);
-  const maxClass = grade===2?6:9;
+  const maxClass = grade===4?9:6; // 0,2年級6班；4年級9班
 
   // 收集全年級大頭，依班級→座號排序
   const rows = [];
@@ -399,7 +338,7 @@ ${stampRow()}`;
 function buildRules(grade) {
   const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
   const gl=gradeLabel(grade);
-  const maxClass = grade===2?6:9;
+  const maxClass = grade===4?9:6; // 0,2年級6班；4年級9班
 
   // 全年級規則，依班級→目標學生座號排序
   const allRules = Object.values(state.rules)
@@ -584,15 +523,19 @@ async function go(type) {
   printArea.innerHTML=''; previewArea.innerHTML='';
 
   let pages=[];
+  if(type==='twin0')    pages=[buildTwin(0)];
   if(type==='twin2')    pages=[buildTwin(2)];
-  if(type==='twinNew')   pages=buildNewTwin();
   if(type==='twin4')    pages=[buildTwin(4)];
+  if(type==='bighead0') pages=buildBighead(0);
   if(type==='bighead2') pages=buildBighead(2);
   if(type==='bighead4') pages=buildBighead(4);
+  if(type==='rules0')   pages=buildRules(0);
   if(type==='rules2')   pages=buildRules(2);
   if(type==='rules4')   pages=buildRules(4);
+  if(type==='gifted0')  pages=buildGiftedGroup(0);
   if(type==='gifted2')  pages=buildGiftedGroup(2);
   if(type==='gifted4')  pages=buildGiftedGroup(4);
+  if(type==='special0') pages=buildSpecialGroup(0);
   if(type==='special2') pages=buildSpecialGroup(2);
   if(type==='special4') pages=buildSpecialGroup(4);
 
