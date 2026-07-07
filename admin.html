@@ -1817,12 +1817,12 @@ function renderTeachers() {
   const cont = document.getElementById('teacherList');
   let teachers = Object.values(state.teachers);
   if(filterGrade) teachers = teachers.filter(t=>t.grade==filterGrade);
-  teachers.sort((a,b)=>a.grade-b.grade||a.name.localeCompare(b.name));
+  teachers.sort((a,b)=>a.grade-b.grade||(a.class||0)-(b.class||0)||a.name.localeCompare(b.name));
   
   if(!teachers.length) { cont.innerHTML='<div class="empty">尚無導師資料</div>'; return; }
   
   const table = document.createElement('table');
-  table.innerHTML = `<thead><tr><th>導師姓名</th><th>負責年級</th><th>綁定學生</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr><th>導師姓名</th><th>負責年級</th><th>班級</th><th>綁定學生</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   
   teachers.forEach(t=>{
@@ -1840,6 +1840,7 @@ function renderTeachers() {
         </div>
       </td>
       <td><span style="font-size:.8rem;">${gradeText}</span></td>
+      <td><span style="font-size:.8rem;">${t.class ? t.class+'班' : '<span style="color:var(--text3);">─</span>'}</span></td>
       <td style="font-size:.8rem;">${boundNames||'<span style="color:var(--text3);">無</span>'}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteTeacher('${t.id}')">🗑</button></td>
     `;
