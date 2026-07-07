@@ -295,19 +295,18 @@ select:focus, input:focus { border-color: var(--blue); }
 <div id="tab-twins" class="tab-pane">
   <div class="filter-bar">
     <div class="form-group">
-      <label class="fl">類別</label>
-      <select id="twFilter" onchange="renderTwinsTab()">
-        <option value="">全部</option>
-        <option value="grade">升級生（2/4年級）</option>
-        <option value="new">新生</option>
+      <label class="fl">年級篩選</label>
+      <select id="twGradeFilter" onchange="renderTwinsTab()">
+        <option value="">全部年級</option>
       </select>
     </div>
     <div class="form-group">
       <label class="fl">意願篩選</label>
       <select id="twPrefFilter" onchange="renderTwinsTab()">
         <option value="">全部</option>
-        <option value="separate">❌ 分班</option>
-        <option value="same">✅ 同班</option>
+        <option value="same">同班</option>
+        <option value="separate">不同班</option>
+        <option value="any">依電腦編班結果</option>
       </select>
     </div>
     <span class="updated-lbl" id="twinCountLbl"></span>
@@ -365,7 +364,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ── STATE ──
-const state = { students:{}, rules:{}, bindings:{}, gradeTwins:{}, twins:{}, newStudents:{}, studentNotes:{} };
+const state = { students:{}, rules:{}, bindings:{}, gradeTwins:{}, studentNotes:{} };
 
 // ── HELPERS ──
 function classLabel(g,c){ return `${g}年${c}班`; }
@@ -382,21 +381,17 @@ function switchTab(name, btn) {
 async function initApp() {
   if(!firebase.apps.length) return;
   try {
-    const [stuSnap, ruleSnap, bindSnap, gradeTwinSnap, twinSnap, newStuSnap, notesSnap] = await Promise.all([
+    const [stuSnap, ruleSnap, bindSnap, gradeTwinSnap, notesSnap] = await Promise.all([
       db.collection('students').get(),
       db.collection('separationRules').get(),
       db.collection('bindings').get(),
       db.collection('gradeTwins').get(),
-      db.collection('twins').get(),
-      db.collection('newStudents').get(),
       db.collection('studentNotes').get()
     ]);
     stuSnap.forEach(d=>{ state.students[d.id]={id:d.id,...d.data()}; });
     ruleSnap.forEach(d=>{ state.rules[d.id]={id:d.id,...d.data()}; });
     bindSnap.forEach(d=>{ state.bindings[d.id]={id:d.id,...d.data()}; });
     gradeTwinSnap.forEach(d=>{ state.gradeTwins[d.id]={id:d.id,...d.data()}; });
-    twinSnap.forEach(d=>{ state.twins[d.id]={id:d.id,...d.data()}; });
-    newStuSnap.forEach(d=>{ state.newStudents[d.id]={id:d.id,...d.data()}; });
     state.studentNotes={};
     notesSnap.forEach(d=>{
       const note={id:d.id,...d.data()};
@@ -407,6 +402,7 @@ async function initApp() {
     document.getElementById('dbStatus').textContent='資料已載入';
     document.getElementById('updatedLbl').textContent='最後更新：'+new Date().toLocaleTimeString('zh-TW');
     populateClassFilters();
+    populateTwinGradeFilter();
     renderClassList();
     renderSpecialTab('bighead','bhGrade','bhSummary','bhContent');
     renderSpecialTab('special','spGrade2','spSummary2','spContent2');
@@ -706,23 +702,27 @@ function renderRules() {
 }
 
 // ── TAB 4: TWINS ──
+function gradeTagLabel(g) { return g===0 ? '0年級（新生）' : `${g}年級`; }
+
+function populateTwinGradeFilter() {
+  const sel = document.getElementById('twGradeFilter');
+  const grades = [...new Set(Object.values(state.gradeTwins).map(t=>t.grade))].sort((a,b)=>a-b);
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部年級</option>' +
+    grades.map(g=>`<option value="${g}">${gradeTagLabel(g)}</option>`).join('');
+  if(grades.some(g=>String(g)===cur)) sel.value = cur;
+}
+
 function renderTwinsTab() {
-  const filter    = document.getElementById('twFilter').value;
-  const prefFilter = document.getElementById('twPrefFilter').value;
+  const gradeFilter = document.getElementById('twGradeFilter').value;
+  const prefFilter   = document.getElementById('twPrefFilter').value;
   const cont = document.getElementById('twinsTabContent');
 
-  const gradeTwins = Object.values(state.gradeTwins)
-    .filter(t => !prefFilter || t.preference === prefFilter)
-    .sort((a,b) => a.grade - b.grade || a.s1Name.localeCompare(b.s1Name));
+  const twins = Object.values(state.gradeTwins)
+    .filter(t => gradeFilter==='' || String(t.grade)===gradeFilter)
+    .filter(t => !prefFilter || t.preference === prefFilter);
 
-  const newTwins = Object.values(state.twins)
-    .filter(t => !prefFilter || t.preference === prefFilter)
-    .sort((a,b) => a.s1Name.localeCompare(b.s1Name));
-
-  const showGrade = filter !== 'new';
-  const showNew   = filter !== 'grade';
-
-  const total = (showGrade ? gradeTwins.length : 0) + (showNew ? newTwins.length : 0);
+  const total = twins.length;
   document.getElementById('twinCountLbl').textContent = `共 ${total} 組雙胞胎`;
 
   if(!total) {
@@ -730,33 +730,37 @@ function renderTwinsTab() {
     return;
   }
 
-  // Stats
-  const allShown = [
-    ...(showGrade ? gradeTwins : []),
-    ...(showNew   ? newTwins   : [])
-  ];
-  const sameCnt     = allShown.filter(t=>t.preference==='same').length;
-  const separateCnt = allShown.filter(t=>t.preference==='separate').length;
+  const sameCnt     = twins.filter(t=>t.preference==='same').length;
+  const separateCnt = twins.filter(t=>t.preference==='separate').length;
+  const anyCnt      = twins.filter(t=>t.preference==='any').length;
 
   let html = `<div class="stats-row" style="margin-bottom:16px;">
     <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-lbl">雙胞胎組數</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--teal);">${sameCnt}</div><div class="stat-lbl">✅ 同班</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:var(--red);">${separateCnt}</div><div class="stat-lbl">❌ 分班</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--teal);">${sameCnt}</div><div class="stat-lbl">同班</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--red);">${separateCnt}</div><div class="stat-lbl">不同班</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--text3);">${anyCnt}</div><div class="stat-lbl">依電腦編班結果</div></div>
   </div>`;
 
-  // ── Upgrade students section ──
-  if(showGrade && gradeTwins.length) {
+  // 依年級由低到高分組顯示
+  const grades = [...new Set(twins.map(t=>t.grade))].sort((a,b)=>a-b);
+
+  grades.forEach(grade => {
+    const groupTwins = twins
+      .filter(t=>t.grade===grade)
+      .sort((a,b)=> a.s1Name.localeCompare(b.s1Name));
+
     html += `<div style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:10px;padding:6px 0;border-bottom:2px solid var(--border);">
-      🎓 升級生雙胞胎（2年級 / 4年級）─ ${gradeTwins.length} 組
+      🎓 ${gradeTagLabel(grade)} 雙胞胎 ─ ${groupTwins.length} 組
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:20px;">`;
 
-    gradeTwins.forEach(t => {
-      const same = t.preference === 'same';
-      const prefBadge = same
-        ? '<span class="tag tag-twin" style="font-size:.72rem;">✅ 同班</span>'
-        : '<span class="tag" style="background:var(--red-light);color:var(--red);font-size:.72rem;">❌ 分班</span>';
-      const borderColor = same ? 'var(--teal)' : 'var(--red)';
+    groupTwins.forEach(t => {
+      const prefBadge = t.preference==='same'
+        ? '<span class="tag tag-twin" style="font-size:.72rem;">同班</span>'
+        : t.preference==='any'
+        ? '<span class="tag" style="background:var(--bg);color:var(--text2);font-size:.72rem;">依電腦編班結果</span>'
+        : '<span class="tag" style="background:var(--red-light);color:var(--red);font-size:.72rem;">不同班</span>';
+      const borderColor = t.preference==='same' ? 'var(--teal)' : (t.preference==='any' ? 'var(--text3)' : 'var(--red)');
       html += `<div style="border:1.5px solid var(--border);border-left:3px solid ${borderColor};border-radius:8px;padding:11px 14px;background:#fff;box-shadow:var(--shadow);">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px;">
           <span style="font-weight:700;">${t.s1Name}</span>
@@ -767,48 +771,13 @@ function renderTwinsTab() {
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           ${prefBadge}
-          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2);">${t.grade}年級</span>
+          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2);">${gradeTagLabel(t.grade)}</span>
           ${t.note ? `<span style="font-size:.72rem;color:var(--text3);font-style:italic;">📝 ${t.note}</span>` : ''}
         </div>
       </div>`;
     });
     html += '</div>';
-  }
-
-  // ── New students section ──
-  if(showNew && newTwins.length) {
-    html += `<div style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:10px;padding:6px 0;border-bottom:2px solid var(--border);">
-      👶 新生雙胞胎 ─ ${newTwins.length} 組
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;">`;
-
-    newTwins.forEach(t => {
-      const same = t.preference === 'same';
-      const prefBadge = same
-        ? '<span class="tag tag-twin" style="font-size:.72rem;">✅ 同班</span>'
-        : '<span class="tag" style="background:var(--red-light);color:var(--red);font-size:.72rem;">❌ 分班</span>';
-      const borderColor = same ? 'var(--teal)' : 'var(--red)';
-      // Look up gender from newStudents
-      const s1 = Object.values(state.newStudents).find(s=>s.id===t.s1Id||s.name===t.s1Name);
-      const s2 = Object.values(state.newStudents).find(s=>s.id===t.s2Id||s.name===t.s2Name);
-      const g1 = s1 ? (s1.gender==='M'?'♂':'♀') : '';
-      const g2 = s2 ? (s2.gender==='M'?'♂':'♀') : '';
-      html += `<div style="border:1.5px solid var(--border);border-left:3px solid ${borderColor};border-radius:8px;padding:11px 14px;background:#fff;box-shadow:var(--shadow);">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px;">
-          <span style="font-size:.8rem;color:var(--blue);">${g1}</span>
-          <span style="font-weight:700;">${t.s1Name}</span>
-          <span style="color:var(--text3);">👫</span>
-          <span style="font-size:.8rem;color:var(--blue);">${g2}</span>
-          <span style="font-weight:700;">${t.s2Name}</span>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${prefBadge}
-          <span style="font-size:.72rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2);">新生</span>
-        </div>
-      </div>`;
-    });
-    html += '</div>';
-  }
+  });
 
   cont.innerHTML = html;
 }
