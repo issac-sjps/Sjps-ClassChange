@@ -232,11 +232,11 @@ function buildTwin(grade) {
 
   const rows = twins.map((t,i)=>{
     const members = t.members||[{id:t.s1Id,name:t.s1Name},{id:t.s2Id,name:t.s2Name}];
-    const pref    = t.preference==='same'?'同班':'不同班';
+    const pref    = t.preference==='same'?'同班':(t.preference==='any'?'依電腦編班結果':'不同班');
     const note    = t.note||'';
-    const code    = t.twinCode || `T${i+1}${t.preference==='same'?'+':'-'}`;
-    const cColor  = t.preference==='same'?'#0d9488':'#dc2626';
-    const cBg     = t.preference==='same'?'#ccfbf1':'#fee2e2';
+    const code    = t.twinCode || `T${i+1}${t.preference==='same'?'+':(t.preference==='any'?'~':'-')}`;
+    const cColor  = t.preference==='same'?'#0d9488':(t.preference==='any'?'#6b7280':'#dc2626');
+    const cBg     = t.preference==='same'?'#ccfbf1':(t.preference==='any'?'#f3f4f6':'#fee2e2');
     const nameCells = members.map(m=>`<span style="white-space:nowrap;"><span style="font-family:monospace;font-weight:800;font-size:9pt;background:${cBg};color:${cColor};border:0.5pt solid ${cColor};border-radius:2pt;padding:0 3pt;">${code}</span> ${m.name}</span>`).join('　');
     return `<tr style="break-inside:avoid;page-break-inside:avoid;">
       <td class="c">${i+1}</td>
