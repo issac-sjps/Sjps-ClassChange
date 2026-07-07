@@ -747,7 +747,7 @@ function renderTwinsTab() {
   grades.forEach(grade => {
     const groupTwins = twins
       .filter(t=>t.grade===grade)
-      .sort((a,b)=> a.s1Name.localeCompare(b.s1Name));
+      .sort((a,b)=> (a.s1Class-b.s1Class) || a.s1Name.localeCompare(b.s1Name));
 
     html += `<div style="font-size:.82rem;font-weight:700;color:var(--navy);margin-bottom:10px;padding:6px 0;border-bottom:2px solid var(--border);">
       🎓 ${gradeTagLabel(grade)} 雙胞胎 ─ ${groupTwins.length} 組
@@ -756,7 +756,7 @@ function renderTwinsTab() {
 
     groupTwins.forEach(t => {
       const prefBadge = t.preference==='same'
-        ? '<span class="tag tag-twin" style="font-size:.72rem;">同班</span>'
+        ? '<span class="tag" style="background:#dcfce7;color:var(--green);font-size:.72rem;">同班</span>'
         : t.preference==='any'
         ? '<span class="tag" style="background:var(--bg);color:var(--text2);font-size:.72rem;">依電腦編班結果</span>'
         : '<span class="tag" style="background:var(--red-light);color:var(--red);font-size:.72rem;">不同班</span>';
