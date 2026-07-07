@@ -82,6 +82,16 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
   </div>
 
   <div class="card">
+    <div class="card-title">⚡ 一鍵列印（指定年級全套報表）</div>
+    <div class="notice">會把該年級的雙胞胎、需費心、不宜同班、資優生、鑑輔生共 5 種報表一次串好，直接叫出列印。若某類報表該年級無資料，仍會印出「無資料」的那一頁（方便留存核章）。</div>
+    <div class="btn-row">
+      <button class="btn btn-red" style="background:#0f2044;" onclick="goGrade(0)">⚡ 一鍵列印　新生（升1年級）全套</button>
+      <button class="btn btn-red" style="background:#0f2044;" onclick="goGrade(2)">⚡ 一鍵列印　2年級（升3年級）全套</button>
+      <button class="btn btn-red" style="background:#0f2044;" onclick="goGrade(4)">⚡ 一鍵列印　4年級（升5年級）全套</button>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-title">🖨️ 選擇列印文件</div>
     <div class="notice">列印時請在瀏覽器勾選「背景圖形」，確保黑色標題列正確列印。</div>
 
@@ -538,6 +548,29 @@ async function go(type) {
   if(type==='special0') pages=buildSpecialGroup(0);
   if(type==='special2') pages=buildSpecialGroup(2);
   if(type==='special4') pages=buildSpecialGroup(4);
+
+  pages.forEach(p=>{
+    printArea.appendChild(p.cloneNode(true));
+    previewArea.appendChild(p);
+  });
+  document.getElementById('previewCard').style.display='';
+  setTimeout(()=>window.print(),500);
+}
+
+// 一鍵列印：把指定年級的五種報表（雙胞胎／需費心／不宜同班／資優生／鑑輔生）全部串起來一次印
+async function goGrade(grade) {
+  await loadAll();
+  const printArea   = document.getElementById('printArea');
+  const previewArea = document.getElementById('previewArea');
+  printArea.innerHTML=''; previewArea.innerHTML='';
+
+  const pages = [
+    buildTwin(grade),
+    ...buildBighead(grade),
+    ...buildRules(grade),
+    ...buildGiftedGroup(grade),
+    ...buildSpecialGroup(grade)
+  ];
 
   pages.forEach(p=>{
     printArea.appendChild(p.cloneNode(true));
