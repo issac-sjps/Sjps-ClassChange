@@ -689,10 +689,13 @@ tr:hover td { background: #f8f9fd; }
           <label>家長意願</label>
           <div style="display:flex;gap:16px;margin-top:5px;">
             <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twPref" value="separate" checked> ❌ 分開不同班
+              <input type="radio" name="twPref" value="separate" checked> 不同班
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
-              <input type="radio" name="twPref" value="same"> ✅ 同班在一起
+              <input type="radio" name="twPref" value="same"> 同班
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer;">
+              <input type="radio" name="twPref" value="any"> 依電腦編班結果
             </label>
           </div>
         </div>
@@ -997,10 +1000,13 @@ tr:hover td { background: #f8f9fd; }
       <label>家長意願</label>
       <div style="display:flex;gap:16px;margin-top:5px;">
         <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;cursor:pointer;">
-          <input type="radio" name="editTwinPref" value="separate"> ❌ 分開不同班
+          <input type="radio" name="editTwinPref" value="separate"> 不同班
         </label>
         <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;cursor:pointer;">
-          <input type="radio" name="editTwinPref" value="same"> ✅ 同班在一起
+          <input type="radio" name="editTwinPref" value="same"> 同班
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:400;cursor:pointer;">
+          <input type="radio" name="editTwinPref" value="any"> 依電腦編班結果
         </label>
       </div>
     </div>
@@ -2031,6 +2037,7 @@ function runSimulation() {
   // Apply twin constraints (post-processing check & swap)
   const gradeTwinsForSim = Object.values(state.gradeTwins).filter(t=>t.grade===grade);
   for(const twin of gradeTwinsForSim) {
+    if(twin.preference === 'any') continue; // 依電腦編班結果，不強制調整
     const cls1 = classes.find(c=>c.students.some(s=>s.id===twin.s1Id));
     const cls2 = classes.find(c=>c.students.some(s=>s.id===twin.s2Id));
     if(!cls1||!cls2) continue;
@@ -2640,7 +2647,7 @@ function renderGradeTwinList() {
   twinGrades.forEach(grade=>{
     const gradeGroup = twins.filter(t=>t.grade===grade);
     gradeGroup.forEach((t,i)=>{
-      const sign = t.preference==='same' ? '+' : '-';
+      const sign = t.preference==='same' ? '+' : (t.preference==='any' ? '~' : '-');
       twinCodes[t.id] = `T${i+1}${sign}`;
     });
   });
@@ -2650,12 +2657,14 @@ function renderGradeTwinList() {
       {id:t.s2Id,name:t.s2Name,class:t.s2Class}
     ];
     const prefLabel = t.preference==='same'
-      ? '<span class="tag tag-twin">✅ 同班</span>'
-      : '<span class="tag" style="background:#fee2e2;color:#dc2626;">❌ 分班</span>';
+      ? '<span class="tag tag-twin">同班</span>'
+      : t.preference==='any'
+      ? '<span class="tag" style="background:var(--bg);color:var(--text2);">依電腦編班結果</span>'
+      : '<span class="tag" style="background:#fee2e2;color:#dc2626;">不同班</span>';
     const countLabel = members.length === 2 ? '雙胞胎' : members.length === 3 ? '三胞胎' : `${members.length}胞胎`;
     const tCode = twinCodes[t.id]||'';
-    const tCodeColor = t.preference==='same' ? 'var(--teal)' : 'var(--red)';
-    const tCodeBg    = t.preference==='same' ? 'var(--teal-light)' : 'var(--red-light)';
+    const tCodeColor = t.preference==='same' ? 'var(--teal)' : (t.preference==='any' ? 'var(--text3)' : 'var(--red)');
+    const tCodeBg    = t.preference==='same' ? 'var(--teal-light)' : (t.preference==='any' ? 'var(--bg)' : 'var(--red-light)');
     const nameHtml = members.map(m=>{
       const stu = state.students[m.id];
       const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
@@ -2718,12 +2727,13 @@ function renderTwinSimStatus() {
       </div>`;
     }
     const same = cls1===cls2;
+    const isAny = t.preference === 'any';
     const want = t.preference==='same';
-    const ok = (want&&same)||(!want&&!same);
+    const ok = isAny || (want&&same)||(!want&&!same);
     if(!ok) allOk=false;
     const statusIcon = ok?'✅':'⚠️';
     const statusColor = ok?'var(--green)':'var(--red)';
-    const wantLabel = want?'希望同班':'希望分班';
+    const wantLabel = isAny ? '依電腦編班結果' : (want?'希望同班':'希望分班');
     const resultLabel = same?`同在第 ${cls1} 包`:`分別在第 ${cls1} 包 / 第 ${cls2} 包`;
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f0f2f8;font-size:.855rem;flex-wrap:wrap;">
       <span style="font-size:1.1rem;">${statusIcon}</span>
