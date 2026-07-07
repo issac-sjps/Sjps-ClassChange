@@ -491,9 +491,9 @@ tr:hover td { background: #f8f9fd; }
             <label>篩選年級</label>
             <select id="teacherViewGrade" onchange="renderTeachers()">
               <option value="">全部</option>
-              <option value="3">3年級</option>
-              <option value="5">5年級</option>
-              <option value="1">1年級</option>
+              <option value="0">新生（升1年級）</option>
+              <option value="2">2年級（升3年級）</option>
+              <option value="4">4年級（升5年級）</option>
             </select>
           </div>
         </div>
@@ -1830,10 +1830,16 @@ function renderTeachers() {
       const stu = state.students[bid];
       return stu ? stu.name : bid;
     }).join('、');
+    const gradeText = {0:'新生（升1年級）',2:'2年級（升3年級）',4:'4年級（升5年級）',1:'1年級',3:'3年級',5:'5年級'}[t.grade] ?? (t.grade ?? '─');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" value="${t.name}" id="tname_${t.id}" style="width:100%;border:none;background:transparent;font-weight:600;padding:0;" onblur="updateTeacherName('${t.id}',this.value)"></td>
-      <td><span style="font-size:.8rem;">${{1:'1年級',3:'3年級',5:'5年級'}[t.grade]}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="text" value="${t.name}" id="tname_${t.id}" style="width:100%;border:1.5px solid var(--border);border-radius:6px;background:#fff;font-weight:600;padding:4px 7px;" onkeydown="if(event.key==='Enter')this.blur()">
+          <button class="btn btn-primary btn-sm" style="padding:4px 8px;" onclick="updateTeacherName('${t.id}',document.getElementById('tname_${t.id}').value)">✓</button>
+        </div>
+      </td>
+      <td><span style="font-size:.8rem;">${gradeText}</span></td>
       <td style="font-size:.8rem;">${boundNames||'<span style="color:var(--text3);">無</span>'}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteTeacher('${t.id}')">🗑</button></td>
     `;
@@ -1844,10 +1850,13 @@ function renderTeachers() {
 }
 
 async function updateTeacherName(id, name) {
-  if(!name.trim()) return;
-  await db.collection('teachers').doc(id).update({ name });
-  state.teachers[id].name = name;
-  renderTeachers(); updateBindTeacherList();
+  if(!name.trim()) { showAlert('姓名不可空白','warn'); return; }
+  try {
+    await db.collection('teachers').doc(id).update({ name: name.trim() });
+    state.teachers[id].name = name.trim();
+    renderTeachers(); updateBindTeacherList();
+    showAlert('導師姓名已更新');
+  } catch(e) { showAlert('更新失敗：'+e.message,'warn'); }
 }
 
 async function deleteTeacher(id) {
