@@ -409,8 +409,8 @@ tr:hover td { background: #f8f9fd; }
         </div>
         <div style="background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:9px 14px;font-size:.82rem;color:#1e40af;line-height:1.8;margin-bottom:10px;">
           <b>代號說明（供老師檢查用）</b><br>
-          <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A1-</span>此學生每個班只能有一人（需完全隔離）<br>
-          <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A1+</span>此學生可與其他「+」同組同學同班，但不能與「A1-」同班<br>
+          <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A-</span>此學生每個班只能有一人（需完全隔離）<br>
+          <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A+</span>此學生可與其他「+」同組同學同班，但不能與「A-」同班<br>
           每個班：<b>「-」代號最多出現一次</b>，「+」代號可以多人同班。
         </div>
         <div class="form-row" style="margin-bottom:12px;">
@@ -836,8 +836,8 @@ tr:hover td { background: #f8f9fd; }
     <div class="card-title">📌 不能同班總表 <span>供老師快速瀏覽 ─ 依班級顯示所有隔離規則</span></div>
     <div style="background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:9px 14px;font-size:.82rem;color:#1e40af;line-height:1.8;margin-bottom:14px;">
   <b>代號說明（供老師檢查用）</b><br>
-  <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A1-</span>此學生每個班只能有一人（需完全隔離）<br>
-  <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A1+</span>此學生可與其他「+」同組同學同班，但不能與「A1-」同班<br>
+  <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A-</span>此學生每個班只能有一人（需完全隔離）<br>
+  <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A+</span>此學生可與其他「+」同組同學同班，但不能與「A-」同班<br>
   每個班：<b>「-」代號最多出現一次</b>，「+」代號可以多人同班。
 </div>
     <div class="form-row" style="margin-bottom:0;">
@@ -947,7 +947,7 @@ tr:hover td { background: #f8f9fd; }
       </div>
       <div style="min-width:110px;">
         <label style="font-size:.75rem;font-weight:700;color:var(--text2);letter-spacing:.04em;display:block;margin-bottom:5px;">群組代號</label>
-        <input type="text" id="editRuleGroupCode" placeholder="A1-" style="width:100%;font-family:monospace;font-size:1rem;font-weight:700;text-align:center;">
+        <input type="text" id="editRuleGroupCode" placeholder="A-" style="width:100%;font-family:monospace;font-size:1rem;font-weight:700;text-align:center;">
       </div>
     </div>
 
@@ -1624,17 +1624,20 @@ async function saveRule() {
   const targetStu  = state.students[ruleTargetStu.id];
   const sepStudents = ruleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
 
-  // 自動產生群組代號：同年級依已有規則數量遞增，格式 A1- / A2- / B1- ...
+  // 自動產生群組代號：同年級依已有規則數量遞增，格式 A- / B- / C- ...
   // 註：跳過 G/S/T，因為這三個字母分別給「資優生(G)」「鑑輔生(S)」「雙胞胎(T)」代號使用，避免撞碼
   const gradeRules = Object.values(state.rules).filter(r=>r.grade===grade);
   const usedCodes  = new Set(gradeRules.map(r=>r.groupCode).filter(Boolean));
   const alpha = 'ABCDEFHIJKLMNOPQRUVWXYZ'; // 已排除 G, S, T
   let groupCode = '';
-  outer: for(const a of alpha){
-    for(let n=1; n<=20; n++){
-      const code = `${a}${n}-`;
-      if(!usedCodes.has(code)){ groupCode=code; break outer; }
-    }
+  for(const a of alpha){
+    const code = `${a}-`;
+    if(!usedCodes.has(code)){ groupCode=code; break; }
+  }
+  if(!groupCode) { // 超過可用字母數，用 Z1-, Z2- ... 延伸
+    let n=1;
+    while(usedCodes.has(`Z${n}-`)) n++;
+    groupCode = `Z${n}-`;
   }
 
   const rule = {
@@ -1742,7 +1745,7 @@ function renderRuleList() {
               const glyph=stu?(stu.gender==='M'?'♂':'♀'):'';
               const isGrp = r.type==='group';
               const base  = r.groupCode ? r.groupCode.replace(/[0-9+-]+$/,'') : '';
-              const mCode = base ? `${base}1${isGrp?'-':'+'}` : '';
+              const mCode = base ? `${base}${isGrp?'-':'+'}` : '';
               const mc    = isGrp?'var(--red)':'var(--green)';
               const mb    = isGrp?'#fee2e2':'#dcfce7';
               return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;font-size:.855rem;">
@@ -2501,7 +2504,7 @@ function renderOverviewRules() {
         const code = stu ? `${stu.grade}0${stu.class}${String(stu.number).padStart(2,'0')}` : '';
         const gc  = stu ? (stu.gender==='M'?'var(--blue)':'var(--pink)') : 'var(--text3)';
         const memberSign = isGroup ? '-' : '+';
-        const memberCode = baseCode ? `${baseCode}1${memberSign}` : '';
+        const memberCode = baseCode ? `${baseCode}${memberSign}` : '';
         const memberBadgeColor = isGroup ? 'var(--red)' : 'var(--green)';
         const memberBadgeBg   = isGroup ? '#fee2e2' : '#dcfce7';
         return `<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">
@@ -3089,7 +3092,7 @@ async function assignGroupCodes(grade) {
   rules.forEach((r, idx) => {
     const letter = alpha[idx] || `Z${idx - alpha.length + 1}`;  // 超過可用字母數用Z1,Z2...
     const memberCount = (r.separateFrom || []).length + 1; // 含目標
-    const code = letter + '1-';  // 代表這一組的標記，每人序號在教育局系統手填
+    const code = letter + '-';  // 代表這一組的標記
     if(r.groupCode !== code) {
       batch.update(db.collection('separationRules').doc(r.id), { groupCode: code });
       state.rules[r.id].groupCode = code;
