@@ -142,8 +142,8 @@ select:focus,input:focus{border-color:var(--blue);}
   <div class="ctrl-sep"></div>
   <div style="font-size:.8rem;color:var(--text3);">
     <span class="code-b code-red">*</span> 大頭　
-    <span class="code-b code-purple">S</span> 鑑輔生　
-    <span class="code-b code-gold">G</span> 資優生　
+    <span class="code-b code-purple">S1</span> 鑑輔生（數字＝分組）　
+    <span class="code-b code-gold">G1</span> 資優生（數字＝分組）　
     <span class="code-b code-red">A-</span> 不能同班甲　
     <span class="code-b code-green">A+</span> 不能同班乙　
     <span class="code-b code-teal">T1+</span> 雙胞胎同班　
@@ -229,10 +229,10 @@ function getRuleCodes(stuId) {
   const codes = [];
   Object.values(state.rules).forEach(r => {
     const gc = r.groupCode||'';
-    const base = gc.replace(/[0-9+-]+$/,'');
     if(!gc) return;
+    const base = gc.replace(/[0-9+-]+$/,''); // 只取字母部分，避免舊資料殘留的數字（如「D1-」）跟新格式（「D-」）同時出現
     if(r.targetStudentId === stuId) {
-      codes.push({ code: gc, cls: r.type==='group'?'code-red':'code-red' });
+      codes.push({ code: `${base}-`, cls: 'code-red' });
     }
     (r.separateFrom||[]).forEach(s => {
       if(s.id === stuId) {
@@ -244,6 +244,24 @@ function getRuleCodes(stuId) {
   // deduplicate
   const seen = new Set();
   return codes.filter(c=>{ if(seen.has(c.code)) return false; seen.add(c.code); return true; });
+}
+
+// 取得資優生／鑑輔生群組編號（邏輯與 admin.html 一致）
+function getGiftedGroup(tags, grade) {
+  if(grade !== undefined) {
+    const t = (tags||[]).find(t=>t.startsWith(`gifted_g${grade}_`));
+    if(t) return parseInt(t.split('_').pop());
+  }
+  const t = (tags||[]).find(t=>t.startsWith('gifted_g')&&!t.includes('_', 8));
+  return t ? parseInt(t.replace('gifted_g','')) : 1;
+}
+function getSpecialGroup(tags, grade) {
+  if(grade !== undefined) {
+    const t = (tags||[]).find(t=>t.startsWith(`special_g${grade}_`));
+    if(t) return parseInt(t.split('_').pop());
+  }
+  const t = (tags||[]).find(t=>t.startsWith('special_g')&&!t.includes('_', 9));
+  return t ? parseInt(t.replace('special_g','')) : 1;
 }
 
 // 雙胞胎代號 map：studentId → {code, cls}
@@ -280,8 +298,8 @@ function getTwinCode(stuId) {
 function buildAllCodes(stu) {
   const codes = [];
   if(stu.tags.includes('bighead')) codes.push({code:'*', cls:'code-red'});
-  if(stu.tags.includes('special')) codes.push({code:'S', cls:'code-purple'});
-  if(stu.tags.includes('gifted'))  codes.push({code:'G', cls:'code-gold'});
+  if(stu.tags.includes('special')) codes.push({code:`S${getSpecialGroup(stu.tags, stu.grade)}`, cls:'code-purple'});
+  if(stu.tags.includes('gifted'))  codes.push({code:`G${getGiftedGroup(stu.tags, stu.grade)}`, cls:'code-gold'});
   const ruleCodes = getRuleCodes(stu.id);
   codes.push(...ruleCodes);
   const twinCode = getTwinCode(stu.id);
