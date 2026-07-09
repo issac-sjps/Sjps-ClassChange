@@ -86,6 +86,14 @@ tr:hover td{background:#f8f9fd;}
 .stat-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--text2);padding:3px 0;border-bottom:1px dashed var(--border);}
 .stat-row:last-child{border-bottom:none;}
 .stat-row b{color:var(--text);}
+
+.remarks-columns{display:flex;gap:0;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow-x:auto;}
+.remarks-col{flex:0 0 auto;min-width:110px;border-right:1px solid var(--border);padding:10px 8px;}
+.remarks-col:last-child{border-right:none;}
+.remarks-col-head{font-size:.78rem;font-weight:800;color:var(--navy);text-align:center;padding-bottom:8px;margin-bottom:8px;border-bottom:2px solid var(--border);}
+.remarks-col-head span{display:block;font-size:.68rem;font-weight:400;color:var(--text3);margin-top:2px;}
+.remarks-item{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:8px;}
+.remarks-item-name{font-size:.66rem;color:var(--text3);}
 </style>
 </head>
 <body>
@@ -103,6 +111,7 @@ tr:hover td{background:#f8f9fd;}
     <button class="tab-btn active" data-tab="upload">📁 上傳資料</button>
     <button class="tab-btn" data-tab="list">📋 分群名單</button>
     <button class="tab-btn" data-tab="conflict">🚫 備註衝突檢查</button>
+    <button class="tab-btn" data-tab="remarks">📝 備註總覽</button>
     <button class="tab-btn" data-tab="stats">📈 統計分頁</button>
   </div>
 
@@ -158,6 +167,13 @@ tr:hover td{background:#f8f9fd;}
     <div id="conflict-result"><div class="empty">請先上傳資料並選擇年級</div></div>
   </div>
 
+  <!-- ============ TAB: 備註總覽 ============ -->
+  <div class="tab-panel" id="tab-remarks">
+    <div class="grade-select" id="remarks-grade-select"></div>
+    <div class="info">由上往下依「班群 → 座號」排列，只列出有填備註的學生，方便一次核對有無重複或打錯。</div>
+    <div id="remarks-result"><div class="empty">請先上傳資料並選擇年級</div></div>
+  </div>
+
   <!-- ============ TAB: 統計分頁 ============ -->
   <div class="tab-panel" id="tab-stats">
     <div class="grade-select" id="stats-grade-select"></div>
@@ -171,7 +187,7 @@ tr:hover td{background:#f8f9fd;}
    資料儲存（僅存於記憶體，不使用 localStorage/sessionStorage）
    ============================================================ */
 const gradeData = { "1": null, "3": null, "5": null };
-let currentGrade = { list: null, conflict: null, stats: null };
+let currentGrade = { list: null, conflict: null, remarks: null, stats: null };
 
 /* ============================================================
    Tab 切換
@@ -234,6 +250,7 @@ function refreshGradeSelectors() {
   const loadedGrades = Object.keys(gradeData).filter(g => gradeData[g]);
   buildGradeButtons('list-grade-select', loadedGrades, (g) => { currentGrade.list = g; renderGroupButtons(g); });
   buildGradeButtons('conflict-grade-select', loadedGrades, (g) => { currentGrade.conflict = g; renderConflictCheck(g); });
+  buildGradeButtons('remarks-grade-select', loadedGrades, (g) => { currentGrade.remarks = g; renderRemarksOverview(g); });
   buildGradeButtons('stats-grade-select', loadedGrades, (g) => { currentGrade.stats = g; renderStats(g); });
 }
 
@@ -323,18 +340,22 @@ function parseRemark(raw) {
   const original = raw;
   let s = (raw || '').trim();
   let bigHead = false;
-  let special = null;
+  const specials = [];
   let error = null;
 
-  // 反覆嘗試吃掉開頭的 * 與 S/G/T 特殊代號（不限順序）
-  for (let i = 0; i < 2; i++) {
-    if (s[0] === '*') { bigHead = true; s = s.slice(1); }
+  // 反覆嘗試吃掉開頭的 * 與 S/G/T 特殊代號（可能不只一個，不限順序，例如 *S3T2-）
+  let matched = true;
+  while (matched) {
+    matched = false;
+    if (s[0] === '*') { bigHead = true; s = s.slice(1); matched = true; }
     const m = s.match(/^(S|G|T)(\d+)([+\-~]?)/);
-    if (m && !special) {
-      special = { type: m[1], num: m[2], sign: m[3] || '+' };
+    if (m) {
+      specials.push({ type: m[1], num: m[2], sign: m[3] || '+' });
       s = s.slice(m[0].length);
+      matched = true;
     }
   }
+  const special = specials.length ? specials[0] : null; // 向下相容：第一個特殊代號
 
   const letters = [];
   let pending = [];
@@ -354,7 +375,7 @@ function parseRemark(raw) {
     pending.forEach(l => letters.push({ letter: l, sign: '+', assumed: true }));
   }
 
-  return { raw: original, bigHead, special, letters, error };
+  return { raw: original, bigHead, special, specials, letters, error };
 }
 
 /* ============================================================
@@ -410,11 +431,10 @@ function renderConflictCheck(grade) {
   students.forEach(s => {
     if (!s.remark) return;
     const p = parseRemark(s.remark);
-    if (p.special && p.special.type === 'T') {
-      const num = p.special.num;
-      if (!twinMap[num]) twinMap[num] = [];
-      twinMap[num].push({ name: s.name, group: s.group, sign: p.special.sign, remark: s.remark });
-    }
+    p.specials.filter(sp => sp.type === 'T').forEach(sp => {
+      if (!twinMap[sp.num]) twinMap[sp.num] = [];
+      twinMap[sp.num].push({ name: s.name, group: s.group, sign: sp.sign, remark: s.remark });
+    });
   });
   Object.entries(twinMap).forEach(([num, list]) => {
     const sign = list[0].sign;
@@ -433,29 +453,7 @@ function renderConflictCheck(grade) {
     }
   });
 
-  // 3) 鑑輔生（S）：同組同班提醒
-  const sMap = {};
-  students.forEach(s => {
-    if (!s.remark) return;
-    const p = parseRemark(s.remark);
-    if (p.special && p.special.type === 'S') {
-      const key = p.special.num;
-      if (!sMap[key]) sMap[key] = [];
-      sMap[key].push({ name: s.name, group: s.group, remark: s.remark });
-    }
-  });
-  Object.entries(sMap).forEach(([num, list]) => {
-    const byG = {};
-    list.forEach(l => { (byG[l.group] = byG[l.group] || []).push(l); });
-    Object.entries(byG).forEach(([g, arr]) => {
-      if (arr.length > 1) {
-        warnings.push({
-          title: `鑑輔生 S${num} 同組同班（${g}）`,
-          detail: arr.map(a => `${a.name}（${a.remark}）`).join('、') + ' — 依慣例同組鑑輔生通常建議拆到不同班，請確認是否刻意安排。'
-        });
-      }
-    });
-  });
+  // 3) 鑑輔生（S）同組同班為常見刻意安排，不視為需要提醒的項目（已依需求移除此檢查）
 
   // render
   let html = '';
@@ -481,23 +479,68 @@ function renderConflictCheck(grade) {
 }
 
 /* ============================================================
-   統計分頁
+   備註總覽分頁
    ============================================================ */
+function renderRemarksOverview(grade) {
+  const students = gradeData[grade];
+  const wrap = document.getElementById('remarks-result');
+  const withRemark = students.filter(s => s.remark && s.remark.trim() !== '');
+  if (!withRemark.length) { wrap.innerHTML = '<div class="empty">此年級沒有任何學生填寫備註</div>'; return; }
+
+  const byClass = {};
+  withRemark.forEach(s => { (byClass[s.group] = byClass[s.group] || []).push(s); });
+  const classNames = Object.keys(byClass).sort();
+
+  let html = '<div class="remarks-columns">';
+  classNames.forEach(cls => {
+    const list = byClass[cls].sort((a,b) => (a.seat+'').localeCompare(b.seat+'', undefined, {numeric:true}));
+    html += `<div class="remarks-col"><div class="remarks-col-head">${cls}<span>${list.length}人</span></div>`;
+    list.forEach(s => {
+      const p = parseRemark(s.remark);
+      const tip = `${s.seat}號 ${s.name}` + (p.error ? `　⚠️${p.error}` : '');
+      html += `<div class="remarks-item" title="${tip}">${remarkBadge(s.remark)}<span class="remarks-item-name">${s.name}</span></div>`;
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
 function renderStats(grade) {
   const students = gradeData[grade];
   const wrap = document.getElementById('stats-result');
   const groups = [...new Set(students.map(s => s.group))].sort();
   const hasT = students.some(s => s.tscore !== null && !isNaN(s.tscore));
 
+  const totalBigHead = students.filter(s => s.remark && parseRemark(s.remark).bigHead).length;
+  const avgBigHead = groups.length ? totalBigHead / groups.length : 0;
+
   let html = `<div class="stat-grid">`;
   groups.forEach(g => {
     const list = students.filter(s => s.group === g);
     const male = list.filter(s => s.gender === '男').length;
     const female = list.filter(s => s.gender === '女').length;
-    html += `<div class="stat-card"><h4>${g}</h4>`;
+    const reduceCount = list.reduce((sum, s) => {
+      const n = parseInt(s.reduceCount, 10);
+      return sum + (isNaN(n) ? 0 : n);
+    }, 0);
+    const bigHeadCount = list.filter(s => s.remark && parseRemark(s.remark).bigHead).length;
+    const effectiveSize = list.length + reduceCount;
+    const overLimit = effectiveSize >= 30;
+    html += `<div class="stat-card" style="${overLimit ? 'border-color:var(--red);background:var(--red-light);' : ''}"><h4>${g}</h4>`;
     html += `<div class="stat-row"><span>學生人數</span><b>${list.length}</b></div>`;
+    html += `<div class="stat-row"><span>減授人數合計</span><b>${reduceCount}</b></div>`;
+    html += `<div class="stat-row"><span>視同班級人數</span><b style="${overLimit ? 'color:var(--red);' : ''}">${effectiveSize}</b></div>`;
+    if (overLimit) {
+      html += `<div class="stat-row" style="border-bottom:none;"><span style="color:var(--red);font-weight:700;">⚠️ 已達或超過 30 人，需調整</span></div>`;
+    }
     html += `<div class="stat-row"><span>男生</span><b>${male}</b></div>`;
     html += `<div class="stat-row"><span>女生</span><b>${female}</b></div>`;
+    const bigHeadOff = Math.abs(bigHeadCount - avgBigHead) > 1;
+    html += `<div class="stat-row"><span>大頭（*）人數</span><b style="${bigHeadOff ? 'color:var(--red);' : ''}">${bigHeadCount}</b></div>`;
+    if (bigHeadOff) {
+      html += `<div class="stat-row" style="border-bottom:none;"><span style="color:var(--red);font-weight:700;font-size:.75rem;">⚠️ 與全年級平均（${avgBigHead.toFixed(1)}人）差距較大</span></div>`;
+    }
     if (hasT) {
       const tscores = list.map(s => s.tscore).filter(t => t !== null && !isNaN(t));
       if (tscores.length) {
