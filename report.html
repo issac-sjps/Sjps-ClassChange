@@ -328,8 +328,8 @@ function buildDrawCheck(grade) {
         ${mi===0?`<td rowspan="${members.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#ccfbf1;color:#0d9488;vertical-align:middle;">${code}</td>`:''}
         <td class="c">${stuCode}</td>
         <td>${m.name}</td>
-        ${mi===0?`<td rowspan="${members.length}" class="c" style="font-size:8.5pt;vertical-align:middle;">${pref}</td>`:''}
         ${blankCell}
+        ${mi===0?`<td rowspan="${members.length}" class="c" style="font-size:8.5pt;vertical-align:middle;">${pref}</td>`:''}
       </tr>`;
     });
   }).join('');
@@ -340,8 +340,8 @@ function buildDrawCheck(grade) {
         <th style="width:40pt;">代號</th>
         <th style="width:50pt;">原班座號</th>
         <th>姓名</th>
-        <th style="width:60pt;">家長意願</th>
         <th style="width:70pt;">抽到班級</th>
+        <th style="width:60pt;">家長意願</th>
       </tr></thead>
       <tbody>${twinRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
     </table>`);
