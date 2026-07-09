@@ -466,21 +466,26 @@ tr:hover td { background: #f8f9fd; }
             <input type="text" id="teacherName" placeholder="例：王老師、導師A">
           </div>
           <div class="form-group">
-            <label>負責年級（新）</label>
+            <label>負責年級</label>
             <select id="teacherGrade">
-              <option value="3">3年級</option>
-              <option value="5">5年級</option>
-              <option value="1">1年級（新生）</option>
+              <option value="0">新生（升1年級）</option>
+              <option value="2">2年級（升3年級）</option>
+              <option value="4">4年級（升5年級）</option>
             </select>
+          </div>
+          <div class="form-group" style="max-width:90px;">
+            <label>班級（選填）</label>
+            <input type="number" id="teacherClass" min="1" placeholder="例：1">
           </div>
           <button class="btn btn-primary" style="align-self:flex-end;" onclick="saveTeacher()">新增</button>
         </div>
         <hr class="sep-line">
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick="addPlaceholders(3,'A,B,C,D,E,F')">快速加入 3年級 導師A~F</button>
-          <button class="btn btn-ghost btn-sm" onclick="addPlaceholders(5,'A,B,C,D,E,F,G,H')">快速加入 5年級 導師A~H</button>
+          <button class="btn btn-ghost btn-sm" onclick="addPlaceholders(2,'A,B,C,D,E,F')">快速加入 2年級 導師A~F（不指定班級）</button>
+          <button class="btn btn-ghost btn-sm" onclick="addPlaceholders(4,'A,B,C,D,E,F,G,H,I')">快速加入 4年級 導師A~I（不指定班級）</button>
         </div>
       </div>
+      <div class="notice" style="margin-top:8px;">💡 建議直接用上方「班級導師設定」表格輸入，比較不會漏填班級。這裡的「班級」若留空，該導師會出現在導師列表但不會對應到任何一班，核章列印時也不會被抓到。</div>
     </div>
 
     <div>
@@ -1620,9 +1625,10 @@ async function saveRule() {
   const sepStudents = ruleSepStudents.map(m=>({ id:m.id, name:m.name, class:m.class }));
 
   // 自動產生群組代號：同年級依已有規則數量遞增，格式 A1- / A2- / B1- ...
+  // 註：跳過 G/S/T，因為這三個字母分別給「資優生(G)」「鑑輔生(S)」「雙胞胎(T)」代號使用，避免撞碼
   const gradeRules = Object.values(state.rules).filter(r=>r.grade===grade);
   const usedCodes  = new Set(gradeRules.map(r=>r.groupCode).filter(Boolean));
-  const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const alpha = 'ABCDEFHIJKLMNOPQRUVWXYZ'; // 已排除 G, S, T
   let groupCode = '';
   outer: for(const a of alpha){
     for(let n=1; n<=20; n++){
@@ -1787,11 +1793,18 @@ async function deleteRule(id) {
 async function saveTeacher() {
   const name = document.getElementById('teacherName').value.trim();
   const grade = parseInt(document.getElementById('teacherGrade').value);
+  const classVal = document.getElementById('teacherClass').value.trim();
+  const cls = classVal ? parseInt(classVal) : null;
   if(!name) { showAlert('請輸入導師姓名','warn'); return; }
-  const teacher = { name, grade, boundStudents:[] };
+  if(cls) {
+    const dup = Object.values(state.teachers).find(t=>t.grade===grade && t.class===cls);
+    if(dup && !confirm(`${{0:'新生',2:'2年級',4:'4年級'}[grade]} ${cls}班 目前已經是「${dup.name}」，確定要新增另一位導師到同一班嗎？（建議改用「班級導師設定」表格直接覆蓋既有姓名）`)) return;
+  }
+  const teacher = cls ? { name, grade, class:cls, boundStudents:[] } : { name, grade, boundStudents:[] };
   const ref = await db.collection('teachers').add(teacher);
   state.teachers[ref.id] = { id:ref.id, ...teacher };
   document.getElementById('teacherName').value = '';
+  document.getElementById('teacherClass').value = '';
   renderTeachers();
   updateBindTeacherList();
   showAlert(`導師 ${name} 已新增`);
@@ -1800,7 +1813,7 @@ async function saveTeacher() {
 async function addPlaceholders(grade, letters) {
   const names = letters.split(',').map(l=>l.trim());
   const batch = db.batch();
-  const gradeLabel = {1:'1年級',3:'3年級',5:'5年級'}[grade];
+  const gradeLabel = {0:'新生',2:'2年級',4:'4年級'}[grade];
   for(const l of names) {
     const name = `導師${l}`;
     const ref = db.collection('teachers').doc();
@@ -1809,7 +1822,7 @@ async function addPlaceholders(grade, letters) {
   }
   await batch.commit();
   renderTeachers(); updateBindTeacherList();
-  showAlert(`已新增 ${names.length} 位${gradeLabel}佔位導師`);
+  showAlert(`已新增 ${names.length} 位${gradeLabel}佔位導師（尚未指定班級）`);
 }
 
 function renderTeachers() {
@@ -1840,7 +1853,12 @@ function renderTeachers() {
         </div>
       </td>
       <td><span style="font-size:.8rem;">${gradeText}</span></td>
-      <td><span style="font-size:.8rem;">${t.class ? t.class+'班' : '<span style="color:var(--text3);">─</span>'}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" min="1" value="${t.class||''}" placeholder="未指定" id="tclass_${t.id}" style="width:64px;border:1.5px solid var(--border);border-radius:6px;background:#fff;padding:4px 6px;font-size:.8rem;" onkeydown="if(event.key==='Enter')this.blur()">
+          <button class="btn btn-primary btn-sm" style="padding:4px 8px;" onclick="updateTeacherClass('${t.id}',document.getElementById('tclass_${t.id}').value)">✓</button>
+        </div>
+      </td>
       <td style="font-size:.8rem;">${boundNames||'<span style="color:var(--text3);">無</span>'}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteTeacher('${t.id}')">🗑</button></td>
     `;
@@ -1857,6 +1875,25 @@ async function updateTeacherName(id, name) {
     state.teachers[id].name = name.trim();
     renderTeachers(); updateBindTeacherList();
     showAlert('導師姓名已更新');
+  } catch(e) { showAlert('更新失敗：'+e.message,'warn'); }
+}
+
+async function updateTeacherClass(id, classVal) {
+  const t = state.teachers[id];
+  const cls = classVal.trim() ? parseInt(classVal) : null;
+  if(cls !== null) {
+    const dup = Object.values(state.teachers).find(o=>o.id!==id && o.grade===t.grade && o.class===cls);
+    if(dup && !confirm(`${t.grade===0?'新生':t.grade+'年級'} ${cls}班 目前是「${dup.name}」，確定要改成「${t.name}」嗎？（原本的「${dup.name}」將變成未指定班級）`)) {
+      renderTeachers();
+      return;
+    }
+  }
+  try {
+    if(cls===null) await db.collection('teachers').doc(id).update({ class: firebase.firestore.FieldValue.delete() });
+    else await db.collection('teachers').doc(id).update({ class: cls });
+    t.class = cls===null ? undefined : cls;
+    renderTeachers(); updateBindTeacherList();
+    showAlert('導師班級已更新');
   } catch(e) { showAlert('更新失敗：'+e.message,'warn'); }
 }
 
@@ -3046,11 +3083,11 @@ async function assignGroupCodes(grade) {
       return (sa ? sa.number : 99) - (sb ? sb.number : 99);
     });
 
-  const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const alpha = 'ABCDEFHIJKLMNOPQRUVWXYZ'; // 已排除 G, S, T（資優/鑑輔/雙胞胎專用）
   const batch = db.batch();
 
   rules.forEach((r, idx) => {
-    const letter = alpha[idx] || `Z${idx - 25}`;  // 超過26條用Z1,Z2...
+    const letter = alpha[idx] || `Z${idx - alpha.length + 1}`;  // 超過可用字母數用Z1,Z2...
     const memberCount = (r.separateFrom || []).length + 1; // 含目標
     const code = letter + '1-';  // 代表這一組的標記，每人序號在教育局系統手填
     if(r.groupCode !== code) {
