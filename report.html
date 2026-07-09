@@ -147,6 +147,18 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
         <button class="btn btn-primary" onclick="go('special4')" style="background:#7c3aed;">🖨️ 4年級鑑輔生群組（升5年級）</button>
       </div>
     </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+
+    <div class="btn-group">
+      <div class="group-label">📋 附件E：教育局抽籤 班級填寫核對表</div>
+      <div class="notice" style="margin-top:0;">抽籤現場用：把雙胞胎、不宜同班、資優生、鑑輔生集中列在同一張表，旁邊留空格讓你手寫抽到的班級，方便當場核對有沒有符合要求。</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="go('drawcheck0')" style="background:#0d9488;">🖨️ 新生抽籤核對表（升1年級）</button>
+        <button class="btn btn-primary" onclick="go('drawcheck2')" style="background:#0d9488;">🖨️ 2年級抽籤核對表（升3年級）</button>
+        <button class="btn btn-primary" onclick="go('drawcheck4')" style="background:#0d9488;">🖨️ 4年級抽籤核對表（升5年級）</button>
+      </div>
+    </div>
   </div>
 
   <div class="card" id="previewCard" style="display:none;">
@@ -283,6 +295,181 @@ function buildTwin(grade) {
 </table>
 ${stampRow()}`;
   return div;
+}
+
+
+// ═══════════════════════════════════════
+// 附件E：教育局抽籤 班級核對表（雙胞胎／不宜同班／資優生／鑑輔生）
+// ═══════════════════════════════════════
+function buildDrawCheck(grade) {
+  const year=v('cfgYear'); const school=v('cfgSchool'); const date=v('cfgDate');
+  const gl=gradeLabel(grade);
+  const blankCell = `<td style="height:20pt;border-bottom:1pt solid #999;"></td>`;
+
+  const sections = [];
+
+  // ── 1. 雙胞胎 ──
+  const twins = Object.values(state.twins)
+    .filter(t=>t.grade===grade)
+    .sort((a,b)=>{
+      const ma=(a.members||[{id:a.s1Id}])[0]; const mb=(b.members||[{id:b.s1Id}])[0];
+      const sa=state.students[ma.id]; const sb=state.students[mb.id];
+      if(!sa||!sb) return 0;
+      return sa.class!==sb.class ? sa.class-sb.class : sa.number-sb.number;
+    });
+  const twinRows = twins.flatMap((t,i)=>{
+    const members = t.members||[{id:t.s1Id,name:t.s1Name},{id:t.s2Id,name:t.s2Name}];
+    const pref = t.preference==='same'?'同班':(t.preference==='any'?'依電腦結果':'不同班');
+    const code = t.twinCode || `T${i+1}${t.preference==='same'?'+':(t.preference==='any'?'~':'-')}`;
+    return members.map((m,mi)=>{
+      const st = state.students[m.id];
+      const stuCode = st ? `${grade}0${st.class}${String(st.number).padStart(2,'0')}` : '';
+      return `<tr style="break-inside:avoid;page-break-inside:avoid;">
+        ${mi===0?`<td rowspan="${members.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#ccfbf1;color:#0d9488;vertical-align:middle;">${code}</td>`:''}
+        <td class="c">${stuCode}</td>
+        <td>${m.name}</td>
+        ${mi===0?`<td rowspan="${members.length}" class="c" style="font-size:8.5pt;vertical-align:middle;">${pref}</td>`:''}
+        ${blankCell}
+      </tr>`;
+    });
+  }).join('');
+  sections.push(`
+    <div style="font-size:10.5pt;font-weight:bold;background:#0d9488;color:#fff;padding:4pt 8pt;margin-top:10pt;">👫 雙胞胎</div>
+    <table class="rpt-table">
+      <thead><tr>
+        <th style="width:40pt;">代號</th>
+        <th style="width:50pt;">原班座號</th>
+        <th>姓名</th>
+        <th style="width:60pt;">家長意願</th>
+        <th style="width:70pt;">抽到班級</th>
+      </tr></thead>
+      <tbody>${twinRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+    </table>`);
+
+  // ── 2. 不宜同班 ──
+  const allRules = Object.values(state.rules)
+    .filter(r=>r.grade===grade)
+    .sort((a,b)=>{
+      if(a.targetStudentClass!==b.targetStudentClass) return a.targetStudentClass-b.targetStudentClass;
+      const sa=state.students[a.targetStudentId]; const sb=state.students[b.targetStudentId];
+      return sa&&sb?sa.number-sb.number:0;
+    });
+  const ruleRows = allRules.flatMap(r=>{
+    const stu = state.students[r.targetStudentId];
+    const cls = r.targetStudentClass;
+    const base = (r.groupCode||'').replace(/[0-9+-]+$/,'');
+    const isGrp = r.type==='group';
+    const targetCode = base ? `${base}-` : '';
+    const memberCode  = base ? `${base}${isGrp?'-':'+'}` : '';
+    const targetStuCode = stu ? `${grade}0${cls}${String(stu.number).padStart(2,'0')}` : '';
+    const sepMembers = [...(r.separateFrom||[])].sort((a,b)=>{
+      const sa=state.students[a.id]; const sb=state.students[b.id];
+      return sa&&sb?sa.class-sb.class||sa.number-sb.number:0;
+    });
+    const groupSize = 1 + sepMembers.length;
+    const rows = [];
+    rows.push(`<tr style="break-inside:avoid;page-break-inside:avoid;">
+      <td rowspan="${groupSize}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#fee2e2;color:#dc2626;vertical-align:middle;">${base}</td>
+      <td class="c" style="font-family:monospace;font-weight:bold;color:#dc2626;">${targetCode}</td>
+      <td class="c">${targetStuCode}</td>
+      <td><b>${stu?stu.name:r.targetStudentName}</b>（甲）</td>
+      ${blankCell}
+    </tr>`);
+    sepMembers.forEach(s=>{
+      const st = state.students[s.id];
+      const sc = st ? `${grade}0${st.class}${String(st.number).padStart(2,'0')}` : '';
+      rows.push(`<tr style="break-inside:avoid;page-break-inside:avoid;">
+        <td class="c" style="font-family:monospace;font-weight:bold;color:${isGrp?'#dc2626':'#16a34a'};">${memberCode}</td>
+        <td class="c">${sc}</td>
+        <td>${st?st.name:s.name}（乙）</td>
+        ${blankCell}
+      </tr>`);
+    });
+    return rows;
+  }).join('');
+  sections.push(`
+    <div style="font-size:10.5pt;font-weight:bold;background:#dc2626;color:#fff;padding:4pt 8pt;margin-top:10pt;">🚫 不宜同班</div>
+    <table class="rpt-table">
+      <thead><tr>
+        <th style="width:40pt;">群組</th>
+        <th style="width:40pt;">代號</th>
+        <th style="width:50pt;">原班座號</th>
+        <th>姓名</th>
+        <th style="width:70pt;">抽到班級</th>
+      </tr></thead>
+      <tbody>${ruleRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+    </table>`);
+
+  // ── 3. 資優生 ──
+  const giftedMap = {};
+  Object.values(state.students).filter(s=>s.grade===grade&&s.tags.includes('gifted')).forEach(s=>{
+    const g = getGiftedGroup(s.tags, grade);
+    if(!giftedMap[g]) giftedMap[g]=[];
+    giftedMap[g].push(s);
+  });
+  const giftedRows = Object.keys(giftedMap).map(Number).sort().flatMap(g=>{
+    const stus=[...giftedMap[g]].sort((a,b)=>a.class-b.class||a.number-b.number);
+    return stus.map((s,i)=>`<tr style="break-inside:avoid;page-break-inside:avoid;">
+      ${i===0?`<td rowspan="${stus.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#fef9c3;color:#b45309;vertical-align:middle;">G${g}</td>`:''}
+      <td class="c">${grade}0${s.class}${String(s.number).padStart(2,'0')}</td>
+      <td>${s.name}</td>
+      ${blankCell}
+    </tr>`);
+  }).join('');
+  sections.push(`
+    <div style="font-size:10.5pt;font-weight:bold;background:#b45309;color:#fff;padding:4pt 8pt;margin-top:10pt;">⭐ 資優生</div>
+    <table class="rpt-table">
+      <thead><tr>
+        <th style="width:40pt;">群組</th>
+        <th style="width:50pt;">原班座號</th>
+        <th>姓名</th>
+        <th style="width:70pt;">抽到班級</th>
+      </tr></thead>
+      <tbody>${giftedRows||'<tr><td colspan="4" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+    </table>`);
+
+  // ── 4. 鑑輔生 ──
+  const specialMap = {};
+  Object.values(state.students).filter(s=>s.grade===grade&&s.tags.includes('special')).forEach(s=>{
+    const g = getSpecialGroup(s.tags, grade);
+    if(!specialMap[g]) specialMap[g]=[];
+    specialMap[g].push(s);
+  });
+  const specialRows = Object.keys(specialMap).map(Number).sort().flatMap(g=>{
+    const stus=[...specialMap[g]].sort((a,b)=>a.class-b.class||a.number-b.number);
+    return stus.map((s,i)=>`<tr style="break-inside:avoid;page-break-inside:avoid;">
+      ${i===0?`<td rowspan="${stus.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#ede9fe;color:#7c3aed;vertical-align:middle;">S${g}</td>`:''}
+      <td class="c">${grade}0${s.class}${String(s.number).padStart(2,'0')}</td>
+      <td>${s.name}</td>
+      ${blankCell}
+    </tr>`);
+  }).join('');
+  sections.push(`
+    <div style="font-size:10.5pt;font-weight:bold;background:#7c3aed;color:#fff;padding:4pt 8pt;margin-top:10pt;">🔵 鑑輔生</div>
+    <table class="rpt-table">
+      <thead><tr>
+        <th style="width:40pt;">群組</th>
+        <th style="width:50pt;">原班座號</th>
+        <th>姓名</th>
+        <th style="width:70pt;">抽到班級</th>
+      </tr></thead>
+      <tbody>${specialRows||'<tr><td colspan="4" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+    </table>`);
+
+  const div=document.createElement('div'); div.className='print-page';
+  div.innerHTML=`
+<div style="margin-bottom:4pt;">
+  <div style="font-size:9.5pt;color:#333;text-align:center;">（附件E）　${school}</div>
+  <div style="font-size:13pt;font-weight:bold;text-align:center;">${year} 學年度教育局抽籤 班級填寫核對表</div>
+  <div style="font-size:10.5pt;text-align:center;margin-top:2pt;">升${gl}年級</div>
+  <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#555;margin-top:3pt;">
+    <span>※ 抽籤現場請依序在「抽到班級」欄手寫填入，核對雙胞胎／不宜同班／資優生／鑑輔生是否符合安排</span>
+    <span>製表日期：${date}</span>
+  </div>
+</div>
+${sections.join('')}
+${stampRow()}`;
+  return [div];
 }
 
 
@@ -548,6 +735,9 @@ async function go(type) {
   if(type==='special0') pages=buildSpecialGroup(0);
   if(type==='special2') pages=buildSpecialGroup(2);
   if(type==='special4') pages=buildSpecialGroup(4);
+  if(type==='drawcheck0') pages=buildDrawCheck(0);
+  if(type==='drawcheck2') pages=buildDrawCheck(2);
+  if(type==='drawcheck4') pages=buildDrawCheck(4);
 
   pages.forEach(p=>{
     printArea.appendChild(p.cloneNode(true));
