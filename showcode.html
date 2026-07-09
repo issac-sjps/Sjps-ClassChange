@@ -84,6 +84,7 @@ select:focus,input:focus{border-color:var(--blue);}
 .code-purple{background:var(--purple-light);color:var(--purple);border-color:var(--purple);}
 .code-gold  {background:var(--gold-light);color:var(--gold);border-color:var(--gold);}
 .code-teal  {background:var(--teal-light);color:var(--teal);border-color:var(--teal);}
+.code-orange{background:#ffedd5;color:#c2410c;border-color:#c2410c;}
 
 /* EMPTY */
 .empty{text-align:center;padding:40px;color:var(--text3);}
@@ -141,7 +142,7 @@ select:focus,input:focus{border-color:var(--blue);}
   <button id="btnHideNormal" class="btn btn-ghost" onclick="toggleHideNormal()">👁 只顯示特殊學生</button>
   <div class="ctrl-sep"></div>
   <div style="font-size:.8rem;color:var(--text3);">
-    <span class="code-b code-red">*</span> 大頭　
+    <span class="code-b code-orange">*</span> 大頭　
     <span class="code-b code-purple">S1</span> 鑑輔生（數字＝分組）　
     <span class="code-b code-gold">G1</span> 資優生（數字＝分組）　
     <span class="code-b code-red">A-</span> 不能同班甲　
@@ -297,7 +298,7 @@ function getTwinCode(stuId) {
 // 組合所有代號字串
 function buildAllCodes(stu) {
   const codes = [];
-  if(stu.tags.includes('bighead')) codes.push({code:'*', cls:'code-red'});
+  if(stu.tags.includes('bighead')) codes.push({code:'*', cls:'code-orange'});
   if(stu.tags.includes('special')) codes.push({code:`S${getSpecialGroup(stu.tags, stu.grade)}`, cls:'code-purple'});
   if(stu.tags.includes('gifted'))  codes.push({code:`G${getGiftedGroup(stu.tags, stu.grade)}`, cls:'code-gold'});
   const ruleCodes = getRuleCodes(stu.id);
@@ -344,7 +345,7 @@ function renderAll() {
 
   let html = `<div class="summary-bar">
     <div class="sum-item"><span class="sum-num">${allStus.length}</span> 位學生</div>
-    <div class="sum-item"><span class="code-b code-red">*</span> 大頭 <span class="sum-num" style="color:var(--red);">${totalBH}</span></div>
+    <div class="sum-item"><span class="code-b code-orange">*</span> 大頭 <span class="sum-num" style="color:#c2410c;">${totalBH}</span></div>
     <div class="sum-item"><span class="code-b code-purple">S</span> 鑑輔生 <span class="sum-num" style="color:var(--purple);">${totalSP}</span></div>
     <div class="sum-item"><span class="code-b code-gold">G</span> 資優生 <span class="sum-num" style="color:var(--gold);">${totalGF}</span></div>
     <div class="sum-item">🚫 不能同班規則 <span class="sum-num">${totalRules}</span> 條</div>
