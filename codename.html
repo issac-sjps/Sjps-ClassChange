@@ -57,6 +57,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
 .code-gold  {background:var(--gold-light);color:var(--gold);border-color:var(--gold);}
 .code-teal  {background:var(--teal-light);color:var(--teal);border-color:var(--teal);}
 .code-gray  {background:var(--bg);color:var(--text2);border-color:var(--border);}
+.code-orange{background:#ffedd5;color:#c2410c;border-color:#c2410c;}
 
 .desc-text{font-size:.875rem;color:var(--text);line-height:1.6;}
 .desc-sub {font-size:.8rem;color:var(--text3);margin-top:2px;}
@@ -104,8 +105,9 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
     </div>
     <div class="section-body">
       <div class="info">
-        代號格式：<b>字母 + 數字 + 符號</b>，例如 <span class="code-badge code-red">A1-</span>、<span class="code-badge code-green">A1+</span><br>
-        2年級和4年級的代號<b>各自獨立</b>從 A 開始，不會互相衝突。
+        代號格式：<b>字母 + 符號</b>，例如 <span class="code-badge code-red">A-</span>、<span class="code-badge code-green">A+</span><br>
+        0年級（新生）、2年級、4年級的代號<b>各自獨立</b>從 A 開始，不會互相衝突。<br>
+        系統自動配號時會<b>跳過 G、S、T 這三個字母</b>，因為它們分別保留給「資優生（G）」「鑑輔生（S）」「雙胞胎（T）」的代號使用，避免撞碼看不出是哪一種。
       </div>
       <table class="code-table">
         <tr>
@@ -115,19 +117,19 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
           <th>編班規則</th>
         </tr>
         <tr>
-          <td><span class="code-badge code-red">A1-</span></td>
+          <td><span class="code-badge code-red">A-</span></td>
           <td><b>甲生</b>（目標學生）</td>
           <td class="desc-text">這位學生需要被完全隔離</td>
           <td class="desc-text">每個班<b>最多只能有一個「-」代號</b>的學生</td>
         </tr>
         <tr>
-          <td><span class="code-badge code-green">A1+</span></td>
+          <td><span class="code-badge code-green">A+</span></td>
           <td><b>乙生</b>（單向隔離）</td>
-          <td class="desc-text">不能跟甲生（A1-）同班，但乙生彼此之間<b>可以同班</b></td>
-          <td class="desc-text">同一班可以有多個「A1+」的學生</td>
+          <td class="desc-text">不能跟甲生（A-）同班，但乙生彼此之間<b>可以同班</b></td>
+          <td class="desc-text">同一班可以有多個「A+」的學生</td>
         </tr>
         <tr>
-          <td><span class="code-badge code-red">A1-</span><br><small style="color:var(--text3);">群組隔離時</small></td>
+          <td><span class="code-badge code-red">A-</span><br><small style="color:var(--text3);">群組隔離時</small></td>
           <td><b>所有成員</b>（群組隔離）</td>
           <td class="desc-text">全部人都要分到不同班，沒有人可以同班</td>
           <td class="desc-text">每人在每個班都只能出現一次</td>
@@ -135,29 +137,33 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
       </table>
 
       <hr class="sep">
-      <div class="desc-text"><b>代號字母分配規則（系統自動產生）：</b></div>
+      <div class="desc-text"><b>代號字母分配規則（系統自動產生，跳過 G/S/T）：</b></div>
       <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
           <div style="font-weight:700;margin-bottom:4px;">2年1班 第1條規則</div>
-          <span class="code-badge code-red" style="font-size:.85rem;">A1-</span>
+          <span class="code-badge code-red" style="font-size:.85rem;">A-</span>
         </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
           <div style="font-weight:700;margin-bottom:4px;">2年1班 第2條規則</div>
-          <span class="code-badge code-red" style="font-size:.85rem;">B1-</span>
+          <span class="code-badge code-red" style="font-size:.85rem;">B-</span>
         </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
           <div style="font-weight:700;margin-bottom:4px;">2年2班 第1條規則</div>
-          <span class="code-badge code-red" style="font-size:.85rem;">C1-</span>
+          <span class="code-badge code-red" style="font-size:.85rem;">C-</span>
         </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
           <div style="font-weight:700;margin-bottom:4px;">4年1班 第1條（獨立）</div>
-          <span class="code-badge code-red" style="font-size:.85rem;">A1-</span>
+          <span class="code-badge code-red" style="font-size:.85rem;">A-</span>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;">
+          <div style="font-weight:700;margin-bottom:4px;">第7條規則（跳過G）</div>
+          <span class="code-badge code-red" style="font-size:.85rem;">H-</span>
         </div>
       </div>
 
       <hr class="sep">
       <div class="notice">
-        ⚠️ <b>填入教育局系統時：</b>每位學生的備註欄填入對應代號即可（最長約 10 字元，空間充裕）。<br>
+        ⚠️ <b>填入教育局系統時：</b>每位學生的備註欄填入對應代號即可，字元數很省（教育局系統空間充裕）。<br>
         看到「-」= 這一組每班只能有一個人；看到「+」= 這一組可以多人同班，但不能跟同字母「-」的人同班。
       </div>
     </div>
@@ -183,20 +189,20 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
         </tr>
         <tr>
           <td><span class="tag tag-bighead">⚠ 大頭</span></td>
-          <td><span class="code-badge code-red" style="font-size:.95rem;">*</span></td>
-          <td class="desc-text">需多費心管教的學生。若同時有不能同班規則，備註可為 <span class="example">*A1-</span>，仍在 10 字元內</td>
+          <td><span class="code-badge code-orange" style="font-size:.95rem;">*</span></td>
+          <td class="desc-text">需多費心管教的學生。若同時有不能同班規則，備註可為 <span class="example">*A-</span></td>
           <td class="desc-text">模擬編班時<b>平均分散</b>至各班，避免集中</td>
         </tr>
         <tr>
           <td><span class="tag tag-special">🔵 鑑輔生</span></td>
-          <td><span class="code-badge code-purple" style="font-size:.95rem;">S</span></td>
-          <td class="desc-text">Special needs，身障或智能障礙需特殊照護。若同時是大頭：<span class="example">*S</span></td>
+          <td><span class="code-badge code-purple" style="font-size:.95rem;">S1</span></td>
+          <td class="desc-text">Special needs，身障或智能障礙需特殊照護。數字＝該生所屬的分組編號（同班同組的鑑輔生通常會被拆到不同班）。若同時是大頭：<span class="example">*S1</span></td>
           <td class="desc-text">可綁定特定導師，模擬編班時分配到對應班包</td>
         </tr>
         <tr>
           <td><span class="tag tag-gifted">⭐ 資優生</span></td>
-          <td><span class="code-badge code-gold" style="font-size:.95rem;">G</span></td>
-          <td class="desc-text">Gifted，資優班學生需跳班上課。若同時是大頭：<span class="example">*G</span></td>
+          <td><span class="code-badge code-gold" style="font-size:.95rem;">G1</span></td>
+          <td class="desc-text">Gifted，資優班學生需跳班上課。數字＝分組編號。若同時是大頭：<span class="example">*G1</span></td>
           <td class="desc-text">預設<b>全部同班</b>（方便跳班上課），可調整為平均分散</td>
         </tr>
       </table>
@@ -230,8 +236,13 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
         </tr>
         <tr>
           <td><span class="code-badge code-red">T1-</span></td>
-          <td class="desc-text">第1組雙胞胎，家長希望<b>分班</b></td>
+          <td class="desc-text">第1組雙胞胎，家長希望<b>不同班</b></td>
           <td class="desc-sub">兩人備註欄都填 T1-</td>
+        </tr>
+        <tr>
+          <td><span class="code-badge code-gray">T1~</span></td>
+          <td class="desc-text">第1組雙胞胎，家長表示<b>依電腦編班結果</b>（沒有特別意見）</td>
+          <td class="desc-sub">系統不會強制調整，電腦排到哪班就是哪班</td>
         </tr>
         <tr>
           <td><span class="code-badge code-teal">T2+</span></td>
@@ -242,8 +253,7 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
 
       <hr class="sep">
       <div class="notice">
-        ⚠️ 雙胞胎代號目前需<b>手動</b>填入教育局系統（本系統暫不自動產生雙胞胎代號）。<br>
-        建議從 T1 開始依序編號，2年級和4年級的 T1 代號雖然相同，但因為分在不同年級不會衝突。
+        雙胞胎代號會依「新增多胞胎」表單裡選的家長意願（同班／不同班／依電腦編班結果）自動產生，0年級（新生）、2年級、4年級的組數各自獨立計算，不會互相衝突。
       </div>
     </div>
   </div>
@@ -295,72 +305,66 @@ body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;backgro
           <th>分類</th>
           <th>代號</th>
           <th>一句話說明</th>
-          <th>字元數</th>
         </tr>
         <tr>
           <td>不能同班（甲）</td>
-          <td><span class="code-badge code-red" style="font-size:.85rem;">A1-</span></td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">A-</span></td>
           <td class="desc-text">此人每班只能有一個</td>
-          <td><span class="example">3字元</span></td>
         </tr>
         <tr>
           <td>不能同班（乙/單向）</td>
-          <td><span class="code-badge code-green" style="font-size:.85rem;">A1+</span></td>
-          <td class="desc-text">不能跟A1-同班，但乙生之間可同班</td>
-          <td><span class="example">3字元</span></td>
+          <td><span class="code-badge code-green" style="font-size:.85rem;">A+</span></td>
+          <td class="desc-text">不能跟A-同班，但乙生之間可同班</td>
         </tr>
         <tr>
           <td>不能同班（群組）</td>
-          <td><span class="code-badge code-red" style="font-size:.85rem;">A1-</span></td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">A-</span></td>
           <td class="desc-text">全員都要拆開，每人每班只能一個</td>
-          <td><span class="example">3字元</span></td>
         </tr>
         <tr>
           <td>雙胞胎（同班）</td>
           <td><span class="code-badge code-teal" style="font-size:.85rem;">T1+</span></td>
           <td class="desc-text">第1組雙胞胎，希望同班</td>
-          <td><span class="example">3字元</span></td>
         </tr>
         <tr>
-          <td>雙胞胎（分班）</td>
+          <td>雙胞胎（不同班）</td>
           <td><span class="code-badge code-red" style="font-size:.85rem;">T1-</span></td>
-          <td class="desc-text">第1組雙胞胎，希望分班</td>
-          <td><span class="example">3字元</span></td>
+          <td class="desc-text">第1組雙胞胎，希望不同班</td>
+        </tr>
+        <tr>
+          <td>雙胞胎（依電腦結果）</td>
+          <td><span class="code-badge code-gray" style="font-size:.85rem;">T1~</span></td>
+          <td class="desc-text">第1組雙胞胎，沒有特別意見</td>
         </tr>
         <tr>
           <td>大頭</td>
-          <td><span class="code-badge code-red" style="font-size:.85rem;">*</span></td>
+          <td><span class="code-badge code-orange" style="font-size:.85rem;">*</span></td>
           <td class="desc-text">需多費心，編班時平均分散</td>
-          <td><span class="example">1字元</span></td>
         </tr>
         <tr>
           <td>鑑輔生</td>
-          <td><span class="code-badge code-purple" style="font-size:.85rem;">S</span></td>
-          <td class="desc-text">特殊需求學生，可綁定導師</td>
-          <td><span class="example">1字元</span></td>
+          <td><span class="code-badge code-purple" style="font-size:.85rem;">S1</span></td>
+          <td class="desc-text">特殊需求學生，數字為分組編號，可綁定導師</td>
         </tr>
         <tr>
           <td>資優生</td>
-          <td><span class="code-badge code-gold" style="font-size:.85rem;">G</span></td>
-          <td class="desc-text">資優班，預設同班</td>
-          <td><span class="example">1字元</span></td>
+          <td><span class="code-badge code-gold" style="font-size:.85rem;">G1</span></td>
+          <td class="desc-text">資優班，數字為分組編號，預設同班</td>
         </tr>
         <tr>
           <td>組合範例</td>
-          <td><span class="code-badge code-red" style="font-size:.85rem;">*A1-</span></td>
+          <td><span class="code-badge code-red" style="font-size:.85rem;">*A-</span></td>
           <td class="desc-text">大頭 + 不能同班甲生</td>
-          <td><span class="example">4字元</span></td>
         </tr>
         <tr>
           <td>組合範例</td>
-          <td><span class="code-badge code-purple" style="font-size:.85rem;">*S</span></td>
-          <td class="desc-text">大頭 + 鑑輔生</td>
-          <td><span class="example">2字元</span></td>
+          <td><span class="code-badge code-purple" style="font-size:.85rem;">*S1</span></td>
+          <td class="desc-text">大頭 + 鑑輔生（第1組）</td>
         </tr>
         <tr style="background:var(--bg);">
-          <td colspan="4" style="font-size:.8rem;color:var(--text3);padding:6px 14px;">
-            ※ 所有代號都在 4 字元內，教育局系統 10 字元限制完全夠用。<br>
-            ※ 2年級和4年級代號各自獨立，A1- 在兩個年級分別計算，不會混淆。
+          <td colspan="3" style="font-size:.8rem;color:var(--text3);padding:6px 14px;">
+            ※ 0年級（新生）、2年級、4年級代號各自獨立，A- 在三個年級分別計算，不會混淆。<br>
+            ※ 「不能同班」自動配號時會跳過 G、S、T，避免跟資優生／鑑輔生／雙胞胎的代號撞在一起。
           </td>
         </tr>
       </table>
