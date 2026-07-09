@@ -144,8 +144,8 @@ select:focus,input:focus{border-color:var(--blue);}
     <span class="code-b code-red">*</span> 大頭　
     <span class="code-b code-purple">S</span> 鑑輔生　
     <span class="code-b code-gold">G</span> 資優生　
-    <span class="code-b code-red">A1-</span> 不能同班甲　
-    <span class="code-b code-green">A1+</span> 不能同班乙　
+    <span class="code-b code-red">A-</span> 不能同班甲　
+    <span class="code-b code-green">A+</span> 不能同班乙　
     <span class="code-b code-teal">T1+</span> 雙胞胎同班　
     <span class="code-b code-red">T1-</span> 雙胞胎分班
   </div>
@@ -237,7 +237,7 @@ function getRuleCodes(stuId) {
     (r.separateFrom||[]).forEach(s => {
       if(s.id === stuId) {
         const sign = r.type==='group' ? '-' : '+';
-        codes.push({ code: `${base}1${sign}`, cls: r.type==='group'?'code-red':'code-green' });
+        codes.push({ code: `${base}${sign}`, cls: r.type==='group'?'code-red':'code-green' });
       }
     });
   });
