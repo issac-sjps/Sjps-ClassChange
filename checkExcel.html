@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>編班檢查系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --navy:#0f2044; --navy2:#1a3060; --blue:#2d5be3; --blue-light:#e8eefb;
+  --red:#dc2626; --red-light:#fee2e2; --green:#16a34a; --green-light:#dcfce7;
+  --purple:#7c3aed; --purple-light:#ede9fe;
+  --gold:#b45309; --gold-light:#fef9c3;
+  --teal:#0d9488; --teal-light:#ccfbf1;
+  --amber:#d97706; --amber-light:#fef3c7;
+  --bg:#f4f6fb; --surface:#fff; --border:#dde3f0;
+  --text:#111827; --text2:#4b5563; --text3:#9ca3af;
+  --radius:12px; --shadow:0 1px 4px rgba(15,32,68,.08),0 4px 16px rgba(15,32,68,.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Microsoft JhengHei','PingFang TC',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+.header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;box-shadow:0 2px 12px rgba(15,32,68,.25);position:sticky;top:0;z-index:100;}
+.header-title{font-size:1.1rem;font-weight:700;}
+.header-sub{font-size:.72rem;opacity:.6;margin-top:1px;}
+.main{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px;box-shadow:var(--shadow);flex-wrap:wrap;}
+.tab-btn{flex:1;min-width:120px;padding:10px 14px;border:none;background:transparent;border-radius:8px;font-size:.88rem;font-weight:700;color:var(--text2);cursor:pointer;transition:.15s;}
+.tab-btn:hover{background:var(--bg);}
+.tab-btn.active{background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);}
+.section-head{padding:14px 20px;background:linear-gradient(135deg,var(--navy),var(--navy2));}
+.section-title{font-size:1rem;font-weight:800;color:#fff;}
+.section-desc{font-size:.8rem;color:rgba(255,255,255,.75);margin-top:2px;}
+.section-body{padding:20px;}
+
+/* Upload grid */
+.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+.upload-card{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;background:var(--bg);}
+.upload-card.loaded{border-color:var(--green);background:var(--green-light);}
+.upload-card h3{font-size:.95rem;margin-bottom:10px;color:var(--navy);}
+.upload-card input[type=file]{display:none;}
+.upload-label{display:inline-block;background:var(--blue);color:#fff;padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;}
+.upload-status{font-size:.78rem;color:var(--text3);margin-top:8px;}
+.upload-card.loaded .upload-status{color:var(--green);font-weight:700;}
+
+/* Group buttons */
+.grade-select{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.grade-btn{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:.85rem;cursor:pointer;color:var(--text2);}
+.grade-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.group-btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.group-btn{padding:7px 16px;border-radius:99px;border:1px solid var(--blue);background:var(--blue-light);color:var(--blue);font-weight:700;font-size:.82rem;cursor:pointer;}
+.group-btn.active{background:var(--blue);color:#fff;}
+
+table{width:100%;border-collapse:collapse;font-size:.86rem;}
+th{background:var(--bg);padding:8px 12px;text-align:left;font-size:.76rem;font-weight:700;color:var(--text2);border-bottom:2px solid var(--border);white-space:nowrap;}
+td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:#f8f9fd;}
+.badge{display:inline-block;font-family:monospace;font-weight:800;font-size:.82rem;padding:2px 8px;border-radius:6px;border:2px solid;white-space:nowrap;}
+.badge-red{background:var(--red-light);color:var(--red);border-color:var(--red);}
+.badge-green{background:var(--green-light);color:var(--green);border-color:var(--green);}
+.badge-purple{background:var(--purple-light);color:var(--purple);border-color:var(--purple);}
+.badge-gold{background:var(--gold-light);color:var(--gold);border-color:var(--gold);}
+.badge-teal{background:var(--teal-light);color:var(--teal);border-color:var(--teal);}
+.badge-gray{background:var(--bg);color:var(--text2);border-color:var(--border);}
+
+.empty{padding:40px 20px;text-align:center;color:var(--text3);font-size:.9rem;}
+.notice{background:var(--amber-light);border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:.83rem;color:#92400e;line-height:1.7;margin-bottom:14px;}
+.info{background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:10px 14px;font-size:.83rem;color:#1e40af;line-height:1.7;margin-bottom:14px;}
+
+.conflict-card{border:1px solid var(--red);background:var(--red-light);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.conflict-card .ctitle{font-weight:800;color:var(--red);font-size:.9rem;margin-bottom:6px;}
+.conflict-card .cdetail{font-size:.83rem;color:var(--text2);line-height:1.7;}
+.warn-card{border:1px solid var(--gold);background:var(--gold-light);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.warn-card .ctitle{font-weight:800;color:var(--gold);font-size:.9rem;margin-bottom:6px;}
+.warn-card .cdetail{font-size:.83rem;color:var(--text2);line-height:1.7;}
+.ok-card{border:1px solid var(--green);background:var(--green-light);border-radius:10px;padding:16px;text-align:center;color:var(--green);font-weight:700;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.stat-card{border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--bg);}
+.stat-card h4{font-size:.88rem;color:var(--navy);margin-bottom:8px;}
+.stat-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--text2);padding:3px 0;border-bottom:1px dashed var(--border);}
+.stat-row:last-child{border-bottom:none;}
+.stat-row b{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">📊 編班檢查系統</div>
+    <div class="header-sub">上傳各年級 Excel，檢視分群名單、備註衝突檢查、統計</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="upload">📁 上傳資料</button>
+    <button class="tab-btn" data-tab="list">📋 分群名單</button>
+    <button class="tab-btn" data-tab="conflict">🚫 備註衝突檢查</button>
+    <button class="tab-btn" data-tab="stats">📈 統計分頁</button>
+  </div>
+
+  <!-- ============ TAB: 上傳資料 ============ -->
+  <div class="tab-panel active" id="tab-upload">
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">上傳各年級 Excel 檔案</div>
+        <div class="section-desc">欄位需含：班群、座號、姓名、性別、T分、原班級、原座號、減授人數、中數生、備註</div>
+      </div>
+      <div class="section-body">
+        <div class="upload-grid">
+          <div class="upload-card" id="card-1" data-grade="1">
+            <h3>1 年級</h3>
+            <label class="upload-label">選擇檔案<input type="file" accept=".xlsx,.xls" data-grade="1"></label>
+            <div class="upload-status" id="status-1">尚未上傳</div>
+          </div>
+          <div class="upload-card" id="card-3" data-grade="3">
+            <h3>3 年級</h3>
+            <label class="upload-label">選擇檔案<input type="file" accept=".xlsx,.xls" data-grade="3"></label>
+            <div class="upload-status" id="status-3">尚未上傳</div>
+          </div>
+          <div class="upload-card" id="card-5" data-grade="5">
+            <h3>5 年級</h3>
+            <label class="upload-label">選擇檔案<input type="file" accept=".xlsx,.xls" data-grade="5"></label>
+            <div class="upload-status" id="status-5">尚未上傳</div>
+          </div>
+        </div>
+        <div class="info" style="margin-top:16px;">
+          上傳後資料只存在瀏覽器記憶體中（重新整理頁面會清空，不會上傳到任何伺服器），可放心使用。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: 分群名單 ============ -->
+  <div class="tab-panel" id="tab-list">
+    <div class="grade-select" id="list-grade-select"></div>
+    <div class="group-btn-row" id="list-group-select"></div>
+    <div class="section">
+      <div class="section-body" id="list-table-wrap">
+        <div class="empty">請先上傳資料並選擇年級／班群</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: 備註衝突檢查 ============ -->
+  <div class="tab-panel" id="tab-conflict">
+    <div class="grade-select" id="conflict-grade-select"></div>
+    <div class="notice">
+      檢查規則：同一班內，同一個字母代號若同時出現「-」與「+」＝衝突；同一字母「-」出現兩次以上＝衝突。雙胞胎（T）標「-」卻同班＝衝突；標「+」卻分班＝提醒。鑑輔生（S）同組同班＝提醒（依慣例建議拆班，非強制衝突）。
+    </div>
+    <div id="conflict-result"><div class="empty">請先上傳資料並選擇年級</div></div>
+  </div>
+
+  <!-- ============ TAB: 統計分頁 ============ -->
+  <div class="tab-panel" id="tab-stats">
+    <div class="grade-select" id="stats-grade-select"></div>
+    <div id="stats-result"><div class="empty">請先上傳資料並選擇年級</div></div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   資料儲存（僅存於記憶體，不使用 localStorage/sessionStorage）
+   ============================================================ */
+const gradeData = { "1": null, "3": null, "5": null };
+let currentGrade = { list: null, conflict: null, stats: null };
+
+/* ============================================================
+   Tab 切換
+   ============================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ============================================================
+   Excel 上傳與解析
+   ============================================================ */
+document.querySelectorAll('input[type=file]').forEach(input => {
+  input.addEventListener('change', (e) => {
+    const grade = input.dataset.grade;
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        const students = rows
+          .filter(r => (r['姓名'] || '').toString().trim() !== '')
+          .map(r => ({
+            group: (r['班群'] || '').toString().trim(),
+            seat: (r['座號'] || '').toString().trim(),
+            name: (r['姓名'] || '').toString().trim(),
+            gender: (r['性別'] || '').toString().trim(),
+            tscore: r['T分'] !== undefined && r['T分'] !== '' ? Number(r['T分']) : null,
+            origClass: (r['原班級'] || '').toString().trim(),
+            origSeat: (r['原座號'] || '').toString().trim(),
+            reduceCount: (r['減授人數'] || '').toString().trim(),
+            midStudent: (r['中數生'] || '').toString().trim(),
+            remark: (r['備註'] || '').toString().trim()
+          }));
+        gradeData[grade] = students;
+        const card = document.getElementById('card-' + grade);
+        const status = document.getElementById('status-' + grade);
+        card.classList.add('loaded');
+        status.textContent = `已載入 ${students.length} 筆學生資料`;
+        refreshGradeSelectors();
+      } catch (err) {
+        alert('讀取失敗，請確認檔案格式：' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+});
+
+/* ============================================================
+   年級選擇列產生（三個分頁共用邏輯）
+   ============================================================ */
+function refreshGradeSelectors() {
+  const loadedGrades = Object.keys(gradeData).filter(g => gradeData[g]);
+  buildGradeButtons('list-grade-select', loadedGrades, (g) => { currentGrade.list = g; renderGroupButtons(g); });
+  buildGradeButtons('conflict-grade-select', loadedGrades, (g) => { currentGrade.conflict = g; renderConflictCheck(g); });
+  buildGradeButtons('stats-grade-select', loadedGrades, (g) => { currentGrade.stats = g; renderStats(g); });
+}
+
+function buildGradeButtons(containerId, grades, onSelect) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  if (grades.length === 0) { wrap.innerHTML = ''; return; }
+  grades.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'grade-btn';
+    btn.textContent = g + ' 年級';
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      onSelect(g);
+    });
+    wrap.appendChild(btn);
+  });
+  // auto-select first
+  wrap.querySelector('.grade-btn').click();
+}
+
+/* ============================================================
+   分群名單分頁
+   ============================================================ */
+function renderGroupButtons(grade) {
+  const students = gradeData[grade];
+  const groups = [...new Set(students.map(s => s.group))].sort();
+  const wrap = document.getElementById('list-group-select');
+  wrap.innerHTML = '';
+  groups.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'group-btn';
+    btn.textContent = g + `（${students.filter(s=>s.group===g).length}人）`;
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.group-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderGroupTable(grade, g);
+    });
+    wrap.appendChild(btn);
+  });
+  if (groups.length) wrap.querySelector('.group-btn').click();
+}
+
+function renderGroupTable(grade, group) {
+  const students = gradeData[grade].filter(s => s.group === group)
+    .sort((a,b) => (a.seat+'').localeCompare(b.seat+'', undefined, {numeric:true}));
+  const wrap = document.getElementById('list-table-wrap');
+  if (!students.length) { wrap.innerHTML = '<div class="empty">此群無資料</div>'; return; }
+  const hasT = students.some(s => s.tscore !== null && !isNaN(s.tscore));
+  let html = '<table><tr><th>座號</th><th>姓名</th><th>性別</th>' +
+    (hasT ? '<th>T分</th>' : '') +
+    '<th>原班級</th><th>原座號</th><th>減授人數</th><th>中數生</th><th>備註</th></tr>';
+  students.forEach(s => {
+    html += `<tr><td>${s.seat}</td><td>${s.name}</td><td>${s.gender}</td>` +
+      (hasT ? `<td>${s.tscore !== null && !isNaN(s.tscore) ? s.tscore : ''}</td>` : '') +
+      `<td>${s.origClass}</td><td>${s.origSeat}</td><td>${s.reduceCount}</td><td>${s.midStudent}</td>` +
+      `<td>${s.remark ? remarkBadge(s.remark) : ''}</td></tr>`;
+  });
+  html += '</table>';
+  wrap.innerHTML = html;
+}
+
+function remarkBadge(remark) {
+  const p = parseRemark(remark);
+  let cls = 'badge-gray';
+  if (p.bigHead) cls = 'badge-gold';
+  if (p.special) {
+    if (p.special.type === 'T') cls = 'badge-teal';
+    if (p.special.type === 'S') cls = 'badge-purple';
+    if (p.special.type === 'G') cls = 'badge-gold';
+  }
+  if (p.letters.some(l => l.sign === '-')) cls = 'badge-red';
+  return `<span class="badge ${cls}" title="${p.error||''}">${remark}</span>`;
+}
+
+/* ============================================================
+   備註解析器
+   規則：
+   - 開頭可有 * （大頭）與 S\d/G\d/T\d[+-~]（特殊代號），順序不拘，
+     但一定緊接在字串最前面（* 之前或之後）。
+   - 剩餘部份為「連續字母 + 一個正負號」的重複組合：
+     ABC+ = A+ B+ C+；DE- = D- E-
+   - 若字串結尾有連續字母卻沒有符號，預設為 +（因欄位字數限制被省略）
+   ============================================================ */
+function parseRemark(raw) {
+  const original = raw;
+  let s = (raw || '').trim();
+  let bigHead = false;
+  let special = null;
+  let error = null;
+
+  // 反覆嘗試吃掉開頭的 * 與 S/G/T 特殊代號（不限順序）
+  for (let i = 0; i < 2; i++) {
+    if (s[0] === '*') { bigHead = true; s = s.slice(1); }
+    const m = s.match(/^(S|G|T)(\d+)([+\-~]?)/);
+    if (m && !special) {
+      special = { type: m[1], num: m[2], sign: m[3] || '+' };
+      s = s.slice(m[0].length);
+    }
+  }
+
+  const letters = [];
+  let pending = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (/[A-Za-z]/.test(ch)) {
+      pending.push(ch.toUpperCase());
+    } else if (ch === '+' || ch === '-') {
+      pending.forEach(l => letters.push({ letter: l, sign: ch }));
+      pending = [];
+    } else {
+      error = `無法辨識的字元「${ch}」`;
+    }
+  }
+  if (pending.length) {
+    // 結尾省略符號，預設為 +
+    pending.forEach(l => letters.push({ letter: l, sign: '+', assumed: true }));
+  }
+
+  return { raw: original, bigHead, special, letters, error };
+}
+
+/* ============================================================
+   衝突檢查分頁
+   ============================================================ */
+function renderConflictCheck(grade) {
+  const students = gradeData[grade];
+  const resultWrap = document.getElementById('conflict-result');
+  const conflicts = [];
+  const warnings = [];
+
+  // 1) 依「班群」分組，檢查同班內字母代號衝突
+  const byClass = {};
+  students.forEach(s => {
+    if (!byClass[s.group]) byClass[s.group] = [];
+    byClass[s.group].push(s);
+  });
+
+  Object.entries(byClass).forEach(([className, list]) => {
+    const letterMap = {}; // letter -> [{name, sign, assumed}]
+    list.forEach(s => {
+      if (!s.remark) return;
+      const p = parseRemark(s.remark);
+      if (p.error) {
+        warnings.push({ title: `${className}．${s.name}：備註格式無法完全辨識`, detail: `備註「${s.remark}」— ${p.error}，請人工確認。` });
+      }
+      p.letters.forEach(l => {
+        if (!letterMap[l.letter]) letterMap[l.letter] = [];
+        letterMap[l.letter].push({ name: s.name, seat: s.seat, sign: l.sign, assumed: l.assumed, remark: s.remark });
+      });
+    });
+    Object.entries(letterMap).forEach(([letter, entries]) => {
+      const minus = entries.filter(e => e.sign === '-');
+      const plus = entries.filter(e => e.sign === '+');
+      if (minus.length > 1) {
+        conflicts.push({
+          title: `${className}：字母代號「${letter}-」重複出現 ${minus.length} 次`,
+          detail: `這幾位學生同班卻都帶有「${letter}-」，理論上每班同一字母最多只能有一位「-」：` +
+            minus.map(e => `${e.name}（${e.seat}號，備註 ${e.remark}）`).join('、')
+        });
+      }
+      if (minus.length >= 1 && plus.length >= 1) {
+        conflicts.push({
+          title: `${className}：字母代號「${letter}」出現 + 與 - 同班`,
+          detail: `「${letter}-」：${minus.map(e => `${e.name}(${e.remark})`).join('、')}　和　「${letter}+」：${plus.map(e => `${e.name}(${e.remark})`).join('、')}　不應同班。`
+        });
+      }
+    });
+  });
+
+  // 2) 雙胞胎（T）：跨全年級檢查
+  const twinMap = {}; // num -> [{name, class, sign}]
+  students.forEach(s => {
+    if (!s.remark) return;
+    const p = parseRemark(s.remark);
+    if (p.special && p.special.type === 'T') {
+      const num = p.special.num;
+      if (!twinMap[num]) twinMap[num] = [];
+      twinMap[num].push({ name: s.name, group: s.group, sign: p.special.sign, remark: s.remark });
+    }
+  });
+  Object.entries(twinMap).forEach(([num, list]) => {
+    const sign = list[0].sign;
+    const classes = [...new Set(list.map(l => l.group))];
+    if (sign === '-' && classes.length < list.length) {
+      conflicts.push({
+        title: `雙胞胎 T${num}- 卻同班`,
+        detail: list.map(l => `${l.name}（${l.group}，${l.remark}）`).join('、') + ' — 家長希望不同班，但目前被分到同一班。'
+      });
+    }
+    if (sign === '+' && classes.length > 1) {
+      warnings.push({
+        title: `雙胞胎 T${num}+ 卻分班`,
+        detail: list.map(l => `${l.name}（${l.group}，${l.remark}）`).join('、') + ' — 家長希望同班，但目前分散在不同班，請確認。'
+      });
+    }
+  });
+
+  // 3) 鑑輔生（S）：同組同班提醒
+  const sMap = {};
+  students.forEach(s => {
+    if (!s.remark) return;
+    const p = parseRemark(s.remark);
+    if (p.special && p.special.type === 'S') {
+      const key = p.special.num;
+      if (!sMap[key]) sMap[key] = [];
+      sMap[key].push({ name: s.name, group: s.group, remark: s.remark });
+    }
+  });
+  Object.entries(sMap).forEach(([num, list]) => {
+    const byG = {};
+    list.forEach(l => { (byG[l.group] = byG[l.group] || []).push(l); });
+    Object.entries(byG).forEach(([g, arr]) => {
+      if (arr.length > 1) {
+        warnings.push({
+          title: `鑑輔生 S${num} 同組同班（${g}）`,
+          detail: arr.map(a => `${a.name}（${a.remark}）`).join('、') + ' — 依慣例同組鑑輔生通常建議拆到不同班，請確認是否刻意安排。'
+        });
+      }
+    });
+  });
+
+  // render
+  let html = '';
+  if (conflicts.length === 0 && warnings.length === 0) {
+    html = '<div class="ok-card">✅ 未發現備註衝突，也沒有需要留意的項目</div>';
+  } else {
+    if (conflicts.length) {
+      html += `<div class="section"><div class="section-head" style="background:linear-gradient(135deg,#dc2626,#b91c1c);"><div class="section-title">🚫 衝突（${conflicts.length}）</div></div><div class="section-body">`;
+      conflicts.forEach(c => {
+        html += `<div class="conflict-card"><div class="ctitle">${c.title}</div><div class="cdetail">${c.detail}</div></div>`;
+      });
+      html += '</div></div>';
+    }
+    if (warnings.length) {
+      html += `<div class="section"><div class="section-head" style="background:linear-gradient(135deg,#b45309,#92400e);"><div class="section-title">⚠️ 提醒（${warnings.length}）</div></div><div class="section-body">`;
+      warnings.forEach(w => {
+        html += `<div class="warn-card"><div class="ctitle">${w.title}</div><div class="cdetail">${w.detail}</div></div>`;
+      });
+      html += '</div></div>';
+    }
+  }
+  resultWrap.innerHTML = html;
+}
+
+/* ============================================================
+   統計分頁
+   ============================================================ */
+function renderStats(grade) {
+  const students = gradeData[grade];
+  const wrap = document.getElementById('stats-result');
+  const groups = [...new Set(students.map(s => s.group))].sort();
+  const hasT = students.some(s => s.tscore !== null && !isNaN(s.tscore));
+
+  let html = `<div class="stat-grid">`;
+  groups.forEach(g => {
+    const list = students.filter(s => s.group === g);
+    const male = list.filter(s => s.gender === '男').length;
+    const female = list.filter(s => s.gender === '女').length;
+    html += `<div class="stat-card"><h4>${g}</h4>`;
+    html += `<div class="stat-row"><span>學生人數</span><b>${list.length}</b></div>`;
+    html += `<div class="stat-row"><span>男生</span><b>${male}</b></div>`;
+    html += `<div class="stat-row"><span>女生</span><b>${female}</b></div>`;
+    if (hasT) {
+      const tscores = list.map(s => s.tscore).filter(t => t !== null && !isNaN(t));
+      if (tscores.length) {
+        const avg = tscores.reduce((a,b)=>a+b,0) / tscores.length;
+        const sd = Math.sqrt(tscores.reduce((a,b)=>a+(b-avg)**2,0) / tscores.length);
+        const min = Math.min(...tscores), max = Math.max(...tscores);
+        html += `<div class="stat-row"><span>T分平均</span><b>${avg.toFixed(2)}</b></div>`;
+        html += `<div class="stat-row"><span>T分標準差</span><b>${sd.toFixed(2)}</b></div>`;
+        html += `<div class="stat-row"><span>T分全距</span><b>${min.toFixed(1)} ~ ${max.toFixed(1)}</b></div>`;
+      }
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+  wrap.innerHTML = html;
+}
+</script>
+</body>
+</html>
