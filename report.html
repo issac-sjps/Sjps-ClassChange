@@ -327,9 +327,10 @@ function buildDrawCheck(grade) {
       return `<tr style="break-inside:avoid;page-break-inside:avoid;">
         ${mi===0?`<td rowspan="${members.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#ccfbf1;color:#0d9488;vertical-align:middle;">${code}</td>`:''}
         <td class="c">${stuCode}</td>
-        <td>${m.name}</td>
+        <td style="white-space:nowrap;">${m.name}</td>
         ${blankCell}
         ${mi===0?`<td rowspan="${members.length}" class="c" style="font-size:8.5pt;vertical-align:middle;">${pref}</td>`:''}
+        <td></td>
       </tr>`;
     });
   }).join('');
@@ -339,11 +340,12 @@ function buildDrawCheck(grade) {
       <thead><tr>
         <th style="width:40pt;">代號</th>
         <th style="width:50pt;">原班座號</th>
-        <th>姓名</th>
-        <th style="width:70pt;">抽到班級</th>
-        <th style="width:60pt;">家長意願</th>
+        <th style="width:64pt;">姓名</th>
+        <th style="width:60pt;">抽到班級</th>
+        <th style="width:56pt;">家長意願</th>
+        <th>備註</th>
       </tr></thead>
-      <tbody>${twinRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+      <tbody>${twinRows||'<tr><td colspan="6" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
     </table>`);
 
   // ── 2. 不宜同班 ──
@@ -372,8 +374,9 @@ function buildDrawCheck(grade) {
       <td rowspan="${groupSize}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#fee2e2;color:#dc2626;vertical-align:middle;">${base}</td>
       <td class="c" style="font-family:monospace;font-weight:bold;color:#dc2626;">${targetCode}</td>
       <td class="c">${targetStuCode}</td>
-      <td><b>${stu?stu.name:r.targetStudentName}</b>（甲）</td>
+      <td style="white-space:nowrap;"><b>${stu?stu.name:r.targetStudentName}</b>（甲）</td>
       ${blankCell}
+      <td></td>
     </tr>`);
     sepMembers.forEach(s=>{
       const st = state.students[s.id];
@@ -381,8 +384,9 @@ function buildDrawCheck(grade) {
       rows.push(`<tr style="break-inside:avoid;page-break-inside:avoid;">
         <td class="c" style="font-family:monospace;font-weight:bold;color:${isGrp?'#dc2626':'#16a34a'};">${memberCode}</td>
         <td class="c">${sc}</td>
-        <td>${st?st.name:s.name}（乙）</td>
+        <td style="white-space:nowrap;">${st?st.name:s.name}（乙）</td>
         ${blankCell}
+        <td></td>
       </tr>`);
     });
     return rows;
@@ -394,10 +398,11 @@ function buildDrawCheck(grade) {
         <th style="width:40pt;">群組</th>
         <th style="width:40pt;">代號</th>
         <th style="width:50pt;">原班座號</th>
-        <th>姓名</th>
-        <th style="width:70pt;">抽到班級</th>
+        <th style="width:80pt;">姓名</th>
+        <th style="width:60pt;">抽到班級</th>
+        <th>備註</th>
       </tr></thead>
-      <tbody>${ruleRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+      <tbody>${ruleRows||'<tr><td colspan="6" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
     </table>`);
 
   // ── 3. 資優生 ──
@@ -412,8 +417,9 @@ function buildDrawCheck(grade) {
     return stus.map((s,i)=>`<tr style="break-inside:avoid;page-break-inside:avoid;">
       ${i===0?`<td rowspan="${stus.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#fef9c3;color:#b45309;vertical-align:middle;">G${g}</td>`:''}
       <td class="c">${grade}0${s.class}${String(s.number).padStart(2,'0')}</td>
-      <td>${s.name}</td>
+      <td style="white-space:nowrap;">${s.name}</td>
       ${blankCell}
+      <td></td>
     </tr>`);
   }).join('');
   sections.push(`
@@ -422,10 +428,11 @@ function buildDrawCheck(grade) {
       <thead><tr>
         <th style="width:40pt;">群組</th>
         <th style="width:50pt;">原班座號</th>
-        <th>姓名</th>
-        <th style="width:70pt;">抽到班級</th>
+        <th style="width:64pt;">姓名</th>
+        <th style="width:60pt;">抽到班級</th>
+        <th>備註</th>
       </tr></thead>
-      <tbody>${giftedRows||'<tr><td colspan="4" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+      <tbody>${giftedRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
     </table>`);
 
   // ── 4. 鑑輔生 ──
@@ -440,8 +447,9 @@ function buildDrawCheck(grade) {
     return stus.map((s,i)=>`<tr style="break-inside:avoid;page-break-inside:avoid;">
       ${i===0?`<td rowspan="${stus.length}" class="c" style="font-family:monospace;font-weight:800;font-size:10pt;background:#ede9fe;color:#7c3aed;vertical-align:middle;">S${g}</td>`:''}
       <td class="c">${grade}0${s.class}${String(s.number).padStart(2,'0')}</td>
-      <td>${s.name}</td>
+      <td style="white-space:nowrap;">${s.name}</td>
       ${blankCell}
+      <td></td>
     </tr>`);
   }).join('');
   sections.push(`
@@ -450,10 +458,11 @@ function buildDrawCheck(grade) {
       <thead><tr>
         <th style="width:40pt;">群組</th>
         <th style="width:50pt;">原班座號</th>
-        <th>姓名</th>
-        <th style="width:70pt;">抽到班級</th>
+        <th style="width:64pt;">姓名</th>
+        <th style="width:60pt;">抽到班級</th>
+        <th>備註</th>
       </tr></thead>
-      <tbody>${specialRows||'<tr><td colspan="4" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
+      <tbody>${specialRows||'<tr><td colspan="5" class="c" style="color:#aaa;padding:8pt;">無資料</td></tr>'}</tbody>
     </table>`);
 
   const div=document.createElement('div'); div.className='print-page';
