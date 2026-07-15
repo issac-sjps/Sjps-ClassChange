@@ -596,7 +596,7 @@ function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
           ${bindHtml}
           ${notes.length?`<span style="font-size:.72rem;color:var(--blue);border:1px solid var(--blue-light);border-radius:4px;padding:1px 6px;">💬 ${notes.length} 則說明</span>`:''}
         </div>
-        ${notes.length?`<div id="${noteContId}" style="display:${tag==='bighead'?'':'none'};padding:6px 14px 8px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;font-size:.83rem;">${notesHtml}</div>`:''}
+        ${notes.length?`<div id="${noteContId}" style="padding:6px 14px 8px;background:#f8f9fd;border-bottom:1px solid #f0f2f8;font-size:.83rem;">${notesHtml}</div>`:''}
       </div>`;
     }).join('');
     const div=document.createElement('div'); div.className='ov-card';
