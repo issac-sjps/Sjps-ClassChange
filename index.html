@@ -84,7 +84,7 @@ select:focus, input:focus { border-color: var(--blue); }
 
 /* TAG */
 .tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 99px; font-size: .72rem; font-weight: 700; }
-.tag-bighead { background: var(--red-light); color: var(--red); }
+.tag-bighead { background: #ffedd5; color: #c2410c; }
 .tag-special { background: var(--purple-light); color: var(--purple); }
 .tag-gifted { background: var(--gold-light); color: var(--gold); }
 .tag-male { background: var(--blue-light); color: var(--blue); }
@@ -281,8 +281,8 @@ select:focus, input:focus { border-color: var(--blue); }
   <div id="rulesSummary" style="margin-bottom:16px;"></div>
   <div style="background:var(--blue-light);border:1px solid #c7d4f7;border-radius:8px;padding:9px 14px;font-size:.82rem;color:#1e40af;line-height:1.8;margin-bottom:14px;">
     <b>代號說明</b><br>
-    <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A1-</span>此學生每個班只能有一人（需完全隔離）<br>
-    <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A1+</span>此學生可與其他「+」同組同學同班，但不能與「A1-」同班<br>
+    <span style="display:inline-block;font-family:monospace;font-weight:700;background:#fee2e2;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 5px;margin-right:4px;">A-</span>此學生每個班只能有一人（需完全隔離）<br>
+    <span style="display:inline-block;font-family:monospace;font-weight:700;background:#dcfce7;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-right:4px;">A+</span>此學生可與其他「+」同組同學同班，但不能與「A-」同班<br>
     每個班：<b>「-」代號最多出現一次</b>，「+」代號可以多人同班。
   </div>
   <div class="ov-grid" id="rulesContent">
@@ -368,6 +368,22 @@ const state = { students:{}, rules:{}, bindings:{}, gradeTwins:{}, studentNotes:
 
 // ── HELPERS ──
 function classLabel(g,c){ return `${g}年${c}班`; }
+function getGiftedGroup(tags, grade) {
+  if(grade !== undefined) {
+    const t = (tags||[]).find(t=>t.startsWith(`gifted_g${grade}_`));
+    if(t) return parseInt(t.split('_').pop());
+  }
+  const t = (tags||[]).find(t=>t.startsWith('gifted_g')&&!t.includes('_', 8));
+  return t ? parseInt(t.replace('gifted_g','')) : 1;
+}
+function getSpecialGroup(tags, grade) {
+  if(grade !== undefined) {
+    const t = (tags||[]).find(t=>t.startsWith(`special_g${grade}_`));
+    if(t) return parseInt(t.split('_').pop());
+  }
+  const t = (tags||[]).find(t=>t.startsWith('special_g')&&!t.includes('_', 9));
+  return t ? parseInt(t.replace('special_g','')) : 1;
+}
 function genderLabel(g){ return g==='M'?'男':'女'; }
 
 function switchTab(name, btn) {
@@ -496,8 +512,8 @@ function renderClassList() {
     const rowsHtml=sorted.map(s=>{
       const tgs=[
         s.tags.includes('bighead')?'<span class="tag tag-bighead" style="font-size:.65rem;">大頭</span>':'',
-        s.tags.includes('special')?'<span class="tag tag-special" style="font-size:.65rem;">鑑輔生</span>':'',
-        s.tags.includes('gifted')?'<span class="tag tag-gifted" style="font-size:.65rem;">資優生</span>':''
+        s.tags.includes('special')?`<span class="tag tag-special" style="font-size:.65rem;">鑑輔生 S${getSpecialGroup(s.tags,s.grade)}</span>`:'',
+        s.tags.includes('gifted')?`<span class="tag tag-gifted" style="font-size:.65rem;">資優生 G${getGiftedGroup(s.tags,s.grade)}</span>`:''
       ].filter(Boolean).join('');
       const gc=s.gender==='M'?'var(--blue)':'var(--pink)';
       return `<div class="stu-row ${s.gender==='M'?'male':'female'}">
@@ -528,7 +544,7 @@ function renderSpecialTab(tag, gradeSelId, summaryId, contId) {
   const filterGrade = document.getElementById(gradeSelId).value;
   const cont    = document.getElementById(contId);
   const summary = document.getElementById(summaryId);
-  const tagColor  = {bighead:'var(--red)',special:'var(--purple)',gifted:'var(--gold)'}[tag];
+  const tagColor  = {bighead:'#c2410c',special:'var(--purple)',gifted:'var(--gold)'}[tag];
   const tagLabel  = {bighead:'大頭',special:'鑑輔生',gifted:'資優生'}[tag];
   const tagClass  = {bighead:'tag-bighead',special:'tag-special',gifted:'tag-gifted'}[tag];
 
@@ -647,6 +663,7 @@ function renderRules() {
       const typeBadge=r.type==='group'
         ?'<span class="rule-type-badge rule-type-group">群組</span>'
         :'<span class="rule-type-badge rule-type-uni">單向</span>';
+      const targetGC = r.groupCode ? `${r.groupCode.replace(/[0-9+-]+$/,'')}-` : '';
       const targetStuObj = state.students[r.targetStudentId];
       const targetCode = targetStuObj
         ? `${targetStuObj.grade}0${targetStuObj.class}${String(targetStuObj.number).padStart(2,'0')}`
@@ -663,7 +680,7 @@ function renderRules() {
         const gc=stu?(stu.gender==='M'?'var(--blue)':'var(--pink)'):'var(--text3)';
         const isGrp=r.type==='group';
         const base=r.groupCode?r.groupCode.replace(/[0-9+-]+$/,''):'';
-        const mCode=base?`${base}1${isGrp?'-':'+'}`: '';
+        const mCode=base?`${base}${isGrp?'-':'+'}`: '';
         const mc=isGrp?'var(--red)':'var(--green)';
         const mb=isGrp?'#fee2e2':'#dcfce7';
         return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;">
@@ -676,7 +693,7 @@ function renderRules() {
       }).join('');
       return `<div class="rule-ov-row">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
-          ${r.groupCode?`<span style="font-size:.8rem;font-weight:800;font-family:monospace;color:var(--blue);background:var(--blue-light);border:1px solid var(--blue);border-radius:5px;padding:1px 6px;">${r.groupCode}</span>`:''}
+          ${targetGC?`<span style="font-size:.8rem;font-weight:800;font-family:monospace;color:var(--blue);background:var(--blue-light);border:1px solid var(--blue);border-radius:5px;padding:1px 6px;">${targetGC}</span>`:''}
           <span style="font-size:.73rem;font-family:monospace;color:var(--text3);">${targetCode}</span>
           <span class="rule-target">${r.targetStudentName}</span>
           ${isBH?'<span class="tag tag-bighead" style="font-size:.63rem;">大頭</span>':''}
